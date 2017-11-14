@@ -1,0 +1,11 @@
+[Unit]
+Description=Queries for info from bitcoin
+Wants=bitcoin.service
+After=bitcoin.service
+
+[Service]
+ExecStartPre=/bin/bash -c "mkdir -p /etc/report"
+ExecStart=/bin/bash -c "docker exec bitcoin ./bitcoin-cli getblockchaininfo > /etc/report/bitcoin_info.json"
+
+[Install]
+WantedBy=network-online.target

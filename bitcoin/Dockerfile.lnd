@@ -1,0 +1,18 @@
+FROM hkjn/golang
+
+ARG goarch
+
+ENV CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=${goarch}
+
+RUN mkdir -p src/github.com/lightningnetwork && \
+    cd src/github.com/lightningnetwork && \
+    git clone https://github.com/lightningnetwork/lnd && \
+    cd lnd && \
+    go get -v github.com/Masterminds/glide && \
+    glide install && \
+    go install . ./cmd/...
+WORKDIR /home/go/bin
+ENTRYPOINT echo "Binaries available in $(pwd): $(ls -R)"
+	docker cp lnd-build:/home/go/lib .

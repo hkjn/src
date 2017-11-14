@@ -1,3 +1,3 @@
 # src
 
-Repo src holds some hkjn source code.
+Repo src holds some source code by hkjn.

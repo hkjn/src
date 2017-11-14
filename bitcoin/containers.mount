@@ -1,0 +1,7 @@
+[Mount]
+What=/dev/disk/by-id/scsi-0Google_PersistentDisk_persistent-disk-1-part1
+Where=/containers
+Type=xfs
+
+[Install]
+RequiredBy=local-fs.target
