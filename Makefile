@@ -1,3 +1,5 @@
+.PHONY : all blocksci bitcoin
+
 all: blocksci bitcoin
 
 blocksci:
