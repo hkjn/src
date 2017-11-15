@@ -37,3 +37,5 @@ RUN git clone https://github.com/citp/BlockSci.git && \
 
 RUN pip3 install --upgrade pip && \
     pip3 install --upgrade multiprocess psutil jupyter pycrypto matplotlib pandas dateparser
+
+ENTRYPOINT ["bash"]
