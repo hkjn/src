@@ -6,6 +6,12 @@ ENV CGO_ENABLED=0 \
     GOOS=linux \
     GOARCH=${goarch}
 
+# todo: drop once permission issues in hkjn/golang have been fixed.
+USER root
+RUN chown -R go:go /home/go
+USER go
+RUN pwd && ls -hsal
+
 RUN mkdir -p src/github.com/lightningnetwork && \
     cd src/github.com/lightningnetwork && \
     git clone https://github.com/lightningnetwork/lnd && \
@@ -15,4 +21,3 @@ RUN mkdir -p src/github.com/lightningnetwork && \
     go install . ./cmd/...
 WORKDIR /home/go/bin
 ENTRYPOINT echo "Binaries available in $(pwd): $(ls -R)"
-	docker cp lnd-build:/home/go/lib .
