@@ -30,4 +30,4 @@ push: do-push post-push
 
 do-push:
 	@echo "Pushing image.."
-	docker push $(IMAGE):$(VERSION)
+	docker push $(IMAGE):$(VERSION)-$(DOCKER_ARCH)
