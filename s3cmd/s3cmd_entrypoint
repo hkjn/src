@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -euo pipefail
+
+declare S3_ENDPOINT=${S3_ENDPOINT:-""}
+declare S3_KEY=${S3_KEY:-""}
+declare S3_SECRET=${S3_SECRET:-""}
+if [[ ! "${S3_ENDPOINT}" ]]; then
+	echo "FATAL: Unspecified S3_ENDPOINT." >&2		
+	exit 1
+fi
+if [[ ! "${S3_KEY}" ]]; then
+	echo "FATAL: Unspecified S3_KEY." >&2		
+	exit 1
+fi
+if [[ ! "${S3_SECRET}" ]]; then
+	echo "FATAL: Unspecified S3_SECRET." >&2		
+	exit 1
+fi
+
+# TODO: Fix config
+mkdir -p ${HOME}/.config/s3cmd
+cat << EOF > ${HOME}/.config/s3cmd/s3cmd.conf
+[spaces]
+type = s3
+env_auth = false
+access_key_id = ${S3_KEY}
+secret_access_key = ${S3_SECRET}
+endpoint = ${S3_ENDPOINT}
+acl = private
+EOF
+
+s3cmd $@

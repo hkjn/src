@@ -1,6 +1,6 @@
-.PHONY : all blocksci bitcoin golang
+.PHONY : all blocksci bitcoin golang s3cmd
 
-all: blocksci bitcoin golang
+all: blocksci bitcoin golang s3cmd
 
 blocksci:
 	@echo "Making blocksci.."
@@ -13,4 +13,8 @@ bitcoin:
 golang:
 	@echo "Making golang.."
 	$(MAKE) -C golang
+
+s3cmd:
+	@echo "Making s3cmd.."
+	$(MAKE) -C s3cmd
 
