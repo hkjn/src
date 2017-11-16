@@ -1,6 +1,6 @@
 include ../make/Makefile
-.DEFAULT_GOAL=push
 NAME=bitcoin
+VERSION=$(shell cat VERSION)
 
 pre-build:
 	@echo "Building bitcoin in container.."

@@ -1,11 +1,12 @@
 USERNAME=hkjn
-NAME=undefined
+NAME=undefined-name
+VERSION=undefined-version
 IMAGE=$(USERNAME)/$(NAME)
 MAKE_DIR=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 DOCKER_ARCH=$(shell bash $(MAKE_DIR)/../scripts/get_docker_arch)
-VERSION=$(shell cat VERSION)
 SHELL=/bin/bash
 
+.DEFAULT_GOAL=push
 .PHONY: pre-build docker-build post-build build	push do-push post-push
 
 build: pre-build docker-build post-build
@@ -26,7 +27,7 @@ docker-build:
 	@echo "Building image.."
 	docker build -t $(IMAGE):$(VERSION)-$(DOCKER_ARCH) .
 
-push: do-push post-push
+push: build do-push post-push
 
 do-push:
 	@echo "Pushing image.."
