@@ -1,5 +1,5 @@
 USERNAME=hkjn
-NAME=$(shell basename $(PWD))
+NAME=undefined
 IMAGE=$(USERNAME)/$(NAME)
 MAKE_DIR=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 DOCKER_ARCH=$(shell bash $(MAKE_DIR)/../scripts/get_docker_arch)

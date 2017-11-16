@@ -1,3 +1,4 @@
+NAME=bitcoin
 pre-build:
 	@echo "Building bitcoin in container.."
 	docker build --build-arg bitcoin_version=$(BITCOIN_VERSION) -t bitcoin-build -f Dockerfile.build .
