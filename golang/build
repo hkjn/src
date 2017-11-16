@@ -1,0 +1,47 @@
+set -euo pipefail
+
+declare DOCKER_USER="hkjn"
+declare DOCKER_IMAGE="golang"
+declare CPU_ARCH="$(uname -m)"
+declare VERSIONS="
+1.8.3
+1.9.2
+tip
+"
+declare NO_PUSH=${NO_PUSH:-""}
+declare -A DOCKER_ARCHS
+
+DOCKER_ARCHS["x86_64"]="amd64"
+DOCKER_ARCHS["armv7l"]="arm"
+
+declare DOCKER_ARCH=${DOCKER_ARCHS[${CPU_ARCH}]}
+
+if [[ ! ${DOCKER_ARCH} ]]; then
+	echo "FATAL: Unsupported CPU arch ${CPU_ARCH}." >&2
+        exit 1
+fi
+
+for VERSION in ${VERSIONS}; do
+	TAG="${DOCKER_USER}/${DOCKER_IMAGE}:${DOCKER_ARCH}-${VERSION}"
+	echo "Building ${TAG}.."
+	docker build -t ${TAG} -f Dockerfile.${VERSION} .
+done
+
+docker tag ${DOCKER_USER}/${DOCKER_IMAGE}:${DOCKER_ARCH}-1.9.2 ${DOCKER_USER}/${DOCKER_IMAGE}:${DOCKER_ARCH}
+
+if [[ ! "${NO_PUSH}" ]]; then
+	echo "Pushing images.."
+	for VERSION in ${VERSIONS}; do
+		TAG="${DOCKER_USER}/${DOCKER_IMAGE}:${DOCKER_ARCH}-${VERSION}"
+		docker push ${TAG}
+	done
+	docker push ${DOCKER_USER}/${DOCKER_IMAGE}:${DOCKER_ARCH}
+fi
+
+echo "Pushing multi-arch manifests.."
+for VERSION in ${VERSIONS}; do
+	docker run -v $HOME/.docker:/root/.docker:ro --rm hkjn/manifest-tool \
+	       push from-args --platforms linux/amd64,linux/arm \
+	                      --template ${DOCKER_USER}/${DOCKER_IMAGE}:ARCH-${VERSION} \
+	                      --target ${DOCKER_USER}/${DOCKER_IMAGE}:${VERSION}
+done

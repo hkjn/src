@@ -6,8 +6,10 @@ MAKE_DIR=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 DOCKER_ARCH=$(shell bash $(MAKE_DIR)/../scripts/get_docker_arch)
 SHELL=/bin/bash
 
-.DEFAULT_GOAL=push
+.DEFAULT_GOAL=all
 .PHONY: pre-build docker-build post-build build	push do-push post-push
+
+all: build push
 
 build: pre-build docker-build post-build
 
@@ -24,7 +26,7 @@ post-build:
 post-push:
 
 docker-build:
-	@echo "Building image.."
+	@echo "Building image $(IMAGE):$(VERSION)-$(DOCKER_ARCH).."
 	docker build -t $(IMAGE):$(VERSION)-$(DOCKER_ARCH) .
 
 push: build do-push post-push

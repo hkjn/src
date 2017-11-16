@@ -1,6 +1,6 @@
-.PHONY : all blocksci bitcoin
+.PHONY : all blocksci bitcoin golang
 
-all: blocksci bitcoin
+all: blocksci bitcoin golang
 
 blocksci:
 	@echo "Making blocksci.."
@@ -9,3 +9,8 @@ blocksci:
 bitcoin:
 	@echo "Making bitcoin.."
 	$(MAKE) -C bitcoin
+
+golang:
+	@echo "Making golang.."
+	$(MAKE) -C golang
+
