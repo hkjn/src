@@ -4,7 +4,7 @@ RUN apt-get -y update && \
     apt-get -y install build-essential cmake libssl-dev libboost-all-dev libsqlite3-dev autogen \
                autoconf git libleveldb-dev libcurl4-openssl-dev libjsoncpp-dev libjsonrpccpp-dev \
                libjsonrpccpp-tools python3-dev python3-pip software-properties-common \
-               python-software-properties && \
+               pkg-config python-software-properties && \
     add-apt-repository ppa:ubuntu-toolchain-r/test -y && \
     apt-get -y update && \
     apt-get -y install gcc-6 g++-6 && \
