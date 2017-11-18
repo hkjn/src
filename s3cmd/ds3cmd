@@ -3,6 +3,6 @@
 #
 docker run --rm -it -v $(pwd)/media:/media \
            -e S3_ENDPOINT=zdo.nyc3.digitaloceanspaces.com \
-           -e S3_KEY=$(cat ${HOME}/src/hkjn.me/hkjninfra/.digitalocean/digitalocean0_spaces_key) \
-           -e S3_SECRET=$(cat ${HOME}/src/hkjn.me/hkjninfra/.digitalocean/digitalocean0_spaces_secret) \
-       hkjn/s3cmd sync /media spaces:
+           -e S3_KEY=$(cat /etc/secrets/digitalocean/digitalocean0_spaces_key) \
+           -e S3_SECRET=$(cat /etc/secrets/digitalocean/digitalocean0_spaces_secret) \
+       hkjn/s3cmd:1.0.0 sync /media spaces:
