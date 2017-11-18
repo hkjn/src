@@ -23,13 +23,13 @@ post-build:
 		     -t $(IMAGE):$(VERSION)-$(DOCKER_ARCH) \
 		        $(IMAGE):$(VERSION)-$(DOCKER_ARCH)
 
+post-push:
 	@echo "Pushing multiarch manifest for $(IMAGE):$(VERSION)-$(DOCKER_ARCH).."
 	docker run -v ${HOME}/.docker:/root/.docker:ro --rm \
 	       hkjn/manifest-tool \
 	       push from-args --platforms linux/amd64,linux/arm \
 	                      --template ${DOCKER_USER}/${DOCKER_IMAGE}:ARCH-${VERSION} \
 	                      --target ${DOCKER_USER}/${DOCKER_IMAGE}:${VERSION}
-post-push:
 
 docker-build:
 	@echo "Building image $(IMAGE):$(VERSION)-$(DOCKER_ARCH).."
