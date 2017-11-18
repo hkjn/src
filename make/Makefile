@@ -16,13 +16,19 @@ build: pre-build docker-build post-build
 pre-build:
 
 post-build:
-	@echo "Squashing image $(IMAGE).."
+	@echo "Squashing image $(IMAGE):$(VERSION)-$(DOCKER_ARCH).."
 	docker run --rm \
 		   -v /var/run/docker.sock:/var/run/docker.sock \
 		   hkjn/docker-squash \
 		     -t $(IMAGE):$(VERSION)-$(DOCKER_ARCH) \
 		        $(IMAGE):$(VERSION)-$(DOCKER_ARCH)
 
+	@echo "Pushing multiarch manifest for $(IMAGE):$(VERSION)-$(DOCKER_ARCH).."
+	docker run -v ${HOME}/.docker:/root/.docker:ro --rm \
+	       hkjn/manifest-tool \
+	       push from-args --platforms linux/amd64,linux/arm \
+	                      --template ${DOCKER_USER}/${DOCKER_IMAGE}:ARCH-${VERSION} \
+	                      --target ${DOCKER_USER}/${DOCKER_IMAGE}:${VERSION}
 post-push:
 
 docker-build:
