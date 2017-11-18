@@ -28,8 +28,8 @@ post-push:
 	docker run -v ${HOME}/.docker:/root/.docker:ro --rm \
 	       hkjn/manifest-tool \
 	       push from-args --platforms linux/amd64,linux/arm \
-	                      --template ${DOCKER_USER}/${DOCKER_IMAGE}:ARCH-${VERSION} \
-	                      --target ${DOCKER_USER}/${DOCKER_IMAGE}:${VERSION}
+	                      --template $(IMAGE):$(VERSION)-ARCH \
+	                      --target $(IMAGE):$(VERSION)
 
 docker-build:
 	@echo "Building image $(IMAGE):$(VERSION)-$(DOCKER_ARCH).."
