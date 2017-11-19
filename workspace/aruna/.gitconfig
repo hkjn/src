@@ -1,0 +1,7 @@
+[user]
+	email = aruna@sultanyoga.com
+	name = aruna
+[push]
+	default = current
+[color]
+	ui = true

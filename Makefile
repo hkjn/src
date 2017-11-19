@@ -18,3 +18,7 @@ s3cmd:
 	@echo "Making s3cmd.."
 	$(MAKE) -C s3cmd
 
+workspace:
+	@echo "Making workspace.."
+	$(MAKE) -C workspace
+

@@ -1,0 +1,35 @@
+#
+# Start a workspace container for zero.
+#
+# If container already is running, attach to it.
+#
+declare BASE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+cd "${BASE}/.."
+source "logging.sh"
+source "tools.sh"
+
+declare VERSION=$(cat VERSION)
+declare NAME=workspace-$VERSION
+declare IMAGE=hkjn/workspace:$(uname -m)-zero-$VERSION
+
+if ! exists docker; then
+	fatal "No 'docker' found on PATH. This tool requires docker."
+fi
+
+if docker ps | grep -q "${NAME}$"; then
+	info "Container $NAME is already running, attaching..".
+	docker attach $NAME
+	exit 1
+fi
+
+if docker ps -a | grep -q "${NAME}$"; then
+	docker rm $NAME
+fi
+
+docker run --name $NAME -it \
+       --hostname=$(hostname)-workspace-$VERSION \
+       -p 60000-60020:60000-60020/udp \
+       -v $HOME/src/hkjn.me:/home/user/src/hkjn.me \
+       -v $HOME/.container_keys:/home/user/.container_keys \
+       $IMAGE

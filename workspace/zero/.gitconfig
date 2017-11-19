@@ -1,0 +1,12 @@
+[user]
+	email = me@hkjn.me
+	name = Henrik Jonsson
+	signingkey = 9A5FDC15
+[push]
+	default = current
+# TODO(hkjn): Re-enable color, if we can find why it shows up as
+# control characters and fix it.
+[color]
+	ui = false
+[core]
+	editor = vim
