@@ -1,6 +1,6 @@
-.PHONY : all blocksci bitcoin golang s3cmd
+.PHONY : all blocksci bitcoin golang s3cmd workspace
 
-all: blocksci bitcoin golang s3cmd
+all: blocksci bitcoin golang s3cmd workspace
 
 blocksci:
 	@echo "Making blocksci.."
