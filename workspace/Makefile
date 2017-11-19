@@ -1,3 +1,5 @@
+VERSION=$(shell cat ${HOME}/src/hkjn.me/src/workspace/VERSION)
+
 all: alpine aruna arch zero
 
 alpine:
