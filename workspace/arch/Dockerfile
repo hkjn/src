@@ -13,9 +13,10 @@ ENV UNPRIVILEGED_UID=1001 \
     GOOS=linux
 
 RUN pacman --noconfirm -Syy && \
-    pacman --noconfirm -S autoconf automake dnsutils emacs gcc git go make python openssh tmux unzip && \
-    useradd -m user -u $UNPRIVILEGED_UID -s /bin/bash && \
-    mkdir -p /usr/local/src/github.com/google && \
+    pacman --noconfirm -S autoconf automake dnsutils emacs icu gcc git go make python openssh tmux unzip && \
+    useradd -m user -u $UNPRIVILEGED_UID -s /bin/bash
+
+RUN mkdir -p /usr/local/src/github.com/google && \
     cd /usr/local/src/github.com/google && \
     git clone https://github.com/google/protobuf && \
     cd protobuf && \
