@@ -1,0 +1,8 @@
+#
+# Install make in /opt/bin via docker container.
+#
+set -euo pipefail
+docker run -ti --rm \
+           -v /opt/bin:/out \
+       ubuntu:15.04 \
+         bash -c "apt-get -y update && apt-get -y install make && cp /usr/bin/make /out/make"
