@@ -5,6 +5,7 @@ set -euo pipefail
 declare S3_ENDPOINT=${S3_ENDPOINT:-""}
 declare S3_KEY=${S3_KEY:-""}
 declare S3_SECRET=${S3_SECRET:-""}
+declare S3_GPG_PASS=${S3_GPG_PASS:-""}
 if [[ ! "${S3_ENDPOINT}" ]]; then
 	echo "FATAL: Unspecified S3_ENDPOINT." >&2
 	exit 1
@@ -15,6 +16,10 @@ if [[ ! "${S3_KEY}" ]]; then
 fi
 if [[ ! "${S3_SECRET}" ]]; then
 	echo "FATAL: Unspecified S3_SECRET." >&2
+	exit 1
+fi
+if [[ ! "${S3_GPG_PASS}" ]]; then
+	echo "FATAL: Unspecified S3_GPG_PASS." >&2
 	exit 1
 fi
 
