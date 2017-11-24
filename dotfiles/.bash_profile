@@ -214,3 +214,19 @@ fi
 if [[ "${HOME}/.bash_profile_extra" ]]; then
 	source "${HOME}/.bash_profile_extra"
 fi
+
+kill_other_mosh_sessions() {
+	local pids
+	pids=$(pgrep mosh-server | grep -v $(ps -o ppid --no-headers $$))
+	if [[ "${pids}" ]]; then
+		kill ${pids}
+	fi
+}
+
+# Kill any other mosh sessions that might be lingering.
+kill_other_mosh_sessions
+
+# If not already in tmux session, attach to it.
+if [[ ! "$TMUX" ]]; then
+       tmux attach
+fi
