@@ -13,6 +13,7 @@ ExecStart=/bin/bash -c " \
              --cpu-shares=128 \
              -v /containers/bitcoin:/home/bitcoin/.bitcoin \
              hkjn/bitcoin -dbcache=800 -onlynet=ipv4 -printtoconsole"
+TimeoutStopSec=1000
 Restart=always
 
 [Install]
