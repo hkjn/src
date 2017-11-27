@@ -11,7 +11,7 @@ ExecStart=/bin/bash -c " \
              -p 8333:8333 \
              --memory=1050m \
              --cpu-shares=128 \
-             -v /containers/bitcoin:/home/bitcoin/.bitcoin \
+             -v /crypt/bitcoin:/home/bitcoin/.bitcoin \
              hkjn/bitcoin -dbcache=800 -onlynet=ipv4 -printtoconsole"
 TimeoutStopSec=1000
 Restart=always
