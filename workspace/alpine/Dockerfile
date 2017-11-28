@@ -10,6 +10,7 @@ ENV LANG=en_US.UTF-8 \
 
 USER root
 RUN apk add --no-cache bash bind-tools curl coreutils file git python3 mosh openssh tmux vim
+RUN echo "Welcome to your workspace." > /etc/motd
 
 USER go
 
@@ -18,9 +19,7 @@ USER go
 WORKDIR /home/go
 
 COPY [".bash_profile", "./"]
-RUN echo "source ~/.bash_profile" > .bashrc && \
-#    chown -R go:go /home/go && \
-    echo "Welcome to your workspace." > /etc/motd
+RUN echo "source ~/.bash_profile" > .bashrc
 
 RUN go get github.com/golang/lint/golint \
            golang.org/x/tools/cmd/goimports \
