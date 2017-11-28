@@ -11,6 +11,7 @@ ENV LANG=en_US.UTF-8 \
 USER root
 RUN apk add --no-cache bash bind-tools curl coreutils file git python3 mosh openssh tmux vim
 RUN echo "Welcome to your workspace." > /etc/motd
+RUN chown -R go:go /home/go
 
 USER go
 
