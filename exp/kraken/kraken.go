@@ -67,7 +67,7 @@ func query(api *krakenapi.KrakenApi) (ticker *krakenapi.TickerResponse, balance 
 	}
 	for i := 0; i < maxRetries; i++ {
 		if i > 0 {
-			prefix = fmt.Sprintf("[retry %d]", i)
+			prefix = fmt.Sprintf("[retry %d] ", i)
 		}
 		fmt.Printf("%sFetching all account balances..\n", prefix)
 		balance, err = api.Balance()
