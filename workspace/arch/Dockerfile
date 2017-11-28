@@ -13,7 +13,7 @@ ENV UNPRIVILEGED_UID=1001 \
     GOOS=linux
 
 RUN pacman --noconfirm -Syy && \
-    pacman --noconfirm -S autoconf emacs git go make g++ python openssh tmux unzip && \
+    pacman --noconfirm -S autoconf emacs gcc git go make python openssh tmux unzip && \
     useradd -m user -u $UNPRIVILEGED_UID -s /bin/bash
 
 # TODO: Could alternatively take $(id -u) and $(id -g) at run time,
