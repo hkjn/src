@@ -420,19 +420,23 @@ func (api *KrakenApi) doRequest(reqURL string, values url.Values, headers map[st
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("Could not execute request! #3 (Unexpected response status %q, want \"200 %s\")", resp.Status, http.StatusText(http.StatusOK))
+	}
 	// Read request
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("Could not execute request! #3 (%s)", err.Error())
+		return nil, fmt.Errorf("Could not execute request! #4 (%s)", err.Error())
 	}
 
 	// Check mime type of response
 	mimeType, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
 	if err != nil {
-		return nil, fmt.Errorf("Could not execute request #4! (%s)", err.Error())
+		return nil, fmt.Errorf("Could not execute request #5! (%s)", err.Error())
 	}
 	if mimeType != "application/json" {
-		return nil, fmt.Errorf("Could not execute request #5! (%s)", fmt.Sprintf("Response Content-Type is '%s', but should be 'application/json'.", mimeType))
+		msg := fmt.Sprintf("Response Content-Type is '%s', but should be 'application/json': %q.", mimeType, string(body))
+		return nil, fmt.Errorf("Could not execute request #6! (%s)", msg)
 	}
 
 	// Parse request
