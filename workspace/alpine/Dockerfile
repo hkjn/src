@@ -9,8 +9,8 @@ ENV LANG=en_US.UTF-8 \
     GOOS=linux
 
 USER root
-RUN apk add --no-cache autoconf bash bind-tools curl coreutils file git \
-                       python3 mosh openssh tmux vim
+RUN apk add --no-cache autoconf bash bind-tools curl coreutils file git g++ \
+                       make mosh python3 openssh tmux vim
 RUN chown -R go:go /home/go
 
 USER go
