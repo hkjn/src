@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"text/tabwriter"
+	"time"
 
 	"github.com/beldur/kraken-go-api-client"
 )
@@ -55,7 +57,7 @@ func descBalance(r *krakenapi.BalanceResponse) []balance {
 }
 
 func query(api *krakenapi.KrakenApi) (resp *response, err error) {
-	maxRetries := 5
+	maxRetries := 10
 	prefix := ""
 	resp = &response{}
 	for i := 0; i < maxRetries; i++ {
@@ -70,6 +72,7 @@ func query(api *krakenapi.KrakenApi) (resp *response, err error) {
 			break
 		}
 		fmt.Printf("Failed to fetch ticker, retrying: %v\n", err)
+		time.Sleep(time.Second * time.Duration(i))
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch ticker too many times: %v", err)
@@ -87,6 +90,7 @@ func query(api *krakenapi.KrakenApi) (resp *response, err error) {
 			break
 		}
 		fmt.Printf("Failed to fetch balance, retrying: %v\n", err)
+		time.Sleep(time.Second * time.Duration(i))
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch account balances too many times: %v", err)
@@ -104,6 +108,7 @@ func query(api *krakenapi.KrakenApi) (resp *response, err error) {
 			break
 		}
 		fmt.Printf("Failed to fetch open orders, retrying: %v\n", err)
+		time.Sleep(time.Second * time.Duration(i))
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch open orders too many times: %v", err)
@@ -121,6 +126,7 @@ func query(api *krakenapi.KrakenApi) (resp *response, err error) {
 			break
 		}
 		fmt.Printf("Failed to fetch closed orders, retrying: %v\n", err)
+		time.Sleep(time.Second * time.Duration(i))
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch closed orders too many times: %v", err)
@@ -153,22 +159,50 @@ func main() {
 	}
 	w.Flush()
 
-	if resp.openOrders.Count == 0 {
-		// TODO: Figure out why sometimes response can have .Count = 0, and still .Open contains orders..:w
+	i := 0
+	orders := make([]krakenapi.Order, len(resp.openOrders.Open), len(resp.openOrders.Open))
+	for _, o := range resp.openOrders.Open {
+		orders[i] = o
+		i += 1
+	}
+	sort.Slice(orders, func(i, j int) bool {
+		return orders[i].OpenT.After(orders[j].OpenT)
+	})
+	fmt.Println("")
+	if len(resp.openOrders.Open) == 0 {
 		fmt.Println("No open orders.")
 	} else {
 		fmt.Println("Open orders:")
 	}
-	for s, o := range resp.openOrders.Open {
-		fmt.Printf("%s: %v\n", s, o)
+	for i, o := range orders {
+		if i >= 10 {
+			break
+		}
+		fmt.Printf("%v: %s of %s, %s %v order @ %s BTC (or whatever)\n",
+			o.OpenT, o.Description.Type, o.Description.AssetPair, o.Status, o.Description.OrderType, o.Description.PrimaryPrice)
 	}
 
-	if resp.closedOrders.Count == 0 {
+	fmt.Println("")
+	if len(resp.closedOrders.Closed) == 0 {
 		fmt.Println("No closed orders.")
 	} else {
 		fmt.Println("Closed orders:")
 	}
-	for s, o := range resp.closedOrders.Closed {
-		fmt.Printf("%s: %s (%s)\n", s, o.TransactionID, o.Status)
+
+	i = 0
+	orders = make([]krakenapi.Order, len(resp.closedOrders.Closed), len(resp.closedOrders.Closed))
+	for _, o := range resp.closedOrders.Closed {
+		orders[i] = o
+		i += 1
+	}
+	sort.Slice(orders, func(i, j int) bool {
+		return orders[i].CloseT.After(orders[j].CloseT)
+	})
+	for i, o := range orders {
+		if i >= 10 {
+			break
+		}
+		fmt.Printf("%v: %s of %s, status %s for reason %s, cost %v EUR (or whatever), volume executed %v BTC (or whatever)\n",
+			o.CloseT, o.Description.Type, o.Description.AssetPair, o.Status, o.Reason, o.Cost, o.VolumeExecuted)
 	}
 }
