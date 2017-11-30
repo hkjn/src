@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"mime"
 	"net/http"
 	"net/url"
@@ -219,8 +220,14 @@ func (api *KrakenApi) OpenOrders(args map[string]string) (*OpenOrdersResponse, e
 	if err != nil {
 		return nil, err
 	}
-
-	return resp.(*OpenOrdersResponse), nil
+	r := resp.(*OpenOrdersResponse)
+	for oid, o := range r.Open {
+		sec, dec := math.Modf(o.OpenTime)
+		o := o
+		o.OpenT = time.Unix(int64(sec), int64(dec))
+		r.Open[oid] = o
+	}
+	return r, nil
 }
 
 // ClosedOrders returns all closed orders
@@ -249,8 +256,14 @@ func (api *KrakenApi) ClosedOrders(args map[string]string) (*ClosedOrdersRespons
 	if err != nil {
 		return nil, err
 	}
-
-	return resp.(*ClosedOrdersResponse), nil
+	r := resp.(*ClosedOrdersResponse)
+	for oid, o := range r.Closed {
+		sec, dec := math.Modf(o.CloseTime)
+		o := o
+		o.CloseT = time.Unix(int64(sec), int64(dec))
+		r.Closed[oid] = o
+	}
+	return r, nil
 }
 
 // Depth returns the order book for given pair and orders count.
@@ -420,9 +433,11 @@ func (api *KrakenApi) doRequest(reqURL string, values url.Values, headers map[st
 	}
 	defer resp.Body.Close()
 
+	// Check response status
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("Could not execute request! #3 (Unexpected response status %q, want \"200 %s\")", resp.Status, http.StatusText(http.StatusOK))
 	}
+
 	// Read request
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -448,6 +463,7 @@ func (api *KrakenApi) doRequest(reqURL string, values url.Values, headers map[st
 		jsonData.Result = typ
 	}
 
+	// fmt.Printf("FIXMEH: raw body: %s\n", string(body))
 	err = json.Unmarshal(body, &jsonData)
 	if err != nil {
 		return nil, fmt.Errorf("Could not execute request! #6 (%s)", err.Error())

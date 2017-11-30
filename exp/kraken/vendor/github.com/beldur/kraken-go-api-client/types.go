@@ -3,6 +3,7 @@ package krakenapi
 import (
 	"encoding/json"
 	"strconv"
+	"time"
 )
 
 const (
@@ -386,11 +387,12 @@ type OrderDescription struct {
 
 // Order represents a single order
 type Order struct {
-	TransactionID  string           `json:"-"`
-	ReferenceID    string           `json:"refid"`
-	UserRef        string           `json:"userref"`
-	Status         string           `json:"status"`
-	OpenTime       float64          `json:"opentm"`
+	TransactionID  string  `json:"-"`
+	ReferenceID    string  `json:"refid"`
+	UserRef        string  `json:"userref"`
+	Status         string  `json:"status"`
+	OpenTime       float64 `json:"opentm"`
+	OpenT          time.Time
 	StartTime      float64          `json:"starttm"`
 	ExpireTime     float64          `json:"expiretm"`
 	Description    OrderDescription `json:"descr"`
@@ -404,7 +406,8 @@ type Order struct {
 	Misc           string           `json:"misc"`
 	OrderFlags     string           `json:"oflags"`
 	CloseTime      float64          `json:"closetm"`
-	Reason         string           `json:"reason"`
+	CloseT         time.Time
+	Reason         string `json:"reason"`
 }
 
 // ClosedOrdersResponse represents a list of closed orders, indexed by id
