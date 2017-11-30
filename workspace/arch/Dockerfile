@@ -12,9 +12,9 @@ ENV UNPRIVILEGED_UID=1001 \
     CGO_ENABLED=0 \
     GOOS=linux
 
-RUN pacman --noconfirm -Syy && \
-    pacman --noconfirm -S emacs git go python openssh tmux unzip && \
-    useradd -m user -u $UNPRIVILEGED_UID -s /bin/bash
+RUN pacman --noconfirm -Syy
+RUN pacman --noconfirm -S emacs git go python openssh tmux unzip
+RUN useradd -m user -u $UNPRIVILEGED_UID -s /bin/bash
 
 # TODO: Could alternatively take $(id -u) and $(id -g) at run time,
 # then create user in entrypoint script which then hands off to bash..
