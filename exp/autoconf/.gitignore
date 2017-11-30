@@ -1,0 +1,7 @@
+/Makefile
+/autom4te.cache/
+/config.log
+/configure
+/config.status
+/program
+/program.o

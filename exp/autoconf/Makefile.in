@@ -1,0 +1,16 @@
+# This is Makefile.in, which autoconf uses to generate Makefile.
+#
+# The @CXX@ below is a template, which is replaced with the CXX value, default g++, can
+# be overridden with e.g ./configure CXX=g++-5 && make.
+CXX=@CXX@
+LD=@CXX@
+CXXFLAGS=@CXXFLAGS@
+LDFLAGS=@LDFLAGS@
+LIBS=@LIBS@
+
+program: program.o
+	        $(LD) -o $@ $^ $(LDFLAGS) $(LIBS)
+
+.PHONY: clean
+clean:
+	rm -f program *.o
