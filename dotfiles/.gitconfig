@@ -1,0 +1,12 @@
+[user]
+        email = me@hkjn.me
+        name = Henrik Jonsson
+#        signingkey = 9A5FDC15
+[push]
+        default = current
+[color]
+        ui = true
+[core]
+        editor = vim
+[branch]
+        autosetuprebase = always
