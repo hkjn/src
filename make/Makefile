@@ -15,6 +15,10 @@ build: pre-build docker-build post-build
 
 pre-build:
 
+docker-build:
+	@echo "Building image $(IMAGE):$(VERSION)-$(DOCKER_ARCH).."
+	docker build -t $(IMAGE):$(VERSION)-$(DOCKER_ARCH) .
+
 post-build:
 	@echo "Squashing image $(IMAGE):$(VERSION)-$(DOCKER_ARCH).."
 	docker run --rm \
@@ -23,6 +27,8 @@ post-build:
 		     -t $(IMAGE):$(VERSION)-$(DOCKER_ARCH) \
 		        $(IMAGE):$(VERSION)-$(DOCKER_ARCH)
 
+push: build do-push post-push
+
 post-push:
 	@echo "Pushing multiarch manifest for $(IMAGE):$(VERSION)-$(DOCKER_ARCH).."
 	docker run -v ${HOME}/.docker:/root/.docker:ro --rm \
@@ -30,12 +36,6 @@ post-push:
 	       push from-args --platforms linux/amd64,linux/arm \
 	                      --template $(IMAGE):$(VERSION)-ARCH \
 	                      --target $(IMAGE):$(VERSION)
-
-docker-build:
-	@echo "Building image $(IMAGE):$(VERSION)-$(DOCKER_ARCH).."
-	docker build -t $(IMAGE):$(VERSION)-$(DOCKER_ARCH) .
-
-push: build do-push post-push
 
 do-push:
 	@echo "Pushing image.."
