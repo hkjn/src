@@ -199,7 +199,7 @@ func main() {
 		return orders[i].CloseT.After(orders[j].CloseT)
 	})
 	for i, o := range orders {
-		if i >= 10 {
+		if i >= 5 {
 			break
 		}
 		fmt.Printf("%v: %s of %s, status %s for reason %s, cost %v EUR (or whatever), volume executed %v BTC (or whatever)\n",
