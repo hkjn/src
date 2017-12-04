@@ -129,16 +129,11 @@ xterm*|rxvt*)
 esac
 
 # Pull in useful functions.
-BASH_FUNCS="$HOME/src/hkjn.me/scripts/bash_funcs.sh"
+BASH_FUNCS="$HOME/src/hkjn.me/src/scripts/bash_funcs.sh"
 if [ -e "$BASH_FUNCS" ]; then
   source "$BASH_FUNCS"
 else
 	echo "No '$BASH_FUNCS' found. Try 'go get hkjn.me/scripts'?"
-fi
-
-KLARNA_BASH="$HOME/src/stash.int.klarna.net/henrik.jonsson/hacks/klarna_bash.sh"
-if [ -e "$KLARNA_BASH" ]; then
-  source "$KLARNA_BASH"
 fi
 
 # enable color support of ls and also add handy aliases
