@@ -130,8 +130,8 @@ esac
 
 # Pull in useful functions.
 BASH_FUNCS="$HOME/src/hkjn.me/src/scripts/bash_funcs.sh"
-if [ -e "$BASH_FUNCS" ]; then
-  source "$BASH_FUNCS"
+if [[ -e "$BASH_FUNCS" ]]; then
+	source "$BASH_FUNCS"
 else
 	echo "No '$BASH_FUNCS' found. Try 'go get hkjn.me/scripts'?"
 fi
@@ -171,7 +171,7 @@ export LANG="en_US.UTF-8"
 export LC_CTYPE="en_US.UTF-8"
 export EDITOR=nano
 export GOPATH=${HOME}
-export PATH=/usr/local/go/bin:/usr/local/homebrew/opt/gnu-tar/libexec/gnubin:/usr/local/homebrew/opt/curl/bin:/usr/local/homebrew/bin:/usr/local/homebrew/sbin:/usr/local/homebrew/Cellar/coreutils/8.25/libexec/gnubin/:${GOPATH}/src/hkjn.me/scripts:${GOPATH}/src/hkjn.me/scripts/tools:${GOPATH}/src/hkjn.me/ironkey:${HOME}/bin:.:$PATH
+export PATH=/usr/local/go/bin:/usr/local/homebrew/opt/gnu-tar/libexec/gnubin:/usr/local/homebrew/opt/curl/bin:/usr/local/homebrew/bin:/usr/local/homebrew/sbin:/usr/local/homebrew/Cellar/coreutils/8.25/libexec/gnubin/:${GOPATH}/src/hkjn.me/src/scripts:${GOPATH}/src/hkjn.me/src/scripts/tools:${GOPATH}/src/hkjn.me/ironkey:${HOME}/bin:.:$PATH
 export PYTHONPATH=.:..
 
 # When running nmon, by default show:
