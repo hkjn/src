@@ -1,0 +1,5 @@
+{
+	"color": "gray",
+	"ossified": "unfortunately",
+	"sender": "static test version of facts.json file used by default in dev; set REPORT_FACTS_PATH to specify a different one"
+}

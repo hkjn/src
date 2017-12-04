@@ -1,0 +1,12 @@
+*.swp
+terraform.tfstate.backup
+.gcp/
+.digitalocean/
+.scaleway/
+.keys/
+.terraform.d/
+.terraform/
+?.?.?.sha512
+terraform.tfvars
+telemetry/bin/
+/SHA512SUMS

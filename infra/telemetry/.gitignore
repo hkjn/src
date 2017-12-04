@@ -1,0 +1,5 @@
+*.sw?
+/tclient_*
+/tserver_*
+/SHA512SUMS
+/certs

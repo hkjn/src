@@ -1,0 +1,31 @@
+#
+# Download and install latest version of server binary.
+#
+set -euo pipefail
+
+declare BASE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "${BASE}"
+declare VERSION="$(cat ../VERSION)"
+declare INFRA_RELEASE_URL="https://github.com/hkjn/hkjninfra/releases/download/${VERSION}"
+declare WORK_DIR="/tmp/telemetry_${VERSION}"
+declare CPU_ARCH=$(uname -m)
+source "../logging.sh"
+
+mkdir -p ${WORK_DIR}
+cd ${WORK_DIR}
+
+info "Fetching version ${VERSION}.."
+curl --progress-bar -fSLO ${INFRA_RELEASE_URL}/tserver_${CPU_ARCH}
+if [[ ! -d /opt/bin ]]; then
+	info "Creating /opt/bin.."
+	sudo mkdir -p /opt/bin
+fi
+info "Installing binary to /usr/local/bin/tserver.."
+sudo install tserver_${CPU_ARCH} /usr/local/bin/tserver
+
+if [[ ! -f /etc/systemd/system/tserver.service ]]; then
+	info "Installing and starting tserver.service unit.."
+	sudo cp ${BASE}/telemetry/tserver.service /etc/systemd/system/
+	sudo systemctl daemon-reload
+	sudo systemctl start tserver.service
+fi

@@ -1,0 +1,26 @@
+#
+# Build telemetry binaries in Docker container.
+#
+set -euo pipefail
+
+declare BASE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+cd ${BASE_DIR}
+declare VERSION=$(cat ../VERSION)
+
+echo "Building telemetry in container...."
+
+docker build --build-arg version=${VERSION} -t telemetry-build .
+echo "Running tbuild container.."
+docker run --name tbuild telemetry-build
+echo "Removing bin.."
+rm -rf bin/
+docker cp tbuild:/home/go/bin/ $(pwd)
+docker rm tbuild
+mv -v bin/tclient* bin/tserver* bin/SHA512SUMS .
+if ldd tclient*; then
+	echo "FATAL: tclient binaries should be statically linked" >&2
+	exit 1
+fi
+mv -v bin/report/*.pb.go report/
+docker rmi telemetry-build

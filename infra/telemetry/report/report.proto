@@ -1,0 +1,74 @@
+//
+// The report.proto file defines the protocol buffer messages used for reporting
+// nodes to a server.
+//
+syntax = "proto3";
+
+package report;
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+// Set some options necessary to generate .java classes from the .proto.
+option java_multiple_files = true;
+option java_package = "me.hkjn.hkjninfra.telemetry.report";
+option java_outer_classname = "Report";
+
+// ReportRequest describes the request to report in from a client.
+message ReportRequest {
+	google.protobuf.Timestamp ts = 2;
+	ClientInfo info = 3;
+}
+
+// ReportResponse describes the response from the server when a client reports in.
+message ReportResponse {
+	string message = 1;
+}
+
+// InfoRequest describes a request to look up info on known clients.
+message InfoRequest {}
+
+// DiskInfo describes info on one disk partition.
+message DiskInfo {
+	string source = 1;
+	string size = 2;
+	string percent_used = 3;
+	string target = 4;
+}
+
+// ClientInfo describes info for one client.
+message ClientInfo {
+	string id = 13;
+	string allowed_ssh_keys = 1;
+	string cpu_arch = 2;
+	repeated DiskInfo disks = 3; 
+	string hostname = 4;
+	string kernel_name = 5;
+	string kernel_version = 6;
+	string cpu_architecture = 7;
+	string platform = 8;
+	string memory_total_mb = 9;
+	string memory_avail_mb = 10;
+	repeated string tags = 11;
+	string zone = 12;
+}
+
+// InfoResponse describes a response for info on known clients.
+message InfoResponse {
+       // The info field describes each known client and their info.
+       map<string, ClientInfo> info = 1;
+}
+
+// The Report service definition.
+service Report {
+	// Send report to server.
+	rpc Send(ReportRequest) returns (ReportResponse) {
+          option (google.api.http) = {
+            post: "/v1/telemetry/report"
+            body: "*"
+          };
+        }
+	// Query for info on known clients.
+	rpc Info(InfoRequest) returns (InfoResponse) {}
+}
+

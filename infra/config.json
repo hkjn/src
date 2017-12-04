@@ -1,0 +1,82 @@
+{
+	"projects": {
+		"bitcoin": {
+			"units": [
+				"bitcoin.service",
+				"containers.mount"
+			],
+			"dropins": [
+				{
+					"unit": "docker.service",
+					"dropin": "10_override_storage.conf"
+				}
+			]
+		},
+		"hkjninfra": {
+			"units": [
+				"tclient.service",
+				"tclient.timer"
+			],
+			"files": [
+				{
+					"name": "gather_facts",
+					"path": "/opt/bin/gather_facts"
+				}, {
+					"name": "tclient_x86_64",
+					"path": "/opt/bin/tclient"
+				}
+			],
+			"secrets": [
+				{
+					"name": "client.pem",
+					"path": "/etc/ssl/client.pem"
+				}, {
+					"name": "client-key.pem",
+					"path": "/etc/ssl/client-key.pem"
+				}, {
+					"name": "mon_ca.pem",
+					"path": "/etc/ssl/mon_ca.pem"
+				}
+			]
+		},
+		"decenter.world": {
+			"units": [
+				"decenter.service",
+				"decenter_redirector.service",
+				"etc-secrets.mount"
+			],
+			"files": [
+				{
+					"name": "decenter_world_x86_64",
+					"path": "/opt/bin/decenter_world"
+				}, {
+					"name": "decenter_redirector_x86_64",
+					"path": "/opt/bin/decenter_redirector"
+				}
+			]
+		}
+	},
+	"nodes": {
+		"builder": {
+			"arch": "x86_64",
+			"projects": [
+				{
+					"name": "hkjninfra",
+					"version": "1.5.13"
+				}
+			]
+		},
+		"decenter_world": {
+			"arch": "x86_64",
+			"projects": [
+				{
+					"name": "hkjninfra",
+					"version": "1.5.13"
+				}, {
+					"name": "decenter.world",
+					"version": "1.1.8"
+				}
+			]
+		}
+	}
+}

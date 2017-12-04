@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+#
+# Build secretservice binaries in Docker container.
+#
+
+set -euo pipefail
+
+declare BASE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+cd ${BASE_DIR}
+echo "Building ssbuild.."
+docker build -t secretservice-build .
+echo "Running ssbuild container.."
+docker run --name ssbuild --entrypoint sh secretservice-build
+echo "Copying out binaries from container.."
+rm -rf bin/
+docker cp ssbuild:/home/go/bin $(pwd)
+docker rm ssbuild
+mv -v bin/secretservice* bin/SHA512SUMS .
+rm -rf bin/
+docker rmi secretservice-build

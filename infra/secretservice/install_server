@@ -1,0 +1,20 @@
+#
+# Download and install latest version of secretservice binary.
+#
+set -euo pipefail
+
+declare BASE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "${BASE}"
+declare VERSION="$(cat ../VERSION)"
+declare INFRA_RELEASE_URL="https://github.com/hkjn/hkjninfra/releases/download/${VERSION}"
+declare WORK_DIR="/tmp/secretservice_${VERSION}"
+declare CPU_ARCH=$(uname -m)
+source "../logging.sh"
+
+mkdir -p ${WORK_DIR}
+cd ${WORK_DIR}
+
+info "Fetching version ${VERSION}.."
+curl --progress-bar -fSLO ${INFRA_RELEASE_URL}/secretservice_${CPU_ARCH}
+info "Installing binary to /usr/local/bin/secretservice.."
+sudo install secretservice_${CPU_ARCH} /opt/bin/secretservice

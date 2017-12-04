@@ -1,0 +1,19 @@
+[Unit]
+Description=bitcoind
+After=network-online.target
+
+[Service]
+ExecStartPre=-/bin/bash -c "docker pull hkjn/bitcoin:$(uname -m)"
+ExecStartPre=-/usr/bin/docker stop bitcoin
+ExecStartPre=-/usr/bin/docker rm bitcoin
+ExecStart=/bin/bash -c " \
+  docker run --name bitcoin \
+             -p 8333:8333 \
+             --memory=1050m \
+             --cpu-shares=128 \
+             -v /containers/bitcoin:/home/bitcoin/.bitcoin \
+             hkjn/bitcoin:$(uname -m) -dbcache=800 -onlynet=ipv4 -printtoconsole"
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

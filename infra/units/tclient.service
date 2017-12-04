@@ -1,0 +1,16 @@
+[Unit]
+Description=tclient
+After=network-online.target
+
+[Service]
+Environment=REPORT_ADDR=mon.hkjn.me:50051
+Environment=REPORT_FACTS_PATH=/etc/report_facts.json
+Environment=REPORT_TLS_CA_CERT=/etc/ssl/mon_ca.pem
+Environment=REPORT_TLS_CERT=/etc/ssl/client.pem
+Environment=REPORT_TLS_KEY=/etc/ssl/client-key.pem
+
+ExecStartPre=-/bin/bash -c "/opt/bin/gather_facts > /etc/report_facts.json"
+ExecStart=/opt/bin/tclient
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,124 @@
+#
+# Push a release of the project.
+#
+set -euo pipefail
+
+declare BASE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "${BASE}"
+declare VERSION="$(cat VERSION)"
+declare COMMIT=$(git log -1 --pretty=format:"%h")
+declare COMMIT_MSG=$(git log --format=%B -n 1)
+declare PROJECT="hkjninfra"
+declare GITHUB_TOKEN=$(cat /etc/secrets/github/release_token)
+declare SLACK_TOKEN=$(cat /etc/secrets/slack/token.asc)
+export SLACK_TOKEN=${SLACK_TOKEN}
+declare GITHUB_API_URL="https://api.github.com/repos/hkjn/${PROJECT}/releases"
+declare LINK_URL="https://github.com/hkjn/${PROJECT}/releases/tag"
+
+source "logging.sh"
+source "slack.sh"
+
+preflight_checks() {
+	[[ "$GITHUB_TOKEN" ]] || {
+		fatal "No GITHUB_TOKEN available."
+	}
+	[[ "$SLACK_TOKEN" ]] || {
+		fatal "No SLACK_TOKEN available."
+	}
+
+	info "About to release v${VERSION} of ${PROJECT} at $COMMIT: '$COMMIT_MSG'."
+	confirm
+}
+
+build_binaries() {
+	info "Building telemetry binaries.."
+	bash telemetry/build
+	info "Building secretservice binaries.."
+	bash secretservice/build
+}
+
+create_tag() {
+	# TODO: Verify repo is in clean state, as repo_report would see it, before tagging and releasing.
+	info "Syncing down changes from remote.."
+	git pull
+	info "Pushing any changes to remote.."
+	git push
+	info "Tagging $VERSION at $COMMIT.."
+	git tag $VERSION $COMMIT
+	git push origin --tags
+}
+
+json_escape () {
+    echo "${1}" | python -c 'import json,sys; print(json.dumps(sys.stdin.read()))'
+}
+
+create_release() {
+	info "Creating release.."
+	local payload
+	payload=$(cat <<EOT
+{
+  "tag_name": "$VERSION",
+  "name": "$VERSION",
+  "body": $(json_escape "$COMMIT_MSG"),
+  "draft": false,
+  "prerelease": false
+}
+EOT
+)
+	local response
+	response=$(curl -s \
+	    -H "Content-type: application/json" \
+	    -H "Accept: application/vnd.github.v3+json" \
+	    -H "Authorization: token ${GITHUB_TOKEN}" \
+	    --data "${payload}" \
+	  ${GITHUB_API_URL})
+
+	debugV "Response is: ${response}"
+	local url
+	# TODO: Could dockerize release tools, since curl / jq might not be installed..
+	url=$(echo "${response}" | jq -r ".upload_url")
+	[[ "${url}" ]] && [[ "${url}" != "null" ]] || fatal "Couldn't get upload_url from Github response: ${response}"
+	debugV "URL is '${url}'"
+	export URL=${url%\{?name,label\}}
+	debugV "Stripped url is '${URL}'"
+}
+
+upload() {
+	[[ $# -ne 2 ]] && fatal "usage: upload file url"
+	[[ -e ${1} ]] || fatal "No such file to upload: ${1}"
+	info "Uploading $1 to $2.."
+	local response
+	response=$(curl \
+	  -H "Content-type: application/octet-stream" \
+	  -H "Accept: application/vnd.github.v3+json" \
+	  -H "Authorization: token $GITHUB_TOKEN" \
+	  --data-binary @${1} \
+	  --progress-bar \
+	  "${2}?name=${1}" | tee /dev/null)
+	debugV "Upload response for $1: $response"
+	[[ ${PIPESTATUS[0]} -eq 0 ]] || fatal "Failed to upload $1"
+}
+
+preflight_checks
+build_binaries
+create_tag
+create_release
+
+upload mon_ca.pem ${URL}
+
+rm -f SHA512SUMS
+cd telemetry/
+upload tclient_x86_64 ${URL}
+upload tserver_x86_64 ${URL}
+upload tclient_armv7l ${URL}
+upload tserver_armv7l ${URL}
+upload gather_facts ${URL}
+cat SHA512SUMS > ../SHA512SUMS
+
+cd ../secretservice
+upload secretservice ${URL}
+cat SHA512SUMS >> ../SHA512SUMS
+cd ../
+upload SHA512SUMS ${URL}
+
+slacksend "Released \`${PROJECT}\` v${VERSION}: ${LINK_URL}/${VERSION}"

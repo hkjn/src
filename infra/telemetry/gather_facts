@@ -1,0 +1,74 @@
+#
+# Gather facts around the environment and output them in JSON format.
+#
+declare GCP_METADATA_URL="http://metadata.google.internal/computeMetadata/v1/instance"
+declare DISKS="${DISKS:-"{}"}"
+declare ID="${ID:-$(hostname)}"
+declare PLATFORM="${PLATFORM:-"unknown"}"
+declare NAME="${NAME:-"unknown"}"
+declare MACHINE_TYPE="${MACHINE_TYPE:-""}"
+declare ALLOWED_SSH_KEYS="${ALLOWED_SSH_KEYS:-""}"
+declare DESCRIPTION="${DESCRIPTION:-""}"
+declare TAGS="${TAGS:-[]}"
+declare ZONE="${ZONE:-""}"
+
+gcp_metadata() {
+	curl -sH "Metadata-Flavor: Google" "${GCP_METADATA_URL}/${1}"
+}
+
+if gcp_metadata "description" > /dev/null; then
+	PLATFORM="gcp"
+fi
+
+if [[ "${PLATFORM}" = "gcp" ]]; then
+	DESCRIPTION=$(gcp_metadata "description")
+	ID=$(gcp_metadata "id")
+	# Note that we need to base64encode the keys to be able to encode as JSON string,
+	# not for security through obscurity.
+	ALLOWED_SSH_KEYS=$(gcp_metadata "attributes/ssh-keys" | base64 --wrap=0)
+	TAGS=$(gcp_metadata "tags")
+	MACHINE_TYPE=$(gcp_metadata "machine-type" | cut -d "/" -f4)
+	ZONE=$(gcp_metadata "zone" | cut -d "/" -f4)
+fi
+
+disk_info() {
+	if ! which python > /dev/null 2>&1; then
+		echo "[]"
+		return
+	fi
+	local pyscript
+	pyscript=$(cat <<'EOT'
+import sys, json
+
+data = []
+for line in sys.stdin.readlines():
+	parts = line.split()
+	if len(parts) != 4:
+		continue
+	data.append(dict(source=parts[0], size=parts[1], percent_used=parts[2], target=parts[3]))
+sys.stdout.write(json.dumps(data))
+EOT
+)
+	df -h --output=source,size,pcent,target -x tmpfs -x devtmpfs | python -c "$pyscript"
+}
+
+FACTS=$(cat <<EOT
+{
+	"allowed_ssh_keys": "${ALLOWED_SSH_KEYS}",
+	"cpu_arch": "$(uname -m)",
+	"description": "${DESCRIPTION}",
+	"disks": $(disk_info),
+	"hostname": "$(hostname)",
+	"id": "${ID}",
+	"kernel_name": "$(uname -s)",
+	"kernel_version": "$(uname -r)",
+	"cpu_architecture": "$(uname -m)",
+	"platform": "${PLATFORM}",
+	"memory_total_mb": "$(free -m | awk '/Mem:/ { print $2 }')",
+	"memory_avail_mb": "$(free -m | awk '/Mem:/ { print $7 }')",
+	"tags": ${TAGS},
+	"zone": "${ZONE}"
+}
+EOT
+)
+echo "$FACTS"

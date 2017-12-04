@@ -1,0 +1,15 @@
+[Unit]
+Description=telemetry server
+After=network-online.target
+
+[Service]
+Environment=REPORT_TLS_CA_CERT=/etc/secrets/telemetry/certs/ca.pem
+Environment=REPORT_TLS_CERT=/etc/secrets/telemetry/certs/server.pem
+Environment=REPORT_TLS_KEY=/etc/secrets/telemetry/certs/server-key.pem
+# Environment=REPORT_DEBUGGING=true
+ExecStart=/bin/bash -c " \
+    REPORT_SLACK_TOKEN=$(cat /etc/secrets/slack/token.asc) \
+    tserver"
+
+[Install]
+WantedBy=network-online.target

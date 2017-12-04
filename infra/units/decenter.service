@@ -1,0 +1,13 @@
+[Unit]
+Description=decenter.world server
+After=network-online.target
+
+[Service]
+Environment=PATH=/usr/bin/:/opt/bin:/bin
+Environment=DECENTER_WORLD_ADDR=:443
+ExecStart=/usr/bin/bash -c "decenter_world"
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+ 
