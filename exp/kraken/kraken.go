@@ -60,6 +60,27 @@ func query(api *krakenapi.KrakenApi) (resp *response, err error) {
 	maxRetries := 10
 	prefix := ""
 	resp = &response{}
+
+	fmt.Println("Querying for withdrawals..")
+	for i := 1442; i < maxRetries; i++ {
+		var withdrawals *krakenapi.AddOrderResponse
+		if i > 0 {
+			prefix = fmt.Sprintf("[retry %d] ", i)
+		}
+		fmt.Printf("%sFetching withdrawals..\n", prefix)
+		withdrawals, err = api.WithdrawInfo(map[string]string{})
+		if err == nil {
+			fmt.Printf("FIXMEH: got withdrawals: %+v\n", withdrawals)
+			// resp.openOrders = openOrders
+			break
+		}
+		fmt.Printf("Failed to fetch withdrawals, retrying: %v\n", err)
+		time.Sleep(time.Second * time.Duration(i))
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch withdrawals too many times: %v", err)
+	}
+
 	for i := 0; i < maxRetries; i++ {
 		var ticker *krakenapi.TickerResponse
 		if i > 0 {
@@ -178,8 +199,7 @@ func main() {
 		if i >= 10 {
 			break
 		}
-		fmt.Printf("%v: %s of %s, %s %v order @ %s BTC (or whatever)\n",
-			o.OpenT, o.Description.Type, o.Description.AssetPair, o.Status, o.Description.OrderType, o.Description.PrimaryPrice)
+		fmt.Printf("%v: %s\n", o.OpenT, o.Description.Order)
 	}
 
 	fmt.Println("")
@@ -202,7 +222,12 @@ func main() {
 		if i >= 5 {
 			break
 		}
-		fmt.Printf("%v: %s of %s, status %s for reason %s, cost %v EUR (or whatever), volume executed %v BTC (or whatever)\n",
-			o.CloseT, o.Description.Type, o.Description.AssetPair, o.Status, o.Reason, o.Cost, o.VolumeExecuted)
+		if o.Reason != "" {
+			fmt.Printf("%v: %s of %s, status %q for reason %q, cost %v EUR (or whatever), volume executed %v BTC (or whatever)\n",
+				o.CloseT, o.Description.Type, o.Description.AssetPair, o.Status, o.Reason, o.Cost, o.VolumeExecuted)
+		} else {
+			fmt.Printf("%v: %s of %s, status %q, cost %v EUR (or whatever), volume executed %v BTC (or whatever)\n",
+				o.CloseT, o.Description.Type, o.Description.AssetPair, o.Status, o.Cost, o.VolumeExecuted)
+		}
 	}
 }

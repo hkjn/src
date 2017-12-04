@@ -366,6 +366,27 @@ func (api *KrakenApi) AddOrder(pair string, direction string, orderType string, 
 	return resp.(*AddOrderResponse), nil
 }
 
+// WithdrawInfo gets information about withdrawals
+func (api *KrakenApi) WithdrawInfo(args map[string]string) (*AddOrderResponse, error) {
+
+	params := url.Values{
+		"asset": {"XBTEUR"},
+		//	"type":      {direction},
+		//	"ordertype": {orderType},
+		//	"volume":    {volume},
+	}
+
+	fmt.Printf("FIXMEH: Querying WithdrawInfo()..")
+	var r interface{}
+	resp, err := api.queryPrivate("WithdrawInfo", params, &r)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Printf("FIXMEH: got WithdrawInfo response: %+v\n", r)
+	return resp.(*AddOrderResponse), nil
+}
+
 // Query sends a query to Kraken api for given method and parameters
 func (api *KrakenApi) Query(method string, data map[string]string) (interface{}, error) {
 	values := url.Values{}
