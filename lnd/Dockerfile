@@ -1,3 +1,2 @@
 FROM scratch
-COPY ["lncli", "/]
-COPY ["lnd", "/"]
+COPY bin/ /usr/local/bin/

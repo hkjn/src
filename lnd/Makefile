@@ -10,3 +10,6 @@ pre-build:
 	@echo "Copying out build artifacts.."
 	docker cp lnd-build:/home/go/bin .
 	docker rm lnd-build
+
+post-build:
+	@echo "Not doing anything post-build, no need to squash single layer.."
