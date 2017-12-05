@@ -13,19 +13,19 @@ show_ignite_diff() {
 }
 
 generate_ignite_configs() {
-	echo "Running ignite.go tool to generate Ignite .json.."
+	echo "Running generate_ignite_configs.go tool to generate Ignite .json.."
 	docker run --rm -it \
 	           -v /etc/secrets/secretservice:/etc/secrets/secretservice:ro \
-	           -v $(pwd):/home/go/src/hkjn.me/hkjninfra \
-	           -w /home/go/src/hkjn.me/hkjninfra \
+	           -v $(pwd):/home/go/src/hkjn.me/src/infra \
+	           -w /home/go/src/hkjn.me/src/infra \
 	       hkjn/golang go run generate_ignite_configs.go
 }
 
 fetch_checksums() {
 	docker run --rm -it \
 	           -v /etc/secrets/secretservice:/etc/secrets/secretservice:ro \
-	           -v $(pwd):/home/go/src/hkjn.me/hkjninfra \
-	           -w /home/go/src/hkjn.me/hkjninfra \
+	           -v $(pwd):/home/go/src/hkjn.me/src/infra \
+	           -w /home/go/src/hkjn.me/src/infra \
 	       hkjn/golang go run fetch_checksums.go
 }
 

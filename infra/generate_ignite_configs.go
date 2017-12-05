@@ -6,8 +6,8 @@ package main
 import (
 	"log"
 
-	"hkjn.me/hkjninfra/ignite"
-	"hkjn.me/hkjninfra/secretservice"
+	"hkjn.me/src/infra/ignite"
+	"hkjn.me/src/infra/secretservice"
 )
 
 func main() {
