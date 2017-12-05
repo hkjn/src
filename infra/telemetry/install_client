@@ -25,7 +25,10 @@ sudo install tclient_${CPU_ARCH} /opt/bin/tclient
 
 if [[ ! -f /etc/systemd/system/tclient.service ]] || [[ ! -f /etc/systemd/system/tclient.timer ]]; then
 	info "Installing and starting tclient.service and .timer units.."
-	sudo cp ${BASE}/telemetry/tclient.{service,timer} /etc/systemd/system/
+	sudo cp ${BASE}/../units/tclient.{service,timer} /etc/systemd/system/
 	sudo systemctl daemon-reload
 	sudo systemctl start tclient.service tclient.timer
 fi
+
+sudo mkdir -p /opt/bin
+sudo cp ${BASE}/gather_facts /opt/bin/
