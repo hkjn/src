@@ -1,4 +1,4 @@
-.PHONY : all blocksci bitcoin gcloud golang gpg proto s3cmd workspace
+.PHONY : all blocksci bitcoin gcloud golang gpg lnd proto s3cmd workspace
 
 all: blocksci bitcoin gcloud golang gpg lnd proto s3cmd workspace
 
