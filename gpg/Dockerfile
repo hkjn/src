@@ -5,7 +5,7 @@ FROM hkjn/alpine
 ENV GPG_TTY=/dev/console
 RUN apk add --no-cache bash gnupg vim && \
     adduser -D gpg -s /bin/bash
-
+COPY keys/ /etc/keys
 USER gpg
 WORKDIR /home/gpg
 ENTRYPOINT ["bash"]
