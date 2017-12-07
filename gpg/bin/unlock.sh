@@ -16,7 +16,7 @@ declare PASSWORD_SUB=${PASSWORD_SUB:-""}
 set -euo pipefail
 
 cd ${BASE}
-source "logging.sh"
+source "/usr/local/bin/logging.sh"
 
 cleanup() {
 	info "Securely removing '${CLEAR}'.."
