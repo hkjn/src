@@ -13,4 +13,4 @@ docker run --rm -it \
            -e PASSWORD_SUB \
            -v /etc/secrets/keys:/etc/secrets/keys:ro \
            -v ${HOME}/src/bitbucket.org/hkjn/passwords:/crypt \
-           --workdir /crypt/${PASSWORD_SUB} hkjn/gpg:1.0.3
+           --workdir /crypt/${PASSWORD_SUB} hkjn/gpg:1.0.4
