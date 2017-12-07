@@ -7,9 +7,7 @@ RUN apk add --no-cache bash gnupg vim musl-dev nano secure-delete && \
     adduser -D gpg -s /bin/bash
 COPY keys/ /etc/keys
 WORKDIR /usr/local/bin
-COPY entrypoint.sh ./
-COPY unlock.sh ./
-COPY logging.sh ./
+COPY bin/ ./
 USER gpg
 WORKDIR /home/gpg
 ENTRYPOINT ["entrypoint.sh"]
