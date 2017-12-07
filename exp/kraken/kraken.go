@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"sort"
+	"strings"
 	"text/tabwriter"
 	"time"
 
@@ -54,6 +55,16 @@ func descBalance(r *krakenapi.BalanceResponse) []balance {
 		})
 	}
 	return result
+}
+
+func descOrder(order *krakenapi.Order) (string, error) {
+	desc := order.Description.Order
+	parts := strings.Split(desc, " ")
+	if len(parts) != 6 {
+		return "", fmt.Errorf("invalid description %q", desc)
+	}
+	// parts[1] * parts[5]
+	return parts[1], nil
 }
 
 func query(api *krakenapi.KrakenApi) (resp *response, err error) {
@@ -199,7 +210,7 @@ func main() {
 		if i >= 10 {
 			break
 		}
-		fmt.Printf("%v: %s\n", o.OpenT, o.Description.Order)
+		fmt.Printf("%v: %s, status %s\n", o.OpenT, o.Description.Order, o.Status)
 	}
 
 	fmt.Println("")
@@ -222,12 +233,10 @@ func main() {
 		if i >= 5 {
 			break
 		}
+		msg := fmt.Sprintf("%v: %s, status %q", o.CloseT, o.Description.Order, o.Status)
 		if o.Reason != "" {
-			fmt.Printf("%v: %s of %s, status %q for reason %q, cost %v EUR (or whatever), volume executed %v BTC (or whatever)\n",
-				o.CloseT, o.Description.Type, o.Description.AssetPair, o.Status, o.Reason, o.Cost, o.VolumeExecuted)
-		} else {
-			fmt.Printf("%v: %s of %s, status %q, cost %v EUR (or whatever), volume executed %v BTC (or whatever)\n",
-				o.CloseT, o.Description.Type, o.Description.AssetPair, o.Status, o.Cost, o.VolumeExecuted)
+			msg = fmt.Sprintf("%s for reason %q", msg, o.Reason)
 		}
+		fmt.Println(msg)
 	}
 }
