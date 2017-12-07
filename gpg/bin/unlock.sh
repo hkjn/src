@@ -72,7 +72,7 @@ for RECIPIENT in ${PASSWORD_RECIPIENTS}; do
 done
 debug "Using recipients ${RECIPIENTS}"
 
-if [[ $CHECKSUM_BEFORE != $CHECKSUM_AFTER ]] || [[ "${ALWAYS_ENCRYPT}" ]]; then
+if [[ $CHECKSUM_BEFORE != $CHECKSUM_AFTER ]]; then
 	info "Contents changed, re-encrypting ${CLEAR} -> $CRYPT"
 	gpg --yes --output /crypt/${PASSWORD_SUB}/$(basename ${CRYPT}) --encrypt --armor ${RECIPIENTS} ${CLEAR}
 	if [[ $? -ne 0 ]]; then
