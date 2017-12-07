@@ -31,4 +31,7 @@ if [[ ! -f "/etc/secrets/keys/${PASSWORD_MAIN_KEY}.key" ]]; then
 fi
 gpg --import /etc/secrets/keys/${PASSWORD_MAIN_KEY}.key
 
+echo "Dropping GPG identities from agent.."
+echo RELOADAGENT | gpg-connect-agent
+
 exec "$@"
