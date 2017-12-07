@@ -1,2 +1,15 @@
 #!/usr/bin/env bash
-docker run --rm -it -v $HOME/.gnupg:/home/gpg/.gnupg -v $HOME/src/bitbucket.org/hkjn/passwords:/passwords --workdir /passwords hkjn/gpg:$(uname -m)
+
+set -euo pipefail
+
+if [[ ! "${PASSWORD_MAIN_KEY}" ]]; then
+	echo "FATAL: No PASSWORD_MAIN_KEY specified." >&2
+	exit 1
+fi
+
+docker run --rm -it \
+           -e PASSWORD_MAIN_KEY \
+           -e PASSWORD_RECIPIENTS \
+           -v /etc/secrets/keys:/etc/secrets/keys:ro \
+           -v ${HOME}/src/bitbucket.org/hkjn/passwords:/crypt \
+           --workdir /crypt/${PASSWORD_SUB} hkjn/gpg:1.0.3-amd64
