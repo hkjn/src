@@ -10,5 +10,5 @@ COPY ["vendor", "./vendor"]
 RUN go vet && \
     go install
 USER root
-CMD ["mv", "-v", "/home/go/bin/fileserver", "/build/"]
-
+WORKDIR /build
+CMD ls -hsal && mv -v /home/go/bin/fileserver ./
