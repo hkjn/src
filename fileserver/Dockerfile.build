@@ -1,0 +1,14 @@
+#
+# Build image for fileserver.
+#
+FROM hkjn/golang
+
+ENV CGO_ENABLED=0
+WORKDIR /home/go/src/hkjn.me/fileserver/
+COPY *.go ./
+COPY ["vendor", "./vendor"]
+RUN go vet && \
+    go install
+USER root
+CMD ["mv", "-v", "/home/go/bin/fileserver", "/build/"]
+
