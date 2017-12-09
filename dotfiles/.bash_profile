@@ -147,7 +147,7 @@ fi
 # sources /etc/bash.bashrc).
 [ -f /etc/bash_completion ] && source /etc/bash_completion
 
-alias pp="git pull && git push"
+alias pp="git pull --rebase && git push"
 alias gdc="git diff --cached"
 alias gs="git status"
 
