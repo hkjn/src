@@ -1,10 +1,10 @@
 FROM hkjn/golang
 
-ARG GOARCH=${goarch}
+ARG goarch
 
 ENV CGO_ENABLED=0 \
     GOOS=linux \
-    GOARCH=${GOARCH}
+    GOARCH=${goarch}
 
 USER root
 RUN chown -R go:go /home/go/
