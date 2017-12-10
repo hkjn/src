@@ -142,6 +142,13 @@ if [ -x /usr/bin/dircolors ]; then
     alias ls='ls --color=auto'
 fi
 
+_rmkey() {
+	ssh-keygen -R ${1}
+	local ip
+	ip=$(dig +short ${1})
+	ssh-keygen -R ${ip}
+}
+
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
 # sources /etc/bash.bashrc).
@@ -166,6 +173,7 @@ alias mp="mplayer -af scaletempo $@"
 alias mp50="mplayer -af scaletempo -fs -panscanrange -5 $@"
 alias xclip="xclip -selection c"
 alias shlogs="less ${HOME}/.shell_logs/${HOSTNAME}"
+alias rmkey="_rmkey ${1}"
 
 export LANG="en_US.UTF-8"
 export LC_CTYPE="en_US.UTF-8"
@@ -190,11 +198,11 @@ export GPG_TTY=$(tty)
 export CLOUDSDK_PYTHON=python2
 
 if [ -d ~/google-cloud-sdk ]; then
-		# The next line updates PATH for the Google Cloud SDK.
-		source "$HOME/google-cloud-sdk/path.bash.inc"
+	# The next line updates PATH for the Google Cloud SDK.
+	source "$HOME/google-cloud-sdk/path.bash.inc"
 
-		# The next line enables bash completion for gcloud.
-		source "$HOME/google-cloud-sdk/completion.bash.inc"
+	# The next line enables bash completion for gcloud.
+	source "$HOME/google-cloud-sdk/completion.bash.inc"
 fi
 
 # Allow current user to connect to X11 socket from any host; required
