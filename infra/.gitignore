@@ -1,5 +1,6 @@
 *.swp
 terraform.tfstate.backup
+/bootstrap/
 .gcp/
 .digitalocean/
 .scaleway/
