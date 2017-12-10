@@ -131,7 +131,7 @@ resource "google_compute_instance" "decenter-world" {
     access_config {} # Ephemeral IP
   }
   metadata {
-    sshKeys = "core:${var.zg0_pubkey}"
+    sshKeys = "core:${var.admin2_decenter_world_pubkey}"
     version = "${var.version}"
     user-data = "${file("bootstrap/decenter_world.json")}"
   }
@@ -152,7 +152,7 @@ resource "google_compute_instance" "builder" {
     access_config {} # Ephemeral IP
   }
   metadata {
-    sshKeys = "core:${var.gcloud0_pubkey}"
+    sshKeys = "core:${var.admin2_builder_pubkey}"
     version = "${var.version}"
     user-data = "${file("bootstrap/builder.json")}"
   }
@@ -171,7 +171,7 @@ resource "google_compute_instance" "guac" {
     access_config {} # Ephemeral IP
   }
   metadata {
-    sshKeys = "core:${var.zg0_pubkey}"
+    sshKeys = "core:${var.admin2_guac_pubkey}"
   }
 }
 
