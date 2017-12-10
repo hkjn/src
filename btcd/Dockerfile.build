@@ -1,0 +1,18 @@
+FROM hkjn/golang
+
+USER root
+RUN chown -R go:go /home/go/
+USER go
+
+# Note: we currently install roasbeef's fork of btcd to be compatible with lnd, as described at
+# https://github.com/lightningnetwork/lnd/blob/master/docs/INSTALL.md
+RUN mkdir -p src/github.com/roasbeef && \
+    cd src/github.com/roasbeef && \
+    git clone https://github.com/roasbeef/btcd && \
+    cd btcd && \
+    go get -v github.com/Masterminds/glide && \
+    glide install && \
+    go install . ./cmd/...
+
+WORKDIR /home/go/bin
+ENTRYPOINT echo "Binaries available in $(pwd): $(ls -R)"
