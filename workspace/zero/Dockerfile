@@ -1,5 +1,4 @@
-FROM hkjn/workspace-alpine:1.5.0-arm
-# FIXME: drop -arm once multiarch is built
+FROM hkjn/workspace-alpine:1.6.1
 
 COPY [".gitconfig", "./"]
 COPY ["known_hosts", "./.ssh/"]
