@@ -79,7 +79,7 @@ resource "google_compute_disk" "admin2-disk" {
   name  = "admin2-disk"
   type  = "pd-ssd"
   zone  = "europe-west3-b"
-  size  = "20"
+  size  = "50"
 }
 
 # GCP instances
