@@ -197,7 +197,7 @@ func (n node) String() string {
 	return fmt.Sprintf("%q (%d binaries, %d systemd units)", n.name, len(n.binaries), len(n.systemdUnits))
 }
 
-// write writes the Ignition config to disk.
+// Write writes the Ignition config to disk.
 func (n node) Write() error {
 	bp := "bootstrap"
 	_, err := os.Stat(bp)
@@ -215,13 +215,33 @@ func (n node) Write() error {
 	}
 	defer f.Close()
 
-	conf := newIgnitionConfig()
-	conf.Storage.Files = append(conf.Storage.Files, n.getFiles()...)
-	conf.Systemd.Units = append(conf.Systemd.Units, n.getSystemdUnits()...)
+	conf := n.getIgnitionConfig()
 	return json.NewEncoder(f).Encode(&conf)
 }
 
-func newIgnitionConfig() ignitionConfig {
+// getIgnitionConfig returns the ignition config for the nod.
+func (n node) getIgnitionConfig() ignitionConfig {
+	sysd := systemd{
+		Units:    n.getSystemdUnits(),
+		Passwd:   map[string]string{},
+		Networkd: map[string]string{},
+	}
+	files := append(
+		[]file{
+			file{
+				Filesystem: "root",
+				Path:       "/etc/coreos/update.conf",
+				Contents: fileContents{
+					Source:       "data:,GROUP%3Dbeta%0AREBOOT_STRATEGY%3D%22etcd-lock%22",
+					Verification: fileVerification{},
+				},
+				Mode:  420,
+				User:  map[string]string{},
+				Group: map[string]string{},
+			},
+		},
+		n.getFiles()...,
+	)
 	return ignitionConfig{
 		Ignition: ignition{
 			Version: "2.0.0",
@@ -229,25 +249,9 @@ func newIgnitionConfig() ignitionConfig {
 		},
 		Storage: storage{
 			Filesystem: []string{},
-			Files: []file{
-				file{
-					Filesystem: "root",
-					Path:       "/etc/coreos/update.conf",
-					Contents: fileContents{
-						Source:       "data:,GROUP%3Dbeta%0AREBOOT_STRATEGY%3D%22etcd-lock%22",
-						Verification: fileVerification{},
-					},
-					Mode:  420,
-					User:  map[string]string{},
-					Group: map[string]string{},
-				},
-			},
+			Files:      files,
 		},
-		Systemd: systemd{
-			Units:    []systemdUnit{},
-			Passwd:   map[string]string{},
-			Networkd: map[string]string{},
-		},
+		Systemd: sysd,
 	}
 }
 
