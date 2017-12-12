@@ -1,4 +1,6 @@
 // Package ignite deals with Ignite JSON configs.
+//
+// TODO: Fix issue with missing /etc/ssl .pem files in hkjninfra project
 package ignite
 
 import (
@@ -467,7 +469,11 @@ func ReadConfig() (*Config, error) {
 
 // String returns a human-readable description of the config.
 func (conf Config) String() string {
-	return fmt.Sprintf("Config{%s, %s}", conf.Projects, conf.Nodes)
+	return fmt.Sprintf(
+		"Config{%s, %s}",
+		conf.Projects,
+		conf.Nodes,
+	)
 }
 
 // CreateNodes returns nodes created from the configs.
@@ -493,5 +499,3 @@ func (conf Config) CreateNodes() (nodes, error) {
 	}
 	return result, nil
 }
-
-// TODO: Fix issue with missing /etc/ssl .pem files in hkjninfra project
