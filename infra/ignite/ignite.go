@@ -221,7 +221,12 @@ func (n node) getSystemdUnits() []systemdUnit {
 }
 
 func (n node) String() string {
-	return fmt.Sprintf("%q (%d binaries, %d systemd units)", n.name, len(n.binaries), len(n.systemdUnits))
+	return fmt.Sprintf(
+		"%q (%d binaries, %d systemd units)",
+		n.name,
+		len(n.binaries),
+		len(n.systemdUnits),
+	)
 }
 
 // Write writes the Ignition config to disk.
@@ -337,9 +342,16 @@ func (p Projects) Names() []ProjectName {
 func (p Projects) String() string {
 	desc := make([]string, len(p), len(p))
 	for i, name := range p.Names() {
-		desc[i] = fmt.Sprintf("%s: %s", name, p[name])
+		desc[i] = fmt.Sprintf(
+			"%s: %s",
+			name,
+			p[name],
+		)
 	}
-	return fmt.Sprintf("Projects{%s}", strings.Join(desc, ", "))
+	return fmt.Sprintf(
+		"Projects{%s}",
+		strings.Join(desc, ", "),
+	)
 }
 
 // String returns a human-readable description of the NodeFiles.
@@ -364,16 +376,29 @@ func (nf NodeFiles) String() string {
 			)
 		}
 	}
-	return fmt.Sprintf("NodeFiles{%s}", strings.Join(files, ", "))
+	return fmt.Sprintf(
+		"NodeFiles{%s}",
+		strings.Join(files, ", "),
+	)
 }
 
 func (s Secret) GetURL(secretServiceDomain, sshash string, pv ProjectVersion) string {
-	return fmt.Sprintf("https://%s/%s/files/%s/%s/certs/%s", secretServiceDomain, sshash, pv.Name, pv.Version, s.Name)
+	return fmt.Sprintf(
+		"https://%s/%s/files/%s/%s/certs/%s",
+		secretServiceDomain,
+		sshash,
+		pv.Name,
+		pv.Version,
+		s.Name,
+	)
 }
 
 // String returns a human-readable description of the NodeConfig.
 func (nc NodeConfig) String() string {
-	return fmt.Sprintf(fmt.Sprintf("NodeConfig{Arch: %s}", nc.Arch))
+	return fmt.Sprintf(
+		"NodeConfig{Arch: %s}",
+		nc.Arch,
+	)
 }
 
 // String returns a human-readable description of the project.
