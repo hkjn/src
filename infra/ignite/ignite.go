@@ -113,16 +113,16 @@ type (
 		Name        string `json:"name"`
 		ChecksumKey string `json:"checksum_key"`
 	}
-	NodeFiles   []NodeFile
-	Secret      NodeFile
-	Secrets     []Secret
-	projectJSON struct {
+	NodeFiles []NodeFile
+	Secret    NodeFile
+	Secrets   []Secret
+	project   struct {
 		Units   []string     `json:"units"`
 		Dropins []DropinName `json:"dropins"`
 		Files   NodeFiles    `json:"files"`
 		Secrets NodeFiles    `json:"secrets"`
 	}
-	Projects   map[ProjectName]projectJSON
+	Projects   map[ProjectName]project
 	DropinName struct {
 		Unit, Dropin string
 	}
@@ -262,7 +262,7 @@ func (n node) getIgnitionConfig() ignitionConfig {
 }
 
 // newProjectConfig returns the project config.
-func newProjectConfig(conf projectJSON) (*ProjectConfig, error) {
+func newProjectConfig(conf project) (*ProjectConfig, error) {
 	units := []systemdUnit{}
 	for _, unitFile := range conf.Units {
 		unit, err := newSystemdUnit(unitFile)
@@ -285,8 +285,8 @@ func newProjectConfig(conf projectJSON) (*ProjectConfig, error) {
 	}, nil
 }
 
-// getChecksums returns the checksums for the project.
-func getChecksums(pv ProjectVersion) (map[string]string, error) {
+// getChecksums returns the checksums for the project version.
+func (pv ProjectVersion) getChecksums() (map[string]string, error) {
 	checksumFile := fmt.Sprintf("checksums/%s_%s.sha512", pv.Name, pv.Version)
 	checksumData, err := ioutil.ReadFile(checksumFile)
 	if err != nil {
@@ -372,9 +372,9 @@ func (nc NodeConfig) String() string {
 	return fmt.Sprintf(fmt.Sprintf("NodeConfig{Arch: %s}", nc.Arch))
 }
 
-// String returns a human-readable description of the projectJSON.
-func (p projectJSON) String() string {
-	return fmt.Sprintf("projectJSON{Units: %s, Secrets: %s}",
+// String returns a human-readable description of the project.
+func (p project) String() string {
+	return fmt.Sprintf("project{Units: %s, Secrets: %s}",
 		strings.Join(p.Units, ", "),
 		p.Secrets.String(),
 	)
@@ -389,7 +389,14 @@ func (ps Projects) getBinaries(pversions []ProjectVersion) ([]binary, error) {
 			return nil, fmt.Errorf("bug: no such project %q", pv.Name)
 		}
 
-		bins, err := pc.getBinaries(pv)
+		// TODO: Find better place to load checksums to avoid loading same ones over
+		// and over.
+		checksums, err := pv.getChecksums()
+		if err != nil {
+			return nil, err
+		}
+
+		bins, err := pc.getBinaries(pv, checksums)
 		if err != nil {
 			return nil, err
 		}
@@ -399,14 +406,7 @@ func (ps Projects) getBinaries(pversions []ProjectVersion) ([]binary, error) {
 }
 
 // getBinaries returns the binaries.
-func (conf projectJSON) getBinaries(pv ProjectVersion) ([]binary, error) {
-	// TODO: Find better place to load checksums to avoid loading same ones over
-	// and over.
-	checksums, err := getChecksums(pv)
-	if err != nil {
-		return nil, err
-	}
-
+func (conf project) getBinaries(pv ProjectVersion, checksums map[string]string) ([]binary, error) {
 	result := []binary{}
 	for _, file := range conf.Files {
 		key := file.ChecksumKey
