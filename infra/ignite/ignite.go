@@ -69,15 +69,15 @@ type (
 	}
 	Version  string
 	binaries map[Version][]binary
-	// nodeName is the name of a node, e.g. "core"
+	// nodeName is the name of a node, e.g. "core".
 	nodeName string
-	// node is a single instance
+	// node is a single instance.
 	node struct {
-		// name is the name of the node
+		// name is the name of the node.
 		name nodeName
-		// binaries are the files to install on the node
+		// binaries are the files to install on the node.
 		binaries []binary
-		// systemdUnits are the systemd units to use for the node
+		// systemdUnits are the systemd units to use for the node.
 		systemdUnits []systemdUnit
 	}
 
@@ -211,14 +211,6 @@ func (n node) getFiles() []file {
 	return result
 }
 
-func (n node) getSystemdUnits() []systemdUnit {
-	result := []systemdUnit{}
-	for _, unit := range n.systemdUnits {
-		result = append(result, unit)
-	}
-	return result
-}
-
 func (n node) String() string {
 	return fmt.Sprintf(
 		"%q (%d binaries, %d systemd units)",
@@ -262,7 +254,7 @@ func (n node) getIgnitionConfig() ignitionConfig {
 			Files:      n.getFiles(),
 		},
 		Systemd: systemd{
-			Units:    n.getSystemdUnits(),
+			Units:    n.systemdUnits,
 			Passwd:   map[string]string{},
 			Networkd: map[string]string{},
 		},
@@ -291,7 +283,11 @@ func (conf projectConfig) getSystemdUnits() ([]systemdUnit, error) {
 
 // getChecksums returns the checksums for the project version.
 func (pv ProjectVersion) getChecksums() (map[string]string, error) {
-	checksumFile := fmt.Sprintf("checksums/%s_%s.sha512", pv.Name, pv.Version)
+	checksumFile := fmt.Sprintf(
+		"checksums/%s_%s.sha512",
+		pv.Name,
+		pv.Version,
+	)
 	checksumData, err := ioutil.ReadFile(checksumFile)
 	if err != nil {
 		return nil, fmt.Errorf("unable to read checksums for %q version %q: %v", pv.Name, pv.Version, err)
