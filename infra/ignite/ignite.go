@@ -244,11 +244,6 @@ func (n node) Write() error {
 
 // getIgnitionConfig returns the ignition config for the nod.
 func (n node) getIgnitionConfig() ignitionConfig {
-	sysd := systemd{
-		Units:    n.getSystemdUnits(),
-		Passwd:   map[string]string{},
-		Networkd: map[string]string{},
-	}
 	return ignitionConfig{
 		Ignition: ignition{
 			Version: "2.0.0",
@@ -258,7 +253,11 @@ func (n node) getIgnitionConfig() ignitionConfig {
 			Filesystem: []string{},
 			Files:      n.getFiles(),
 		},
-		Systemd: sysd,
+		Systemd: systemd{
+			Units:    n.getSystemdUnits(),
+			Passwd:   map[string]string{},
+			Networkd: map[string]string{},
+		},
 	}
 }
 
