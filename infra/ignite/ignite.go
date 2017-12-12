@@ -271,9 +271,8 @@ func (n node) getIgnitionConfig() ignitionConfig {
 	}
 }
 
-// newConfig returns the project's config.
-// TODO: Finish renaming
-func (conf projectConfig) newConfig() (*Project, error) {
+// newProject returns the project created from config.
+func (conf projectConfig) newProject() (*Project, error) {
 	units := []systemdUnit{}
 	for _, unitFile := range conf.Units {
 		unit, err := newSystemdUnit(unitFile)
@@ -420,10 +419,10 @@ func (conf projectConfig) String() string {
 }
 
 // getBinaries returns the binaries for the specific project.
-func (pconf ProjectConfigs) getBinaries(pversions []ProjectVersion) ([]binary, error) {
+func (pconfs ProjectConfigs) getBinaries(pversions []ProjectVersion) ([]binary, error) {
 	result := []binary{}
 	for _, pv := range pversions {
-		pc, exists := pconf[pv.Name]
+		pc, exists := pconfs[pv.Name]
 		if !exists {
 			return nil, fmt.Errorf("bug: no such project %q", pv.Name)
 		}
@@ -470,20 +469,19 @@ func (conf projectConfig) getBinaries(pv ProjectVersion, checksums map[string]st
 }
 
 // getUnits returns the systemd units for the specific projects.
-func (pconf ProjectConfigs) getUnits(pversions []ProjectVersion) ([]systemdUnit, error) {
+func (pconfs ProjectConfigs) getUnits(pversions []ProjectVersion) ([]systemdUnit, error) {
 	result := []systemdUnit{}
 	for _, pv := range pversions {
-		p, exists := pconf[pv.Name]
+		pc, exists := pconfs[pv.Name]
 		if !exists {
 			return nil, fmt.Errorf("bug: no such project %q", pv.Name)
 		}
-		// TODO: This seems backwards in naming..
-		// going from project type to create ProjectConfig..
-		pconf, err := p.newConfig()
+		p, err := pc.newProject()
 		if err != nil {
 			return nil, err
 		}
-		result = append(result, pconf.units...)
+		// TODO: seems that apart from units field, Project is not used..
+		result = append(result, p.units...)
 	}
 	return result, nil
 }
