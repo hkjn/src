@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/user"
+	"sort"
 	"strings"
 )
 
@@ -121,13 +122,13 @@ type (
 		Files   NodeFiles    `json:"files"`
 		Secrets NodeFiles    `json:"secrets"`
 	}
-	ProjectsJSON map[ProjectName]projectJSON
-	ConfigJSON   struct { // TODO: better name
-		Projects ProjectsJSON `json:"projects"`
-		Nodes    NodeConfigs  `json:"nodes"`
-	}
+	Projects   map[ProjectName]projectJSON
 	DropinName struct {
 		Unit, Dropin string
+	}
+	Config struct {
+		Projects Projects    `json:"projects"`
+		Nodes    NodeConfigs `json:"nodes"`
 	}
 )
 
@@ -305,7 +306,7 @@ func GetChecksumURL(pv ProjectVersion) string {
 }
 
 // GetSecrets returns the URLs for any secrets in the project.
-func (conf ProjectsJSON) GetSecrets(projectName ProjectName) (Secrets, error) {
+func (conf Projects) GetSecrets(projectName ProjectName) (Secrets, error) {
 	p, exists := conf[projectName]
 	if !exists {
 		return nil, fmt.Errorf("no project %q", projectName)
@@ -314,53 +315,66 @@ func (conf ProjectsJSON) GetSecrets(projectName ProjectName) (Secrets, error) {
 	for i, s := range p.Secrets {
 		result[i] = Secret(s)
 	}
-	return result, nil // TODO: change type of field
-	//	results := make([]string, len(p.Secrets), len(p.Secrets))
-	//	for i, secret := range p.Secrets {
-	//		results[i] = fmt.Sprintf("https://%s/%s/files/%s/%s/certs/%s", secretServiceDomain, sshash, pv.Name, pv.Version, secret.Name)
-	//	}
-	//	return results
+	return result, nil
 }
 
+// Names returns the names of the projects in sorted order.
+func (p Projects) Names() []ProjectName {
+	names := make([]ProjectName, len(p), len(p))
+	i := 0
+	for name, _ := range p {
+		names[i] = name
+		i += 1
+	}
+	sort.Slice(names, func(i, j int) bool {
+		return names[i] < names[j]
+	})
+	return names
+}
+
+// String returns a human-readable description of the projects.
+func (p Projects) String() string {
+	desc := make([]string, len(p), len(p))
+	for i, name := range p.Names() {
+		desc[i] = fmt.Sprintf("%s: %s", name, p[name])
+	}
+	return fmt.Sprintf("Projects{%s}", strings.Join(desc, ", "))
+}
+
+// String returns a human-readable description of the NodeFiles.
 func (nf NodeFiles) String() string {
 	if len(nf) == 0 {
-		return "[empty nodeFile]"
+		return "[]"
 	}
 	files := make([]string, len(nf), len(nf))
 	for i, f := range nf {
 		files[i] = fmt.Sprintf("NodeFile{Name: %s, ChecksumKey: %s, Path: %s}}", f.Name, f.ChecksumKey, f.Path)
 	}
-	return strings.Join(files, ", ")
+	return fmt.Sprintf("NodeFiles{%s}", strings.Join(files, ", "))
 }
 
 func (s Secret) GetURL(secretServiceDomain, sshash string, pv ProjectVersion) string {
 	return fmt.Sprintf("https://%s/%s/files/%s/%s/certs/%s", secretServiceDomain, sshash, pv.Name, pv.Version, s.Name)
 }
 
+// String returns a human-readable description of the NodeConfig.
 func (nc NodeConfig) String() string {
 	return fmt.Sprintf(fmt.Sprintf("NodeConfig{Arch: %s}", nc.Arch))
 }
 
+// String returns a human-readable description of the projectJSON.
 func (p projectJSON) String() string {
-	return fmt.Sprintf("projectJSON{Units: %s, Secrets: %s,..}",
+	return fmt.Sprintf("projectJSON{Units: %s, Secrets: %s}",
 		strings.Join(p.Units, ", "),
 		p.Secrets.String(),
 	)
 }
 
-//func (conf projectsJSON) GetSecretURLs(pv ProjectVersion, sshash, basedomain string) ([]string, error) {
-//	p, exists := conf[pv.Name]
-//	if !exists {
-//		return []string{}, fmt.Errorf("no such project %q", pv.Name)
-//	}
-//	return p.GetSecretURLs(pv, sshash, basedomain), nil
-//}
-
 // getBinaries returns the binaries for the specific project.
-func (conf ProjectsJSON) getBinaries(pversions []ProjectVersion) ([]binary, error) {
+func (ps Projects) getBinaries(pversions []ProjectVersion) ([]binary, error) {
 	result := []binary{}
 	for _, pv := range pversions {
-		pc, exists := conf[pv.Name]
+		pc, exists := ps[pv.Name]
 		if !exists {
 			return nil, fmt.Errorf("bug: no such project %q", pv.Name)
 		}
@@ -408,7 +422,7 @@ func (conf projectJSON) getBinaries(pv ProjectVersion) ([]binary, error) {
 }
 
 // getUnits returns the systemd units for the specific projects.
-func (conf ProjectsJSON) getUnits(pversions []ProjectVersion) ([]systemdUnit, error) {
+func (conf Projects) getUnits(pversions []ProjectVersion) ([]systemdUnit, error) {
 	result := []systemdUnit{}
 	for _, p := range pversions {
 		pc, exists := conf[p.Name]
@@ -425,31 +439,9 @@ func (conf ProjectsJSON) getUnits(pversions []ProjectVersion) ([]systemdUnit, er
 	return result, nil
 }
 
-// CreateNodes returns nodes created from the configs.
-func (conf ConfigJSON) CreateNodes() (nodes, error) {
-	result := nodes{}
-	for name, nc := range conf.Nodes {
-		log.Printf("Generating config for node %q..\n", name)
-		bins, err := conf.Projects.getBinaries(nc.ProjectVersions)
-		if err != nil {
-			return nil, err
-		}
-		units, err := conf.Projects.getUnits(nc.ProjectVersions)
-		if err != nil {
-			return nil, err
-		}
-		result[name] = node{
-			name:         name,
-			binaries:     bins,
-			systemdUnits: units,
-		}
-	}
-	return result, nil
-}
-
 // ReadConfig returns the node/project configs, read from disk.
-func ReadConfig() (*ConfigJSON, error) {
-	conf := ConfigJSON{}
+func ReadConfig() (*Config, error) {
+	conf := Config{}
 	f, err := os.Open("config.json")
 	if err != nil {
 		return nil, err
@@ -468,3 +460,33 @@ func ReadConfig() (*ConfigJSON, error) {
 	}
 	return &conf, nil
 }
+
+// String returns a human-readable description of the config.
+func (conf Config) String() string {
+	return fmt.Sprintf("Config{%s, %s}", conf.Projects, conf.Nodes)
+}
+
+// CreateNodes returns nodes created from the configs.
+func (conf Config) CreateNodes() (nodes, error) {
+	result := nodes{}
+	for name, nc := range conf.Nodes {
+		log.Printf("Generating config for node %q..\n", name)
+		bins, err := conf.Projects.getBinaries(nc.ProjectVersions)
+		if err != nil {
+			return nil, err
+		}
+		units, err := conf.Projects.getUnits(nc.ProjectVersions)
+		if err != nil {
+			return nil, err
+		}
+		result[name] = node{
+			name:         name,
+			binaries:     bins,
+			systemdUnits: units,
+		}
+		log.Printf("Generated config %v\n", result[name])
+	}
+	return result, nil
+}
+
+// TODO: Fix issue with missing /etc/ssl .pem files in hkjninfra project

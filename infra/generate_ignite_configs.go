@@ -16,10 +16,12 @@ func main() {
 		log.Fatalf("Unable to fetch secret service hash: %v\n", err)
 	}
 	log.Printf("Read %d character secret service hash.\n", len(sshash))
+
 	conf, err := ignite.ReadConfig()
 	if err != nil {
 		log.Fatalf("Failed to create project configs: %v\n", err)
 	}
+	log.Printf("Read config: %+v\n", conf)
 
 	ns, err := conf.CreateNodes()
 	if err != nil {
