@@ -90,6 +90,7 @@ type (
 		Version Version `json:"version"`
 	}
 	// ProjectConfig is the full configuration for a project.
+	// TODO: Switch names of ProjectConfig vs project?
 	ProjectConfig struct {
 		units       []systemdUnit
 		files       []NodeFile
@@ -461,14 +462,6 @@ func ReadConfig() (*Config, error) {
 	if err := json.NewDecoder(f).Decode(&conf); err != nil {
 		return nil, err
 	}
-	pconfs := map[ProjectName]ProjectConfig{}
-	for name, p := range conf.Projects {
-		pc, err := p.newConfig()
-		if err != nil {
-			return nil, err
-		}
-		pconfs[name] = *pc
-	}
 	return &conf, nil
 }
 
@@ -481,6 +474,7 @@ func (conf Config) String() string {
 func (conf Config) CreateNodes() (nodes, error) {
 	result := nodes{}
 	for name, nc := range conf.Nodes {
+		// TODO: Could move this loading into ReadConfig() call.
 		log.Printf("Generating config for node %q..\n", name)
 		bins, err := conf.Projects.getBinaries(nc.ProjectVersions)
 		if err != nil {
