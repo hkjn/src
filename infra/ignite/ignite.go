@@ -132,6 +132,21 @@ type (
 	}
 )
 
+// sharedFiles are the shared files for each node.
+var sharedFiles = []file{
+	{
+		Filesystem: "root",
+		Path:       "/etc/coreos/update.conf",
+		Contents: fileContents{
+			Source:       "data:,GROUP%3Dbeta%0AREBOOT_STRATEGY%3D%22etcd-lock%22",
+			Verification: fileVerification{},
+		},
+		Mode:  420,
+		User:  map[string]string{},
+		Group: map[string]string{},
+	},
+}
+
 func (b binary) toFile() file {
 	return file{
 		Filesystem: "root",
@@ -177,10 +192,18 @@ func (dn DropinName) Load() (*systemdUnit, error) {
 	}, nil
 }
 
+// getFiles returns the files to put on the node.
 func (n node) getFiles() []file {
-	result := []file{}
-	for _, bin := range n.binaries {
-		result = append(result, bin.toFile())
+	result := make(
+		[]file,
+		len(n.binaries)+len(sharedFiles),
+		len(n.binaries)+len(sharedFiles),
+	)
+	for i, sharedFile := range sharedFiles {
+		result[i] = sharedFile
+	}
+	for j, bin := range n.binaries {
+		result[j+len(sharedFiles)] = bin.toFile()
 	}
 	return result
 }
@@ -226,22 +249,6 @@ func (n node) getIgnitionConfig() ignitionConfig {
 		Passwd:   map[string]string{},
 		Networkd: map[string]string{},
 	}
-	files := append(
-		[]file{
-			file{
-				Filesystem: "root",
-				Path:       "/etc/coreos/update.conf",
-				Contents: fileContents{
-					Source:       "data:,GROUP%3Dbeta%0AREBOOT_STRATEGY%3D%22etcd-lock%22",
-					Verification: fileVerification{},
-				},
-				Mode:  420,
-				User:  map[string]string{},
-				Group: map[string]string{},
-			},
-		},
-		n.getFiles()...,
-	)
 	return ignitionConfig{
 		Ignition: ignition{
 			Version: "2.0.0",
@@ -249,7 +256,7 @@ func (n node) getIgnitionConfig() ignitionConfig {
 		},
 		Storage: storage{
 			Filesystem: []string{},
-			Files:      files,
+			Files:      n.getFiles(),
 		},
 		Systemd: sysd,
 	}
