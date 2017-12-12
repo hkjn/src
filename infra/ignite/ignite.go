@@ -319,19 +319,6 @@ func GetChecksumURL(pv ProjectVersion) string {
 	)
 }
 
-// GetSecrets returns the URLs for any secrets in the project.
-func (conf Projects) GetSecrets(projectName ProjectName) (Secrets, error) {
-	p, exists := conf[projectName]
-	if !exists {
-		return nil, fmt.Errorf("no project %q", projectName)
-	}
-	result := make(Secrets, len(p.Secrets), len(p.Secrets))
-	for i, s := range p.Secrets {
-		result[i] = Secret(s)
-	}
-	return result, nil
-}
-
 // Names returns the names of the projects in sorted order.
 func (p Projects) Names() []ProjectName {
 	names := make([]ProjectName, len(p), len(p))
@@ -362,7 +349,20 @@ func (nf NodeFiles) String() string {
 	}
 	files := make([]string, len(nf), len(nf))
 	for i, f := range nf {
-		files[i] = fmt.Sprintf("NodeFile{Name: %s, ChecksumKey: %s, Path: %s}}", f.Name, f.ChecksumKey, f.Path)
+		if f.ChecksumKey != "" {
+			files[i] = fmt.Sprintf(
+				"NodeFile{Name: %s, ChecksumKey: %s, Path: %s}}",
+				f.Name,
+				f.ChecksumKey,
+				f.Path,
+			)
+		} else {
+			files[i] = fmt.Sprintf(
+				"NodeFile{Name: %s, Path: %s}}",
+				f.Name,
+				f.Path,
+			)
+		}
 	}
 	return fmt.Sprintf("NodeFiles{%s}", strings.Join(files, ", "))
 }
@@ -378,10 +378,18 @@ func (nc NodeConfig) String() string {
 
 // String returns a human-readable description of the project.
 func (p project) String() string {
-	return fmt.Sprintf("project{Units: %s, Secrets: %s}",
-		strings.Join(p.Units, ", "),
-		p.Secrets.String(),
-	)
+	if len(p.Secrets) > 0 {
+		return fmt.Sprintf(
+			"project{Units: %s, Secrets: %s}",
+			strings.Join(p.Units, ", "),
+			p.Secrets.String(),
+		)
+	} else {
+		return fmt.Sprintf(
+			"project{Units: %s}",
+			strings.Join(p.Units, ", "),
+		)
+	}
 }
 
 // getBinaries returns the binaries for the specific project.
