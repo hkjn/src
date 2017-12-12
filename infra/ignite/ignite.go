@@ -92,12 +92,6 @@ type (
 		Version Version `json:"version"`
 	}
 	// ProjectConfig is the full configuration for a project.
-	// TODO: Switch names of ProjectConfig vs project?
-	ProjectConfig struct {
-		units       []systemdUnit
-		files       []NodeFile
-		secretFiles NodeFiles
-	}
 	// NodeConfig is the configuration of a single node
 	NodeConfig struct {
 		// sshash is the secretservice hash to use
@@ -118,21 +112,29 @@ type (
 	NodeFiles []NodeFile
 	Secret    NodeFile
 	Secrets   []Secret
-	project   struct {
+
+	// TODO: Switch names of ProjectConfig vs project?
+	ProjectConfig struct {
+		units       []systemdUnit
+		files       []NodeFile
+		secretFiles NodeFiles
+	}
+	project struct {
 		Units   []string     `json:"units"`
 		Dropins []DropinName `json:"dropins"`
 		Files   NodeFiles    `json:"files"`
 		Secrets NodeFiles    `json:"secrets"`
 		// TODO: Add checksums here?
 	}
-	// Projects represents all the projects.
-	Projects   map[ProjectName]project
-	DropinName struct {
+	// ProjectConfigs represents all the project configurations.
+	ProjectConfigs map[ProjectName]project
+	DropinName     struct {
 		Unit, Dropin string
 	}
 	Config struct {
-		Projects Projects    `json:"projects"`
-		Nodes    NodeConfigs `json:"nodes"`
+		// TODO: Rename JSON field to project_configs as well.
+		Projects ProjectConfigs `json:"projects"`
+		Nodes    NodeConfigs    `json:"nodes"`
 	}
 )
 
@@ -324,8 +326,8 @@ func GetChecksumURL(pv ProjectVersion) string {
 	)
 }
 
-// Names returns the names of the projects in sorted order.
-func (p Projects) Names() []ProjectName {
+// Names returns the names of the project configs in sorted order.
+func (p ProjectConfigs) Names() []ProjectName {
 	names := make([]ProjectName, len(p), len(p))
 	i := 0
 	for name, _ := range p {
@@ -338,8 +340,8 @@ func (p Projects) Names() []ProjectName {
 	return names
 }
 
-// String returns a human-readable description of the projects.
-func (p Projects) String() string {
+// String returns a human-readable description of the project configs.
+func (p ProjectConfigs) String() string {
 	desc := make([]string, len(p), len(p))
 	for i, name := range p.Names() {
 		desc[i] = fmt.Sprintf(
@@ -418,10 +420,10 @@ func (p project) String() string {
 }
 
 // getBinaries returns the binaries for the specific project.
-func (ps Projects) getBinaries(pversions []ProjectVersion) ([]binary, error) {
+func (pconf ProjectConfigs) getBinaries(pversions []ProjectVersion) ([]binary, error) {
 	result := []binary{}
 	for _, pv := range pversions {
-		pc, exists := ps[pv.Name]
+		pc, exists := pconf[pv.Name]
 		if !exists {
 			return nil, fmt.Errorf("bug: no such project %q", pv.Name)
 		}
@@ -468,10 +470,10 @@ func (conf project) getBinaries(pv ProjectVersion, checksums map[string]string) 
 }
 
 // getUnits returns the systemd units for the specific projects.
-func (ps Projects) getUnits(pversions []ProjectVersion) ([]systemdUnit, error) {
+func (pconf ProjectConfigs) getUnits(pversions []ProjectVersion) ([]systemdUnit, error) {
 	result := []systemdUnit{}
 	for _, pv := range pversions {
-		p, exists := ps[pv.Name]
+		p, exists := pconf[pv.Name]
 		if !exists {
 			return nil, fmt.Errorf("bug: no such project %q", pv.Name)
 		}
