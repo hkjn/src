@@ -91,7 +91,6 @@ type (
 		// version is the version of the project that should run on the node, e.g. "1.0.1"
 		Version Version `json:"version"`
 	}
-	// ProjectConfig is the full configuration for a project.
 	// NodeConfig is the configuration of a single node
 	NodeConfig struct {
 		// sshash is the secretservice hash to use
@@ -113,11 +112,7 @@ type (
 	Secret    NodeFile
 	Secrets   []Secret
 
-	Project struct {
-		units       []systemdUnit
-		files       []NodeFile
-		secretFiles NodeFiles
-	}
+	// projectConfig is the full configuration for a project.
 	projectConfig struct {
 		Units   []string     `json:"units"`
 		Dropins []DropinName `json:"dropins"`
@@ -131,8 +126,7 @@ type (
 		Unit, Dropin string
 	}
 	Config struct {
-		// TODO: Rename JSON field to project_configs as well.
-		Projects ProjectConfigs `json:"projects"`
+		Projects ProjectConfigs `json:"project_configs"`
 		Nodes    NodeConfigs    `json:"nodes"`
 	}
 )
@@ -168,8 +162,12 @@ func (b binary) toFile() file {
 	}
 }
 
+// newSystemdUnit reads systemd unit from file name.
 func newSystemdUnit(unitFile string) (*systemdUnit, error) {
-	b, err := ioutil.ReadFile(fmt.Sprintf("units/%s", unitFile))
+	b, err := ioutil.ReadFile(fmt.Sprintf(
+		"units/%s",
+		unitFile,
+	))
 	if err != nil {
 		return nil, err
 	}
@@ -272,7 +270,7 @@ func (n node) getIgnitionConfig() ignitionConfig {
 }
 
 // newProject returns the project created from config.
-func (conf projectConfig) newProject() (*Project, error) {
+func (conf projectConfig) getSystemdUnits() ([]systemdUnit, error) {
 	units := []systemdUnit{}
 	for _, unitFile := range conf.Units {
 		unit, err := newSystemdUnit(unitFile)
@@ -288,11 +286,7 @@ func (conf projectConfig) newProject() (*Project, error) {
 		}
 		units = append(units, *dropin)
 	}
-	return &Project{
-		units:       units,
-		files:       conf.Files,
-		secretFiles: conf.Secrets,
-	}, nil
+	return units, nil
 }
 
 // getChecksums returns the checksums for the project version.
@@ -476,12 +470,11 @@ func (pconfs ProjectConfigs) getUnits(pversions []ProjectVersion) ([]systemdUnit
 		if !exists {
 			return nil, fmt.Errorf("bug: no such project %q", pv.Name)
 		}
-		p, err := pc.newProject()
+		units, err := pc.getSystemdUnits()
 		if err != nil {
 			return nil, err
 		}
-		// TODO: seems that apart from units field, Project is not used..
-		result = append(result, p.units...)
+		result = append(result, units...)
 	}
 	return result, nil
 }

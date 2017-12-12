@@ -1,5 +1,5 @@
 {
-	"projects": {
+	"project_configs": {
 		"bitcoin": {
 			"units": [
 				"bitcoin.service",
