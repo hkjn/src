@@ -113,13 +113,12 @@ type (
 	Secret    NodeFile
 	Secrets   []Secret
 
-	// TODO: Switch names of ProjectConfig vs project?
-	ProjectConfig struct {
+	Project struct {
 		units       []systemdUnit
 		files       []NodeFile
 		secretFiles NodeFiles
 	}
-	project struct {
+	projectConfig struct {
 		Units   []string     `json:"units"`
 		Dropins []DropinName `json:"dropins"`
 		Files   NodeFiles    `json:"files"`
@@ -127,7 +126,7 @@ type (
 		// TODO: Add checksums here?
 	}
 	// ProjectConfigs represents all the project configurations.
-	ProjectConfigs map[ProjectName]project
+	ProjectConfigs map[ProjectName]projectConfig
 	DropinName     struct {
 		Unit, Dropin string
 	}
@@ -273,26 +272,27 @@ func (n node) getIgnitionConfig() ignitionConfig {
 }
 
 // newConfig returns the project's config.
-func (p project) newConfig() (*ProjectConfig, error) {
+// TODO: Finish renaming
+func (conf projectConfig) newConfig() (*Project, error) {
 	units := []systemdUnit{}
-	for _, unitFile := range p.Units {
+	for _, unitFile := range conf.Units {
 		unit, err := newSystemdUnit(unitFile)
 		if err != nil {
 			return nil, err
 		}
 		units = append(units, *unit)
 	}
-	for _, d := range p.Dropins {
+	for _, d := range conf.Dropins {
 		dropin, err := d.Load()
 		if err != nil {
 			return nil, err
 		}
 		units = append(units, *dropin)
 	}
-	return &ProjectConfig{
+	return &Project{
 		units:       units,
-		files:       p.Files,
-		secretFiles: p.Secrets,
+		files:       conf.Files,
+		secretFiles: conf.Secrets,
 	}, nil
 }
 
@@ -404,17 +404,17 @@ func (nc NodeConfig) String() string {
 }
 
 // String returns a human-readable description of the project.
-func (p project) String() string {
-	if len(p.Secrets) > 0 {
+func (conf projectConfig) String() string {
+	if len(conf.Secrets) > 0 {
 		return fmt.Sprintf(
 			"project{Units: %s, Secrets: %s}",
-			strings.Join(p.Units, ", "),
-			p.Secrets.String(),
+			strings.Join(conf.Units, ", "),
+			conf.Secrets.String(),
 		)
 	} else {
 		return fmt.Sprintf(
 			"project{Units: %s}",
-			strings.Join(p.Units, ", "),
+			strings.Join(conf.Units, ", "),
 		)
 	}
 }
@@ -444,7 +444,7 @@ func (pconf ProjectConfigs) getBinaries(pversions []ProjectVersion) ([]binary, e
 }
 
 // getBinaries returns the binaries.
-func (conf project) getBinaries(pv ProjectVersion, checksums map[string]string) ([]binary, error) {
+func (conf projectConfig) getBinaries(pv ProjectVersion, checksums map[string]string) ([]binary, error) {
 	result := []binary{}
 	for _, file := range conf.Files {
 		key := file.ChecksumKey
