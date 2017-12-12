@@ -79,22 +79,21 @@ type (
 		systemdUnits []systemdUnit
 	}
 
-	nodes          map[nodeName]node
-	ProjectName    string
+	nodes map[nodeName]node
+	// ProjectName is the name of a project.
+	ProjectName string
+	// ProjectVersion is the name and version of a project.
 	ProjectVersion struct {
 		// name is the name of a project the node should run node, e.g. "hkjninfra"
 		Name ProjectName `json:"name"`
 		// version is the version of the project that should run on the node, e.g. "1.0.1"
 		Version Version `json:"version"`
 	}
+	// ProjectConfig is the full configuration for a project.
 	ProjectConfig struct {
 		units       []systemdUnit
 		files       []NodeFile
 		secretFiles NodeFiles
-	}
-	ProjectConfigs struct {
-		secretServiceDomain string
-		configs             map[ProjectName]ProjectConfig
 	}
 	// NodeConfig is the configuration of a single node
 	NodeConfig struct {
@@ -121,7 +120,9 @@ type (
 		Dropins []DropinName `json:"dropins"`
 		Files   NodeFiles    `json:"files"`
 		Secrets NodeFiles    `json:"secrets"`
+		// TODO: Add checksums here?
 	}
+	// Projects represents all the projects.
 	Projects   map[ProjectName]project
 	DropinName struct {
 		Unit, Dropin string
@@ -261,17 +262,17 @@ func (n node) getIgnitionConfig() ignitionConfig {
 	}
 }
 
-// newProjectConfig returns the project config.
-func newProjectConfig(conf project) (*ProjectConfig, error) {
+// newConfig returns the project's config.
+func (p project) newConfig() (*ProjectConfig, error) {
 	units := []systemdUnit{}
-	for _, unitFile := range conf.Units {
+	for _, unitFile := range p.Units {
 		unit, err := newSystemdUnit(unitFile)
 		if err != nil {
 			return nil, err
 		}
 		units = append(units, *unit)
 	}
-	for _, d := range conf.Dropins {
+	for _, d := range p.Dropins {
 		dropin, err := d.Load()
 		if err != nil {
 			return nil, err
@@ -280,8 +281,8 @@ func newProjectConfig(conf project) (*ProjectConfig, error) {
 	}
 	return &ProjectConfig{
 		units:       units,
-		files:       conf.Files,
-		secretFiles: conf.Secrets,
+		files:       p.Files,
+		secretFiles: p.Secrets,
 	}, nil
 }
 
@@ -388,7 +389,6 @@ func (ps Projects) getBinaries(pversions []ProjectVersion) ([]binary, error) {
 		if !exists {
 			return nil, fmt.Errorf("bug: no such project %q", pv.Name)
 		}
-
 		// TODO: Find better place to load checksums to avoid loading same ones over
 		// and over.
 		checksums, err := pv.getChecksums()
@@ -432,18 +432,19 @@ func (conf project) getBinaries(pv ProjectVersion, checksums map[string]string) 
 }
 
 // getUnits returns the systemd units for the specific projects.
-func (conf Projects) getUnits(pversions []ProjectVersion) ([]systemdUnit, error) {
+func (ps Projects) getUnits(pversions []ProjectVersion) ([]systemdUnit, error) {
 	result := []systemdUnit{}
-	for _, p := range pversions {
-		pc, exists := conf[p.Name]
+	for _, pv := range pversions {
+		p, exists := ps[pv.Name]
 		if !exists {
-			return nil, fmt.Errorf("bug: no such project %q", p.Name)
+			return nil, fmt.Errorf("bug: no such project %q", pv.Name)
 		}
-		pconf, err := newProjectConfig(pc)
+		// TODO: This seems backwards in naming..
+		// going from project type to create ProjectConfig..
+		pconf, err := p.newConfig()
 		if err != nil {
 			return nil, err
 		}
-		// p.Version
 		result = append(result, pconf.units...)
 	}
 	return result, nil
@@ -461,8 +462,8 @@ func ReadConfig() (*Config, error) {
 		return nil, err
 	}
 	pconfs := map[ProjectName]ProjectConfig{}
-	for name, pconf := range conf.Projects {
-		pc, err := newProjectConfig(pconf)
+	for name, p := range conf.Projects {
+		pc, err := p.newConfig()
 		if err != nil {
 			return nil, err
 		}
