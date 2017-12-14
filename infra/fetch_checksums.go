@@ -2,11 +2,11 @@
 package main
 
 import (
-	"io"
-	"path/filepath"
-	"os"
 	"fmt"
+	"io"
 	"log"
+	"os"
+	"path/filepath"
 
 	"hkjn.me/src/infra/ignite"
 	"hkjn.me/src/infra/secretservice"
