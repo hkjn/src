@@ -67,8 +67,7 @@ type (
 		// path on the remote node for the binary, e.g. "/opt/bin/tserver"
 		path string
 	}
-	Version  string
-	binaries map[Version][]binary
+	Version string
 	// nodeName is the name of a node, e.g. "core".
 	nodeName string
 	// node is a single instance.
@@ -126,8 +125,8 @@ type (
 		Unit, Dropin string
 	}
 	Config struct {
-		Projects ProjectConfigs `json:"project_configs"`
-		Nodes    NodeConfigs    `json:"nodes"`
+		ProjectConfigs ProjectConfigs `json:"project_configs"`
+		NodeConfigs    NodeConfigs    `json:"nodes"`
 	}
 )
 
@@ -408,22 +407,31 @@ func (conf projectConfig) String() string {
 	}
 }
 
+// getBinaries returns the binaries for this project and version, given configs.
+func (pv ProjectVersion) getBinaries(conf ProjectConfigs) ([]binary, error) {
+	pc, exists := conf[pv.Name]
+	if !exists {
+		return nil, fmt.Errorf("bug: no such project %q", pv.Name)
+	}
+	// TODO: Find better place to load checksums to avoid loading same ones over
+	// and over.
+	checksums, err := pv.getChecksums()
+	if err != nil {
+		return nil, err
+	}
+
+	bins, err := pc.getBinaries(pv, checksums)
+	if err != nil {
+		return nil, err
+	}
+	return bins, err
+}
+
 // getBinaries returns the binaries for the specific project.
-func (pconfs ProjectConfigs) getBinaries(pversions []ProjectVersion) ([]binary, error) {
+func (conf ProjectConfigs) getBinaries(pversions []ProjectVersion) ([]binary, error) {
 	result := []binary{}
 	for _, pv := range pversions {
-		pc, exists := pconfs[pv.Name]
-		if !exists {
-			return nil, fmt.Errorf("bug: no such project %q", pv.Name)
-		}
-		// TODO: Find better place to load checksums to avoid loading same ones over
-		// and over.
-		checksums, err := pv.getChecksums()
-		if err != nil {
-			return nil, err
-		}
-
-		bins, err := pc.getBinaries(pv, checksums)
+		bins, err := pv.getBinaries(conf)
 		if err != nil {
 			return nil, err
 		}
@@ -459,10 +467,10 @@ func (conf projectConfig) getBinaries(pv ProjectVersion, checksums map[string]st
 }
 
 // getUnits returns the systemd units for the specific projects.
-func (pconfs ProjectConfigs) getUnits(pversions []ProjectVersion) ([]systemdUnit, error) {
+func (conf ProjectConfigs) getUnits(pversions []ProjectVersion) ([]systemdUnit, error) {
 	result := []systemdUnit{}
 	for _, pv := range pversions {
-		pc, exists := pconfs[pv.Name]
+		pc, exists := conf[pv.Name]
 		if !exists {
 			return nil, fmt.Errorf("bug: no such project %q", pv.Name)
 		}
@@ -475,8 +483,8 @@ func (pconfs ProjectConfigs) getUnits(pversions []ProjectVersion) ([]systemdUnit
 	return result, nil
 }
 
-// ReadConfig returns the node/project configs, read from disk.
-func ReadConfig() (*Config, error) {
+// readConfig returns the node/project configs, read from disk.
+func readConfig() (*Config, error) {
 	conf := Config{}
 	f, err := os.Open("config.json")
 	if err != nil {
@@ -493,31 +501,54 @@ func ReadConfig() (*Config, error) {
 func (conf Config) String() string {
 	return fmt.Sprintf(
 		"Config{%s, %s}",
-		conf.Projects,
-		conf.Nodes,
+		conf.ProjectConfigs,
+		conf.NodeConfigs,
 	)
 }
 
-// CreateNodes returns nodes created from the configs.
-func (conf Config) CreateNodes() (nodes, error) {
+// getNodes returns the nodes created from configs.
+func (nconf NodeConfig) createNode(name nodeName, pconf ProjectConfigs) (*node, error) {
+	bins, err := pconf.getBinaries(nconf.ProjectVersions)
+	if err != nil {
+		return nil, err
+	}
+	units, err := pconf.getUnits(nconf.ProjectVersions)
+	if err != nil {
+		return nil, err
+	}
+	return &node{
+		name:         name,
+		binaries:     bins,
+		systemdUnits: units,
+	}, nil
+}
+
+// getNodes returns the nodes created from the config.
+func (conf Config) getNodes() (nodes, error) {
 	result := nodes{}
-	for name, nc := range conf.Nodes {
-		// TODO: Could move this loading into ReadConfig() call.
+	for name, nc := range conf.NodeConfigs {
 		log.Printf("Generating config for node %q..\n", name)
-		bins, err := conf.Projects.getBinaries(nc.ProjectVersions)
+		n, err := nc.createNode(name, conf.ProjectConfigs)
 		if err != nil {
 			return nil, err
 		}
-		units, err := conf.Projects.getUnits(nc.ProjectVersions)
-		if err != nil {
-			return nil, err
-		}
-		result[name] = node{
-			name:         name,
-			binaries:     bins,
-			systemdUnits: units,
-		}
+		result[name] = *n
 		log.Printf("Generated config %v\n", result[name])
+	}
+	return result, nil
+}
+
+// CreateNodes returns nodes created from the configs.
+func CreateNodes() (nodes, error) {
+	conf, err := readConfig()
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("Read config: %+v\n", conf)
+
+	result, err := conf.getNodes()
+	if err != nil {
+		log.Fatalf("Failed to get node: %v\n", err)
 	}
 	return result, nil
 }
