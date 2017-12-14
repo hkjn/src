@@ -2,11 +2,23 @@
 package main
 
 import (
+	"io"
+	"path/filepath"
+	"os"
+	"fmt"
 	"log"
 
 	"hkjn.me/src/infra/ignite"
 	"hkjn.me/src/infra/secretservice"
 )
+
+// checkClose closes specified closer and sets err to the result.
+func checkClose(c io.Closer, err *error) {
+	cerr := c.Close()
+	if *err == nil {
+		*err = cerr
+	}
+}
 
 func main() {
 	sshash, err := secretservice.GetHash()
@@ -20,7 +32,23 @@ func main() {
 	}
 
 	log.Printf("Read %d node configs..\n", len(conf.NodeConfigs))
-	if err := conf.DownloadChecksums("checksums", sshash, secretservice.BaseDomain); err != nil {
+	checksums, err := conf.GetChecksums(sshash, secretservice.BaseDomain)
+	if err != nil {
 		log.Fatalf("Failed to download checksums: %v\n", err)
+	}
+	basedir := "checksums"
+	for pv, checksumlines := range checksums {
+		var err error
+		filename := filepath.Join(basedir, fmt.Sprintf("%s_%s.sha512", pv.Name, pv.Version))
+		log.Printf("Creating %s with %d checksums for %v\n", filename, len(checksumlines), pv)
+		f, err := os.Create(filename)
+		if err != nil {
+			log.Fatalf("Failed to open checksums file: %v\n", err)
+		}
+		defer checkClose(f, &err)
+		for _, line := range checksumlines {
+			fmt.Printf("Appending checksum %x[..] to %q..\n", line[:5], filename)
+			f.Write([]byte(line))
+		}
 	}
 }

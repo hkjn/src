@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"path/filepath"
 	"os"
 	"os/user"
 	"sort"
@@ -99,7 +98,7 @@ type (
 	NodeConfig struct {
 		// sshash is the secretservice hash to use
 		sshash string
-		// projectVersions is the names of all the projects the node should run
+		// ProjectVersions is the names of all the projects the node should run
 		ProjectVersions []ProjectVersion `json:"projects"`
 		// arch is the CPU architecture the node runs, e.g. "x86_64"
 		Arch string `json:"arch"`
@@ -116,6 +115,8 @@ type (
 	DropinName     struct {
 		Unit, Dropin string
 	}
+	checksumlines []string
+	Checksums map[ProjectVersion]checksumlines
 
 	// projectConfig is the full configuration for a project.
 	projectConfig struct {
@@ -123,7 +124,6 @@ type (
 		Dropins []DropinName `json:"dropins"`
 		Files   NodeFiles    `json:"files"`
 		Secrets NodeFiles    `json:"secrets"`
-		// TODO: Add checksums here?
 	}
 	// ProjectConfigs represents all the project configurations.
 	ProjectConfigs map[ProjectName]projectConfig
@@ -428,16 +428,10 @@ func (conf projectConfig) String() string {
 }
 
 // getBinaries returns the binaries for this project and version, given configs.
-func (pv ProjectVersion) getBinaries(conf ProjectConfigs) ([]binary, error) {
+func (pv ProjectVersion) getBinaries(conf ProjectConfigs, checksums map[string]string) ([]binary, error) {
 	pc, exists := conf[pv.Name]
 	if !exists {
 		return nil, fmt.Errorf("bug: no such project %q", pv.Name)
-	}
-	// TODO: Find better place to load checksums to avoid loading same ones over
-	// and over.
-	checksums, err := pv.getChecksums()
-	if err != nil {
-		return nil, err
 	}
 
 	bins, err := pc.getBinaries(pv, checksums)
@@ -451,7 +445,13 @@ func (pv ProjectVersion) getBinaries(conf ProjectConfigs) ([]binary, error) {
 func (conf ProjectConfigs) getBinaries(pversions []ProjectVersion) ([]binary, error) {
 	result := []binary{}
 	for _, pv := range pversions {
-		bins, err := pv.getBinaries(conf)
+		// TODO: Find better place to load checksums to avoid loading same ones over
+		// and over.
+		checksums, err := pv.getChecksums()
+		if err != nil {
+			return nil, err
+		}
+		bins, err := pv.getBinaries(conf, checksums)
 		if err != nil {
 			return nil, err
 		}
@@ -512,7 +512,7 @@ func (conf Config) String() string {
 	)
 }
 
-// getNodes returns the nodes created from configs.
+// createNodes returns the nodes created from configs.
 func (nconf NodeConfig) createNode(name nodeName, pconf ProjectConfigs) (*node, error) {
 	bins, err := pconf.getBinaries(nconf.ProjectVersions)
 	if err != nil {
@@ -552,98 +552,83 @@ func checkClose(c io.Closer, err *error) {
 	}
 }
 
-// fetchChecksums downloads specified URL of checksum file.
-func fetchChecksums(url, filename string) (err error) {
+// checksum returns the sha512 checksum of file at specified url.
+func (s Secret) checksum(url string) (string, error) {
 	resp, err := http.Get(url)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer checkClose(resp.Body, &err)
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code from GET %q, want 200 OK, got %s", url, resp.Status)
-	}
-	f, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer checkClose(f, &err)
-	log.Printf("Saving checksum file to %q..\n", filename)
-	_, err = io.Copy(f, resp.Body)
-	return err
-}
-
-// checksumSecret downloads and checksums specified secret, and appends it to the checksum file.
-func checksumSecret(url, checksumfile, secretfile string) error {
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer checkClose(resp.Body, &err)
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code from GET %q, want 200 OK, got %s", url, resp.Status)
+		return "", fmt.Errorf("unexpected status code from GET %q, want 200 OK, got %s", url, resp.Status)
 	}
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return "", err
 	}
 	digest := sha512.Sum512(b)
-
-	f, err := os.OpenFile(checksumfile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
-	}
-	defer checkClose(f, &err)
-	log.Printf("Appending checksum %x[..] to %q..\n", digest[:5], checksumfile)
-	line := fmt.Sprintf("%x  %s\n", digest, secretfile)
-	if _, err := f.Write([]byte(line)); err != nil {
-		return err
-	}
-	_, err = io.Copy(f, resp.Body)
-	return err
+	return fmt.Sprintf("%x  %s\n", digest, s.Name), nil
 }
 
-// DownloadChecksums downloads the checksum files in the config.
-func (conf *Config) DownloadChecksums(basedir, sshash, ssbasedomain string) error {
+// getSecretChecksums returns the checksums of secrets in given combination of node and project version.
+func (nc NodeConfig) getSecretChecksums(sshash, ssbasedomain string, pconfs ProjectConfigs) (Checksums, error) {
+	result := Checksums{}
 	fetched := map[string]bool{}
-	for node, nc := range conf.NodeConfigs {
-		log.Printf("Fetching checksums for node %q..\n", node)
-		for _, pv := range nc.ProjectVersions {
-			// TODO: Also need to handle secrets, like decenter.world.pem for "decenter.world"..
-			// fetch from secret service directly?
-			if pv.Name == ProjectName("bitcoin") {
-				// TODO: Instead of special-casing "core" (bitcoin) project, which has
-				// no checksums since there's no binaries to download, maybe start
-				// checksumming / versioning systemd unit (.service, .mount) and
-				// dropins (.conf) within the project?
-				log.Printf("Skipping bitcoin, no binaries to download..\n")
+	for _, pv := range nc.ProjectVersions {
+		// TODO: Also need to handle secrets, like decenter.world.pem for "decenter.world"..
+		// fetch from secret service directly?
+		if pv.Name == ProjectName("bitcoin") {
+			// TODO: Instead of special-casing "core" (bitcoin) project, which has
+			// no checksums since there's no binaries to download, maybe start
+			// checksumming / versioning systemd unit (.service, .mount) and
+			// dropins (.conf) within the project?
+			log.Printf("Skipping bitcoin, no binaries to download..\n")
+			continue
+		}
+		secrets, err := pconfs.GetSecrets(pv.Name)
+		if err != nil {
+			return nil, err
+		}
+		for _, secret := range secrets {
+			url := secret.GetURL(ssbasedomain, sshash, pv)
+			if fetched[url] {
 				continue
 			}
-			url := pv.GetChecksumURL()
-			filename := filepath.Join(basedir, fmt.Sprintf("%s_%s.sha512", pv.Name, pv.Version))
-			if !fetched[url] {
-				log.Printf("Fetching %q..\n", url)
-				if err := fetchChecksums(url, filename); err != nil {
-					return err
-				}
-				fetched[url] = true
-			}
-			secrets, err := conf.ProjectConfigs.GetSecrets(pv.Name)
+			log.Printf("Fetching and checksumming secret %q..\n", secret.Name)
+			line, err := secret.checksum(url)
 			if err != nil {
-				return err
+				return nil, err
 			}
-			for _, secret := range secrets {
-				url := secret.GetURL(ssbasedomain, sshash, pv)
-				if !fetched[url] {
-					log.Printf("Fetching and checksumming secret %q..\n", secret.Name)
-					if err := checksumSecret(url, filename, secret.Name); err != nil {
-						return err
-					}
-					fetched[url] = true
-				}
+			lines, exist := result[pv]
+			if !exist {
+				result[pv] = checksumlines([]string{line})
+			} else {
+				result[pv] = append(lines, line)
+			}
+			fetched[url] = true
+		}
+	}
+	return result, nil
+}
+
+// GetChecksums returns the checksums specified by the config.
+func (conf *Config) GetChecksums(sshash, ssbasedomain string) (Checksums, error) {
+	result := Checksums{}
+	// TODO: Should include non-secret checksums here too, or otherwise make sure that fetch_checksums.go will include those.
+	for node, nc := range conf.NodeConfigs {
+		log.Printf("Fetching checksums for node %q..\n", node)
+		newchecksums, err := nc.getSecretChecksums(sshash, ssbasedomain, conf.ProjectConfigs)
+		if err != nil {
+			return nil, err
+		}
+		for k, v := range newchecksums {
+			_, exists := result[k]
+			if !exists {
+				result[k] = v
 			}
 		}
 	}
-	return nil
+	return result, nil
 }
 
 // ReadConfig returns the node/project configs, read from disk.
@@ -657,7 +642,7 @@ func ReadConfig() (*Config, error) {
 	if err := json.NewDecoder(f).Decode(&conf); err != nil {
 		return nil, err
 	}
-	// TODO: Should include systemd units / files and secrets in *Config returned here..
+	// TODO: Should probably include systemd units / files and secrets in *Config returned here..
 	return &conf, nil
 }
 
