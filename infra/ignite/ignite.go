@@ -4,6 +4,9 @@
 package ignite
 
 import (
+	"io"
+	"net/http"
+	"crypto/sha512"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -79,6 +82,7 @@ type (
 		// systemdUnits are the systemd units to use for the node.
 		systemdUnits []systemdUnit
 	}
+	// TODO: call conf.ProjectConfigs.GetSecrets()
 
 	nodes map[nodeName]node
 	// ProjectName is the name of a project.
@@ -99,8 +103,6 @@ type (
 		// arch is the CPU architecture the node runs, e.g. "x86_64"
 		Arch string `json:"arch"`
 	}
-	// NodeConfigs is the configuration of all nodes
-	NodeConfigs map[nodeName]NodeConfig
 
 	NodeFile struct {
 		Path        string `json:"path"`
@@ -110,6 +112,9 @@ type (
 	NodeFiles []NodeFile
 	Secret    NodeFile
 	Secrets   []Secret
+	DropinName     struct {
+		Unit, Dropin string
+	}
 
 	// projectConfig is the full configuration for a project.
 	projectConfig struct {
@@ -121,9 +126,8 @@ type (
 	}
 	// ProjectConfigs represents all the project configurations.
 	ProjectConfigs map[ProjectName]projectConfig
-	DropinName     struct {
-		Unit, Dropin string
-	}
+	// NodeConfigs is the configuration of all nodes.
+	NodeConfigs map[nodeName]NodeConfig
 	Config struct {
 		ProjectConfigs ProjectConfigs `json:"project_configs"`
 		NodeConfigs    NodeConfigs    `json:"nodes"`
@@ -210,6 +214,7 @@ func (n node) getFiles() []file {
 	return result
 }
 
+// String returns a human-readable description of the node.
 func (n node) String() string {
 	return fmt.Sprintf(
 		"%q (%d binaries, %d systemd units)",
@@ -260,7 +265,7 @@ func (n node) getIgnitionConfig() ignitionConfig {
 	}
 }
 
-// newProject returns the project created from config.
+// newProject returns the systemd units created from config.
 func (conf projectConfig) getSystemdUnits() ([]systemdUnit, error) {
 	units := []systemdUnit{}
 	for _, unitFile := range conf.Units {
@@ -344,7 +349,7 @@ func (conf ProjectConfigs) String() string {
 	)
 }
 
-// GetSecrets returns the URLs for any secrets in the project.
+// GetSecrets returns any secrets in the project.
 func (conf ProjectConfigs) GetSecrets(projectName ProjectName) (Secrets, error) {
 	p, exists := conf[projectName]
 	if !exists {
@@ -481,7 +486,7 @@ func (conf projectConfig) getBinaries(pv ProjectVersion, checksums map[string]st
 }
 
 // getUnits returns the systemd units for the specific projects.
-func (conf ProjectConfigs) getUnits(pversions []ProjectVersion) ([]systemdUnit, error) {
+func (conf ProjectConfigs) getSystemdUnits(pversions []ProjectVersion) ([]systemdUnit, error) {
 	result := []systemdUnit{}
 	for _, pv := range pversions {
 		pc, exists := conf[pv.Name]
@@ -495,20 +500,6 @@ func (conf ProjectConfigs) getUnits(pversions []ProjectVersion) ([]systemdUnit, 
 		result = append(result, units...)
 	}
 	return result, nil
-}
-
-// ReadConfig returns the node/project configs, read from disk.
-func ReadConfig() (*Config, error) {
-	conf := Config{}
-	f, err := os.Open("config.json")
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	if err := json.NewDecoder(f).Decode(&conf); err != nil {
-		return nil, err
-	}
-	return &conf, nil
 }
 
 // String returns a human-readable description of the config.
@@ -526,7 +517,7 @@ func (nconf NodeConfig) createNode(name nodeName, pconf ProjectConfigs) (*node, 
 	if err != nil {
 		return nil, err
 	}
-	units, err := pconf.getUnits(nconf.ProjectVersions)
+	units, err := pconf.getSystemdUnits(nconf.ProjectVersions)
 	if err != nil {
 		return nil, err
 	}
@@ -550,6 +541,123 @@ func (conf Config) getNodes() (nodes, error) {
 		log.Printf("Generated config %v\n", result[name])
 	}
 	return result, nil
+}
+
+// checkClose closes specified closer and sets err to the result.
+func checkClose(c io.Closer, err *error) {
+	cerr := c.Close()
+	if *err == nil {
+		*err = cerr
+	}
+}
+
+// fetchChecksums downloads specified URL of checksum file.
+func fetchChecksums(url, filename string) (err error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer checkClose(resp.Body, &err)
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code from GET %q, want 200 OK, got %s", url, resp.Status)
+	}
+	f, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer checkClose(f, &err)
+	log.Printf("Saving checksum file to %q..\n", filename)
+	_, err = io.Copy(f, resp.Body)
+	return err
+}
+
+// checksumSecret downloads and checksums specified secret, and appends it to the checksum file.
+func checksumSecret(url, checksumfile, secretfile string) error {
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer checkClose(resp.Body, &err)
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code from GET %q, want 200 OK, got %s", url, resp.Status)
+	}
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	digest := sha512.Sum512(b)
+
+	f, err := os.OpenFile(checksumfile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer checkClose(f, &err)
+	log.Printf("Appending checksum %x[..] to %q..\n", digest[:5], checksumfile)
+	line := fmt.Sprintf("%x  %s\n", digest, secretfile)
+	if _, err := f.Write([]byte(line)); err != nil {
+		return err
+	}
+	_, err = io.Copy(f, resp.Body)
+	return err
+}
+
+// DownloadChecksums downloads the checksum files in the config.
+func (conf *Config) DownloadChecksums(sshash, ssbasedomain string) error {
+	fetched := map[string]bool{}
+	for node, nc := range conf.NodeConfigs {
+		log.Printf("Fetching checksums for node %q..\n", node)
+		for _, pv := range nc.ProjectVersions {
+			// TODO: Also need to handle secrets, like decenter.world.pem for "decenter.world"..
+			// fetch from secret service directly?
+			if pv.Name == ProjectName("bitcoin") {
+				// TODO: Instead of special-casing "core" (bitcoin) project, which has
+				// no checksums since there's no binaries to download, maybe start
+				// checksumming / versioning systemd unit (.service, .mount) and
+				// dropins (.conf) within the project?
+				log.Printf("Skipping bitcoin, no binaries to download..\n")
+				continue
+			}
+			url := GetChecksumURL(pv)
+			filename := fmt.Sprintf("checksums/%s_%s.sha512", pv.Name, pv.Version)
+			if !fetched[url] {
+				log.Printf("Fetching %q..\n", url)
+				if err := fetchChecksums(url, filename); err != nil {
+					return err
+				}
+				fetched[url] = true
+			}
+			secrets, err := conf.ProjectConfigs.GetSecrets(pv.Name)
+			if err != nil {
+				return err
+			}
+			for _, secret := range secrets {
+				url := secret.GetURL(ssbasedomain, sshash, pv)
+				if !fetched[url] {
+					log.Printf("Fetching and checksumming secret %q..\n", secret.Name)
+					if err := checksumSecret(url, filename, secret.Name); err != nil {
+						return err
+					}
+					fetched[url] = true
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// ReadConfig returns the node/project configs, read from disk.
+func ReadConfig() (*Config, error) {
+	conf := Config{}
+	f, err := os.Open("config.json")
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	if err := json.NewDecoder(f).Decode(&conf); err != nil {
+		return nil, err
+	}
+	// TODO: Should include systemd units / files and secrets in *Config returned here..
+	return &conf, nil
 }
 
 // CreateNodes returns nodes created from the configs.
