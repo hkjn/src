@@ -1,4 +1,4 @@
-// fetch_checksums.go is a tool to read nodes.json
+// fetch_checksums.go is a tool that generates .sha512 files under checksums/ based on config.json.
 package main
 
 import (
@@ -10,8 +10,8 @@ import (
 	"net/http"
 	"os"
 
-	"hkjn.me/hkjninfra/ignite"
-	"hkjn.me/hkjninfra/secretservice"
+	"hkjn.me/src/infra/ignite"
+	"hkjn.me/src/infra/secretservice"
 )
 
 // checkClose closes specified closer and sets err to the result.
@@ -73,9 +73,9 @@ func fetchChecksums(url, filename string) (err error) {
 }
 
 // downloadChecksums downloads the checksum files.
-func downloadChecksums(conf ignite.ConfigJSON, sshash string) error {
+func downloadChecksums(conf ignite.Config, sshash string) error {
 	fetched := map[string]bool{}
-	for node, nc := range conf.Nodes {
+	for node, nc := range conf.NodeConfigs {
 		log.Printf("Fetching checksums for node %q..\n", node)
 		for _, pv := range nc.ProjectVersions {
 			// TODO: Also need to handle secrets, like decenter.world.pem for "decenter.world"..
@@ -97,7 +97,7 @@ func downloadChecksums(conf ignite.ConfigJSON, sshash string) error {
 				}
 				fetched[url] = true
 			}
-			secrets, err := conf.Projects.GetSecrets(pv.Name)
+			secrets, err := conf.ProjectConfigs.GetSecrets(pv.Name)
 			if err != nil {
 				return err
 			}
@@ -126,7 +126,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Unable to fetch secret service hash: %v\n", err)
 	}
-	log.Printf("Read %d node configs..\n", len(conf.Nodes))
+	log.Printf("Read %d node configs..\n", len(conf.NodeConfigs))
 	if err := downloadChecksums(*conf, sshash); err != nil {
 		log.Fatalf("Failed to download checksums: %v\n", err)
 	}
