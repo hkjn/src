@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"path/filepath"
 	"os"
 	"os/user"
 	"sort"
@@ -311,7 +312,7 @@ func (pv ProjectVersion) getChecksums() (map[string]string, error) {
 }
 
 // GetChecksumURL returns the URL to fetch the checksums for the project.
-func GetChecksumURL(pv ProjectVersion) string {
+func (pv ProjectVersion) GetChecksumURL() string {
 	return fmt.Sprintf(
 		"https://github.com/hkjn/%s/releases/download/%s/SHA512SUMS",
 		pv.Name,
@@ -602,7 +603,7 @@ func checksumSecret(url, checksumfile, secretfile string) error {
 }
 
 // DownloadChecksums downloads the checksum files in the config.
-func (conf *Config) DownloadChecksums(sshash, ssbasedomain string) error {
+func (conf *Config) DownloadChecksums(basedir, sshash, ssbasedomain string) error {
 	fetched := map[string]bool{}
 	for node, nc := range conf.NodeConfigs {
 		log.Printf("Fetching checksums for node %q..\n", node)
@@ -617,8 +618,8 @@ func (conf *Config) DownloadChecksums(sshash, ssbasedomain string) error {
 				log.Printf("Skipping bitcoin, no binaries to download..\n")
 				continue
 			}
-			url := GetChecksumURL(pv)
-			filename := fmt.Sprintf("checksums/%s_%s.sha512", pv.Name, pv.Version)
+			url := pv.GetChecksumURL()
+			filename := filepath.Join(basedir, fmt.Sprintf("%s_%s.sha512", pv.Name, pv.Version))
 			if !fetched[url] {
 				log.Printf("Fetching %q..\n", url)
 				if err := fetchChecksums(url, filename); err != nil {

@@ -2,13 +2,7 @@
 package main
 
 import (
-	"crypto/sha512"
-	"fmt"
-	"io"
-	"io/ioutil"
 	"log"
-	"net/http"
-	"os"
 
 	"hkjn.me/src/infra/ignite"
 	"hkjn.me/src/infra/secretservice"
@@ -26,7 +20,7 @@ func main() {
 	}
 
 	log.Printf("Read %d node configs..\n", len(conf.NodeConfigs))
-	if err := conf.DownloadChecksums(sshash, secretservice.BaseDomain); err != nil {
+	if err := conf.DownloadChecksums("checksums", sshash, secretservice.BaseDomain); err != nil {
 		log.Fatalf("Failed to download checksums: %v\n", err)
 	}
 }
