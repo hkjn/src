@@ -1,6 +1,6 @@
 // Package ignite deals with Ignite JSON configs.
 //
-// TODO: Fix issue with missing /etc/ssl .pem files in hkjninfra project
+// TODO: Fix issue with missing /etc/ssl .pem files in hkjninfra project, seems like call to ProjectConfigs.GetSecrets() got lost..
 package ignite
 
 import (
@@ -315,10 +315,10 @@ func GetChecksumURL(pv ProjectVersion) string {
 }
 
 // Names returns the names of the project configs in sorted order.
-func (p ProjectConfigs) Names() []ProjectName {
-	names := make([]ProjectName, len(p), len(p))
+func (conf ProjectConfigs) Names() []ProjectName {
+	names := make([]ProjectName, len(conf), len(conf))
 	i := 0
-	for name, _ := range p {
+	for name, _ := range conf {
 		names[i] = name
 		i += 1
 	}
@@ -329,19 +329,32 @@ func (p ProjectConfigs) Names() []ProjectName {
 }
 
 // String returns a human-readable description of the project configs.
-func (p ProjectConfigs) String() string {
-	desc := make([]string, len(p), len(p))
-	for i, name := range p.Names() {
+func (conf ProjectConfigs) String() string {
+	desc := make([]string, len(conf), len(conf))
+	for i, name := range conf.Names() {
 		desc[i] = fmt.Sprintf(
 			"%s: %s",
 			name,
-			p[name],
+			conf[name],
 		)
 	}
 	return fmt.Sprintf(
-		"Projects{%s}",
+		"ProjectConfigs{%s}",
 		strings.Join(desc, ", "),
 	)
+}
+
+// GetSecrets returns the URLs for any secrets in the project.
+func (conf ProjectConfigs) GetSecrets(projectName ProjectName) (Secrets, error) {
+	p, exists := conf[projectName]
+	if !exists {
+		return nil, fmt.Errorf("no project %q", projectName)
+	}
+	result := make(Secrets, len(p.Secrets), len(p.Secrets))
+	for i, s := range p.Secrets {
+		result[i] = Secret(s)
+	}
+	return result, nil
 }
 
 // String returns a human-readable description of the NodeFiles.
@@ -372,6 +385,7 @@ func (nf NodeFiles) String() string {
 	)
 }
 
+// GetURL returns the URL to fetch the secret.
 func (s Secret) GetURL(secretServiceDomain, sshash string, pv ProjectVersion) string {
 	return fmt.Sprintf(
 		"https://%s/%s/files/%s/%s/certs/%s",
@@ -483,8 +497,8 @@ func (conf ProjectConfigs) getUnits(pversions []ProjectVersion) ([]systemdUnit, 
 	return result, nil
 }
 
-// readConfig returns the node/project configs, read from disk.
-func readConfig() (*Config, error) {
+// ReadConfig returns the node/project configs, read from disk.
+func ReadConfig() (*Config, error) {
 	conf := Config{}
 	f, err := os.Open("config.json")
 	if err != nil {
@@ -540,7 +554,7 @@ func (conf Config) getNodes() (nodes, error) {
 
 // CreateNodes returns nodes created from the configs.
 func CreateNodes() (nodes, error) {
-	conf, err := readConfig()
+	conf, err := ReadConfig()
 	if err != nil {
 		return nil, err
 	}
