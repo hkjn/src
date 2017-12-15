@@ -1,0 +1,18 @@
+[Unit]
+Description=btcd connected to testnet
+After=network-online.target
+
+[Service]
+ExecStartPre=-/usr/bin/docker pull hkjn/btcd:0.1.0-roasbeef-fork-9978b9
+ExecStartPre=-/usr/bin/docker stop btcd-testnet
+ExecStartPre=-/usr/bin/docker rm btcd-testnet
+ExecStart=/bin/bash -c " \
+    docker run --name btcd-testnet \
+               -p 18333:18333 \
+               -p 18334:18334 \
+               -v /crypt/btcdtestnet:/blockchain \
+    hkjn/btcd:0.1.0-roasbeef-fork-9978b9 /btcd --configfile=/blockchain/btcd_testnet.conf"
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
