@@ -4,13 +4,13 @@
 package ignite
 
 import (
-	"io"
-	"net/http"
 	"crypto/sha512"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"os/user"
 	"sort"
@@ -82,16 +82,15 @@ type (
 		// systemdUnits are the systemd units to use for the node.
 		systemdUnits []systemdUnit
 	}
-	// TODO: call conf.ProjectConfigs.GetSecrets()
-
 	nodes map[nodeName]node
 	// ProjectName is the name of a project.
 	ProjectName string
+	checksums   map[string]string
 	// ProjectVersion is the name and version of a project.
 	ProjectVersion struct {
-		// name is the name of a project the node should run node, e.g. "hkjninfra"
+		// name is the name of a project the node should run node, e.g. "hkjninfra".
 		Name ProjectName `json:"name"`
-		// version is the version of the project that should run on the node, e.g. "1.0.1"
+		// version is the version of the project that should run on the node, e.g. "1.0.1".
 		Version Version `json:"version"`
 	}
 	// NodeConfig is the configuration of a single node
@@ -100,6 +99,8 @@ type (
 		sshash string
 		// ProjectVersions is the names of all the projects the node should run
 		ProjectVersions []ProjectVersion `json:"projects"`
+		// checksums holds each version of each project's checksums.
+		checksums map[ProjectVersion]checksums
 		// arch is the CPU architecture the node runs, e.g. "x86_64"
 		Arch string `json:"arch"`
 	}
@@ -109,14 +110,15 @@ type (
 		Name        string `json:"name"`
 		ChecksumKey string `json:"checksum_key"`
 	}
-	NodeFiles []NodeFile
-	Secret    NodeFile
-	Secrets   []Secret
-	DropinName     struct {
+	NodeFiles  []NodeFile
+	Secret     NodeFile
+	Secrets    []Secret
+	DropinName struct {
 		Unit, Dropin string
 	}
+	// TODO: Unify with checksums type above
 	checksumlines []string
-	Checksums map[ProjectVersion]checksumlines
+	Checksums     map[ProjectVersion]checksumlines
 
 	// projectConfig is the full configuration for a project.
 	projectConfig struct {
@@ -129,7 +131,7 @@ type (
 	ProjectConfigs map[ProjectName]projectConfig
 	// NodeConfigs is the configuration of all nodes.
 	NodeConfigs map[nodeName]NodeConfig
-	Config struct {
+	Config      struct {
 		ProjectConfigs ProjectConfigs `json:"project_configs"`
 		NodeConfigs    NodeConfigs    `json:"nodes"`
 	}
@@ -287,7 +289,7 @@ func (conf projectConfig) getSystemdUnits() ([]systemdUnit, error) {
 }
 
 // getChecksums returns the checksums for the project version.
-func (pv ProjectVersion) getChecksums() (map[string]string, error) {
+func (pv ProjectVersion) getChecksums() (checksums, error) {
 	checksumFile := fmt.Sprintf(
 		"checksums/%s_%s.sha512",
 		pv.Name,
@@ -297,7 +299,7 @@ func (pv ProjectVersion) getChecksums() (map[string]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to read checksums for %q version %q: %v", pv.Name, pv.Version, err)
 	}
-	checksums := map[string]string{}
+	result := checksums{}
 	for _, line := range strings.Split(string(checksumData), "\n") {
 		if len(line) == 0 {
 			continue
@@ -306,9 +308,9 @@ func (pv ProjectVersion) getChecksums() (map[string]string, error) {
 		if len(parts) != 2 {
 			return nil, fmt.Errorf("invalid line in checksum file %s: %q", checksumFile, line)
 		}
-		checksums[parts[1]] = parts[0]
+		result[parts[1]] = parts[0]
 	}
-	return checksums, nil
+	return result, nil
 }
 
 // GetChecksumURL returns the URL to fetch the checksums for the project.
@@ -428,49 +430,20 @@ func (conf projectConfig) String() string {
 }
 
 // getBinaries returns the binaries for this project and version, given configs.
-func (pv ProjectVersion) getBinaries(conf ProjectConfigs, checksums map[string]string) ([]binary, error) {
+func (pv ProjectVersion) getBinaries(conf ProjectConfigs, checksums checksums) ([]binary, error) {
 	pc, exists := conf[pv.Name]
 	if !exists {
 		return nil, fmt.Errorf("bug: no such project %q", pv.Name)
 	}
-
-	bins, err := pc.getBinaries(pv, checksums)
-	if err != nil {
-		return nil, err
-	}
-	return bins, err
-}
-
-// getBinaries returns the binaries for the specific project.
-func (conf ProjectConfigs) getBinaries(pversions []ProjectVersion) ([]binary, error) {
 	result := []binary{}
-	for _, pv := range pversions {
-		// TODO: Find better place to load checksums to avoid loading same ones over
-		// and over.
-		checksums, err := pv.getChecksums()
-		if err != nil {
-			return nil, err
-		}
-		bins, err := pv.getBinaries(conf, checksums)
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, bins...)
-	}
-	return result, nil
-}
-
-// getBinaries returns the binaries.
-func (conf projectConfig) getBinaries(pv ProjectVersion, checksums map[string]string) ([]binary, error) {
-	result := []binary{}
-	for _, file := range conf.Files {
+	for _, file := range pc.Files {
 		key := file.ChecksumKey
 		if key == "" {
 			key = file.Name
 		}
 		checksum, exists := checksums[key]
 		if !exists {
-			return nil, fmt.Errorf("missing checksum for key %q; all checksums %v", key, checksums)
+			return nil, fmt.Errorf("missing checksum for key %q; all checksums \"%v\"", key, checksums)
 		}
 		result = append(result, binary{
 			url: fmt.Sprintf(
@@ -483,6 +456,7 @@ func (conf projectConfig) getBinaries(pv ProjectVersion, checksums map[string]st
 			path:     file.Path,
 		})
 	}
+
 	return result, nil
 }
 
@@ -514,9 +488,13 @@ func (conf Config) String() string {
 
 // createNodes returns the nodes created from configs.
 func (nconf NodeConfig) createNode(name nodeName, pconf ProjectConfigs) (*node, error) {
-	bins, err := pconf.getBinaries(nconf.ProjectVersions)
-	if err != nil {
-		return nil, err
+	bins := []binary{}
+	for _, pv := range nconf.ProjectVersions {
+		newbins, err := pv.getBinaries(pconf, nconf.checksums[pv])
+		if err != nil {
+			return nil, err
+		}
+		bins = append(bins, newbins...)
 	}
 	units, err := pconf.getSystemdUnits(nconf.ProjectVersions)
 	if err != nil {
@@ -642,6 +620,19 @@ func ReadConfig() (*Config, error) {
 	if err := json.NewDecoder(f).Decode(&conf); err != nil {
 		return nil, err
 	}
+
+	for nn, nc := range conf.NodeConfigs {
+		nc := nc
+		nc.checksums = map[ProjectVersion]checksums{}
+		for _, pv := range nc.ProjectVersions {
+			checksums, err := pv.getChecksums()
+			if err != nil {
+				return nil, err
+			}
+			nc.checksums[pv] = checksums
+		}
+		conf.NodeConfigs[nn] = nc
+	}
 	// TODO: Should probably include systemd units / files and secrets in *Config returned here..
 	return &conf, nil
 }
@@ -653,7 +644,11 @@ func CreateNodes() (nodes, error) {
 		return nil, err
 	}
 	log.Printf("Read config: %+v\n", conf)
-
+	for _, nc := range conf.NodeConfigs {
+		if len(nc.checksums) == 0 {
+			return nil, fmt.Errorf("bug: missing checksums")
+		}
+	}
 	result, err := conf.getNodes()
 	if err != nil {
 		log.Fatalf("Failed to get node: %v\n", err)
