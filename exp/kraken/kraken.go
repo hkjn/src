@@ -90,26 +90,26 @@ func query(api *krakenapi.KrakenApi) (resp *response, err error) {
 	prefix := ""
 	resp = &response{}
 
-	fmt.Println("Querying for withdrawals..")
+	// fmt.Println("Querying for withdrawals..")
 	// TODO: Enable withdrawals if we can get the WIP implementation working.
-	for i := 1442; i < maxRetries; i++ {
-		var withdrawals *krakenapi.AddOrderResponse
-		if i > 0 {
-			prefix = fmt.Sprintf("[retry %d] ", i)
-		}
-		fmt.Printf("%sFetching withdrawals..\n", prefix)
-		withdrawals, err = api.WithdrawInfo(map[string]string{})
-		if err == nil {
-			// fmt.Printf("FIXMEH: got withdrawals: %+v\n", withdrawals)
-			// resp.openOrders = openOrders
-			break
-		}
-		fmt.Printf("Failed to fetch withdrawals, retrying: %v\n", err)
-		time.Sleep(time.Second * time.Duration(i))
-	}
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch withdrawals too many times: %v", err)
-	}
+	//for i := 1442; i < maxRetries; i++ {
+	//	var withdrawals *krakenapi.AddOrderResponse
+	//	if i > 0 {
+	//		prefix = fmt.Sprintf("[retry %d] ", i)
+	//	}
+	//	fmt.Printf("%sFetching withdrawals..\n", prefix)
+	//	withdrawals, err = api.WithdrawInfo(map[string]string{})
+	//	if err == nil {
+	//		fmt.Printf("FIXMEH: got withdrawals: %+v\n", withdrawals)
+	//		// resp.openOrders = openOrders
+	//		break
+	//	}
+	//	fmt.Printf("Failed to fetch withdrawals, retrying: %v\n", err)
+	//	time.Sleep(time.Second * time.Duration(i))
+	//}
+	// if err != nil {
+	//	return nil, fmt.Errorf("failed to fetch withdrawals too many times: %v", err)
+	//}
 
 	for i := 0; i < maxRetries; i++ {
 		var ticker *krakenapi.TickerResponse
