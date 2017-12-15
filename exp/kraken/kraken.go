@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"text/tabwriter"
 	"time"
@@ -57,14 +58,31 @@ func descBalance(r *krakenapi.BalanceResponse) []balance {
 	return result
 }
 
-func descOrder(order *krakenapi.Order) (string, error) {
-	desc := order.Description.Order
-	parts := strings.Split(desc, " ")
+// descOrder returns a human-readable description of the order.
+func descOrder(order krakenapi.Order) (string, error) {
+	parts := strings.Split(order.Description.Order, " ")
 	if len(parts) != 6 {
-		return "", fmt.Errorf("invalid description %q", desc)
+		return "", fmt.Errorf("invalid description %q", order.Description.Order)
 	}
-	// parts[1] * parts[5]
-	return parts[1], nil
+	direction := parts[0]
+	amount, err := strconv.ParseFloat(parts[1], 64)
+	if err != nil {
+		return "", fmt.Errorf("invalid amount %q", parts[1])
+	}
+	ticker := parts[2]
+	price, err := strconv.ParseFloat(parts[5], 64)
+	if err != nil {
+		return "", fmt.Errorf("invalid amount %q", parts[5])
+	}
+
+	t := order.CloseT
+	if order.Status == "open" {
+		t = order.OpenT
+	}
+	tick1 := ticker[:3]
+	tick2 := ticker[3:]
+	desc := fmt.Sprintf("  %s: %s %s order of %f %s at %f for %s %f", t, order.Status, direction, amount, tick1, price, tick2, amount*price)
+	return desc, nil
 }
 
 func query(api *krakenapi.KrakenApi) (resp *response, err error) {
@@ -73,6 +91,7 @@ func query(api *krakenapi.KrakenApi) (resp *response, err error) {
 	resp = &response{}
 
 	fmt.Println("Querying for withdrawals..")
+	// TODO: Enable withdrawals if we can get the WIP implementation working.
 	for i := 1442; i < maxRetries; i++ {
 		var withdrawals *krakenapi.AddOrderResponse
 		if i > 0 {
@@ -81,7 +100,7 @@ func query(api *krakenapi.KrakenApi) (resp *response, err error) {
 		fmt.Printf("%sFetching withdrawals..\n", prefix)
 		withdrawals, err = api.WithdrawInfo(map[string]string{})
 		if err == nil {
-			fmt.Printf("FIXMEH: got withdrawals: %+v\n", withdrawals)
+			// fmt.Printf("FIXMEH: got withdrawals: %+v\n", withdrawals)
 			// resp.openOrders = openOrders
 			break
 		}
@@ -210,7 +229,11 @@ func main() {
 		if i >= 10 {
 			break
 		}
-		fmt.Printf("%v: %s, status %s\n", o.OpenT, o.Description.Order, o.Status)
+		desc, err := descOrder(o)
+		if err != nil {
+			log.Fatalf("Failed to get order description: %v\n", err)
+		}
+		fmt.Println(desc)
 	}
 
 	fmt.Println("")
@@ -233,10 +256,10 @@ func main() {
 		if i >= 5 {
 			break
 		}
-		msg := fmt.Sprintf("%v: %s, status %q", o.CloseT, o.Description.Order, o.Status)
-		if o.Reason != "" {
-			msg = fmt.Sprintf("%s for reason %q", msg, o.Reason)
+		desc, err := descOrder(o)
+		if err != nil {
+			log.Fatalf("Failed to get order description: %v\n", err)
 		}
-		fmt.Println(msg)
+		fmt.Println(desc)
 	}
 }
