@@ -62,7 +62,7 @@ if [[ -p /dev/stdin ]]; then
 	debug "/dev/stdin is a pipe, attempting to read it"
 	cat > ${CLEAR}
 else
-	nano ${CLEAR}
+	vim ${CLEAR}
 fi
 
 CHECKSUM_AFTER=$(sha256sum $CLEAR)
