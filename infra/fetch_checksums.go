@@ -32,7 +32,7 @@ func main() {
 	}
 
 	log.Printf("Read %d node configs..\n", len(conf.NodeConfigs))
-	checksums, err := conf.GetChecksums(sshash, secretservice.BaseDomain)
+	checksums, err := conf.GetChecksums(sshash)
 	if err != nil {
 		log.Fatalf("Failed to download checksums: %v\n", err)
 	}

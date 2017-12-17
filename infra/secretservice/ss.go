@@ -8,8 +8,6 @@ import (
 )
 
 const (
-	// BaseDomain is the base domain for the service.
-	BaseDomain = "admin1.hkjn.me"
 	// saltFile is the path to the secretservice salt file.
 	saltFile = "/etc/secrets/secretservice/salt"
 	// seedFile is the path to the secretservice seed file.

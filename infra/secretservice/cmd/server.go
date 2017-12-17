@@ -21,6 +21,7 @@ type Config struct {
 	Seed     string
 	FilesDir string
 	Addr     string
+	Domain   string
 }
 
 const (
@@ -80,6 +81,9 @@ func main() {
 	if err := envconfig.Process("SECRETSERVICE", &c); err != nil {
 		log.Fatalf("envconfig: %v\n", err)
 	}
+	if c.Domain == "" {
+		log.Fatalf("no SECRETSERVICE_DOMAIN\n")
+	}
 	log.Printf("Using %d character seed\n", len(c.Seed))
 	if c.Seed == "" {
 		log.Fatalf("no SECRETSERVICE_SEED\n")
@@ -104,7 +108,7 @@ func main() {
 		m := autocert.Manager{
 			Prompt:     autocert.AcceptTOS,
 			Cache:      autocert.DirCache("/etc/secrets/acme/"),
-			HostPolicy: autocert.HostWhitelist(secretservice.BaseDomain),
+			HostPolicy: autocert.HostWhitelist(c.Domain),
 		}
 		s.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
 		log.Fatal(s.ListenAndServeTLS("", ""))
