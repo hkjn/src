@@ -15,6 +15,6 @@ mkdir -p ${WORK_DIR}
 cd ${WORK_DIR}
 
 info "Fetching version ${VERSION}.."
-curl --progress-bar -fSLO ${INFRA_RELEASE_URL}/secretservice_${CPU_ARCH}
+curl --progress-bar -fSLO ${INFRA_RELEASE_URL}/secretservice
 info "Installing binary to /usr/local/bin/secretservice.."
 sudo install secretservice_${CPU_ARCH} /opt/bin/secretservice

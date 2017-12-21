@@ -2,6 +2,8 @@
 #
 # Build secretservice binaries in Docker container.
 #
+# TODO: Switch to Makefile-based build/deploy scripts.
+#
 
 set -euo pipefail
 
@@ -11,6 +13,7 @@ cd ${BASE_DIR}
 echo "Building ssbuild.."
 docker build -t secretservice-build .
 echo "Running ssbuild container.."
+# TODO: Drop --entrypoint arg once hkjn/workspace-alpine image we use as base has been updated.
 docker run --name ssbuild --entrypoint sh secretservice-build
 echo "Copying out binaries from container.."
 rm -rf bin/

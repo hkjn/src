@@ -1,7 +1,7 @@
-FROM hkjn/workspace-alpine:1.5.0-arm
+FROM hkjn/workspace-alpine:1.6.1
 
 ENV CGO_ENABLED=0
-WORKDIR /home/go/src/hkjn.me/hkjninfra/secretservice/
+WORKDIR /home/go/src/hkjn.me/src/infra/secretservice/
 
 COPY ["*.go", "./"]
 COPY ["cmd", "./cmd/"]
