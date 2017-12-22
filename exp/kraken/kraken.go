@@ -81,7 +81,7 @@ func descOrder(order krakenapi.Order) (string, error) {
 	}
 	tick1 := ticker[:3]
 	tick2 := ticker[3:]
-	desc := fmt.Sprintf("  %s: %s %s order of %f %s at %f for %s %f", t, order.Status, direction, amount, tick1, price, tick2, amount*price)
+	desc := fmt.Sprintf("  %s: %s %s order of %f %s at %f for %f %s", t, order.Status, direction, amount, tick1, price, amount*price, tick2)
 	return desc, nil
 }
 
