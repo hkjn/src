@@ -49,10 +49,22 @@ func descBalance(r *krakenapi.BalanceResponse) []balance {
 			value:  r.BCH,
 		})
 	}
+	if r.XLTC > 0.00001 {
+		result = append(result, balance{
+			ticker: "LTC",
+			value:  r.XLTC,
+		})
+	}
 	if r.XXMR > 0.00001 {
 		result = append(result, balance{
 			ticker: "XMR",
 			value:  r.XXMR,
+		})
+	}
+	if r.EOS > 0.00001 {
+		result = append(result, balance{
+			ticker: "EOS",
+			value:  r.EOS,
 		})
 	}
 	return result
@@ -70,6 +82,7 @@ func descOrder(order krakenapi.Order) (string, error) {
 		return "", fmt.Errorf("invalid amount %q", parts[1])
 	}
 	ticker := parts[2]
+
 	price, err := strconv.ParseFloat(parts[5], 64)
 	if err != nil {
 		return "", fmt.Errorf("invalid amount %q", parts[5])
@@ -223,7 +236,7 @@ func main() {
 	if len(resp.openOrders.Open) == 0 {
 		fmt.Println("No open orders.")
 	} else {
-		fmt.Println("Open orders:")
+		fmt.Printf("%d open orders:\n", len(resp.openOrders.Open))
 	}
 	for i, o := range orders {
 		if i >= 10 {
@@ -240,7 +253,7 @@ func main() {
 	if len(resp.closedOrders.Closed) == 0 {
 		fmt.Println("No closed orders.")
 	} else {
-		fmt.Println("Closed orders:")
+		fmt.Printf("%d closed orders:\n", len(resp.closedOrders.Closed))
 	}
 
 	i = 0
