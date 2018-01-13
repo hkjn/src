@@ -389,7 +389,7 @@ type OrderDescription struct {
 type Order struct {
 	TransactionID  string  `json:"-"`
 	ReferenceID    string  `json:"refid"`
-	UserRef        string  `json:"userref"`
+	UserRef        float64 `json:"userref"`
 	Status         string  `json:"status"`
 	OpenTime       float64 `json:"opentm"`
 	OpenT          time.Time
