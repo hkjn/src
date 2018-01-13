@@ -4,9 +4,7 @@ FROM hkjn/golang
 
 ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US.UTF-8 \
-    PROTOBUF_VERSION=v3.3.2 \
-    CGO_ENABLED=0 \
-    GOOS=linux
+    PROTOBUF_VERSION=v3.3.2
 
 USER root
 RUN apk add --no-cache autoconf automake bash bind-tools curl coreutils file git g++ \

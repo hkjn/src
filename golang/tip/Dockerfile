@@ -1,5 +1,8 @@
 FROM hkjn/alpine
 
+ENV CGO_ENABLED=0 \
+    GOOS=linux
+
 RUN set -eux && \
     apk add --no-cache ca-certificates git libcap musl-dev && \
     apk add --no-cache --virtual .build-deps bash gcc openssl go && \

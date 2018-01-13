@@ -2,7 +2,9 @@ FROM hkjn/alpine
 
 ENV GOLANG_VERSION=1.9.2
 ENV GOLANG_SRC_URL=https://golang.org/dl/go$GOLANG_VERSION.src.tar.gz \
-    GOLANG_SRC_SHA256=665f184bf8ac89986cfd5a4460736976f60b57df6b320ad71ad4cef53bb143dc
+    GOLANG_SRC_SHA256=665f184bf8ac89986cfd5a4460736976f60b57df6b320ad71ad4cef53bb143dc \
+    CGO_ENABLED=0 \
+    GOOS=linux
 
 RUN set -eux && \
     apk add --no-cache ca-certificates git libcap musl-dev && \

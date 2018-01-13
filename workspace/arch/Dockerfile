@@ -7,10 +7,7 @@ ENV UNPRIVILEGED_UID=1001 \
     LANGUAGE=en_US.UTF-8 \
     LC_ALL=C \
     GOPATH=/home/user \
-    USER=user \
-    PROTOBUF_VERSION=v3.3.2 \
-    CGO_ENABLED=0 \
-    GOOS=linux
+    USER=user
 
 RUN pacman --noconfirm -Syyu && \
     pacman --noconfirm -S autoconf emacs gcc git go make python openssh tmux unzip
