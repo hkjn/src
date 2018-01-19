@@ -1,0 +1,19 @@
+[Unit]
+Description=bitcoind testnet
+After=network-online.target
+
+[Service]
+ExecStartPre=-/usr/bin/docker pull hkjn/bitcoin:v0.15.1
+ExecStartPre=-/usr/bin/docker stop bitcoin-testnet
+ExecStartPre=-/usr/bin/docker rm bitcoin-testnet
+TimeoutStartSec=10000
+ExecStart=/bin/bash -c " \
+  docker run --name bitcoin-testnet \
+             -p 18332-18333:18332-18333 \
+             -v /crypt/btctestnet:/home/bitcoin/.bitcoin \
+             hkjn/bitcoin:v0.15.1 -dbcache=800 -onlynet=ipv4 -printtoconsole"
+TimeoutStopSec=1000
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
