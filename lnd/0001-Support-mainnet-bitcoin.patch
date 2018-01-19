@@ -1,0 +1,76 @@
+From 8ad09c444d3832a722e101737472af0f9294446f Mon Sep 17 00:00:00 2001
+From: junderw <junderwood@bitcoinbank.co.jp>
+Date: Sun, 14 Jan 2018 22:58:25 +0900
+Subject: [PATCH] Support mainnet bitcoin
+
+---
+ chainparams.go   | 6 ++++++
+ chainregistry.go | 4 ++--
+ config.go        | 5 +++++
+ 3 files changed, 13 insertions(+), 2 deletions(-)
+
+diff --git a/chainparams.go b/chainparams.go
+index 0c7fd34..791cb31 100644
+--- a/chainparams.go
++++ b/chainparams.go
+@@ -33,6 +33,12 @@ var bitcoinTestNetParams = bitcoinNetParams{
+ 	rpcPort: "18334",
+ }
+ 
++// bitcoinMainNetParams contains parameters specific to the main network
++var bitcoinMainNetParams = bitcoinNetParams{
++	Params:  &bitcoinCfg.MainNetParams,
++	rpcPort: "8334",
++}
++
+ // bitcoinSimNetParams contains parameters specific to the simulation test
+ // network.
+ var bitcoinSimNetParams = bitcoinNetParams{
+diff --git a/chainregistry.go b/chainregistry.go
+index 675ad5c..99915b7 100644
+--- a/chainregistry.go
++++ b/chainregistry.go
+@@ -108,7 +108,7 @@ func newChainControlFromConfig(cfg *config, chanDB *channeldb.DB,
+ 			TimeLockDelta: cfg.Bitcoin.TimeLockDelta,
+ 		}
+ 		cc.feeEstimator = lnwallet.StaticFeeEstimator{
+-			FeeRate: 50,
++			FeeRate: 200,
+ 		}
+ 	case litecoinChain:
+ 		cc.routingPolicy = htlcswitch.ForwardingPolicy{
+@@ -275,7 +275,7 @@ func newChainControlFromConfig(cfg *config, chanDB *channeldb.DB,
+ 			// if we're using btcd as a backend, then we can use
+ 			// live fee estimates, rather than a statically coded
+ 			// value.
+-			fallBackFeeRate := btcutil.Amount(25)
++			fallBackFeeRate := btcutil.Amount(140)
+ 			cc.feeEstimator, err = lnwallet.NewBtcdFeeEstimator(
+ 				*rpcConfig, fallBackFeeRate,
+ 			)
+diff --git a/config.go b/config.go
+index 4ce84be..f4c3da2 100644
+--- a/config.go
++++ b/config.go
+@@ -84,6 +84,7 @@ type chainConfig struct {
+ 	RPCCert    string `long:"rpccert" description:"File containing the daemon's certificate file"`
+ 	RawRPCCert string `long:"rawrpccert" description:"The raw bytes of the daemon's PEM-encoded certificate chain which will be used to authenticate the RPC connection."`
+ 
++	MainNet  bool `long:"mainnet" description:"Use the main network"`
+ 	TestNet3 bool `long:"testnet" description:"Use the test network"`
+ 	SimNet   bool `long:"simnet" description:"Use the simulation test network"`
+ 	RegTest  bool `long:"regtest" description:"Use the regression test network"`
+@@ -316,6 +317,10 @@ func loadConfig() (*config, error) {
+ 		// number of network flags passed; assign active network params
+ 		// while we're at it.
+ 		numNets := 0
++		if cfg.Bitcoin.MainNet {
++			numNets++
++			activeNetParams = bitcoinMainNetParams
++		}
+ 		if cfg.Bitcoin.TestNet3 {
+ 			numNets++
+ 			activeNetParams = bitcoinTestNetParams
+-- 
+2.7.4
+
