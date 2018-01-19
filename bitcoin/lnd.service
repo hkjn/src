@@ -1,0 +1,19 @@
+[Unit]
+Description=lnd
+After=network-online.target
+
+[Service]
+ExecStartPre=-/usr/bin/docker pull hkjn/lnd:cb7699-arm
+ExecStartPre=-/usr/bin/docker stop lnd
+ExecStartPre=-/usr/bin/docker rm lnd
+TimeoutStartSec=1000
+ExecStart=/bin/bash -c " \
+  docker run --name lnd \
+             -p 9375:9375 \
+             -v /crypt/lnd:/lnd \
+             hkjn/lnd:cb7699-arm"
+TimeoutStopSec=1000
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
