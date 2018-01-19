@@ -1,6 +1,7 @@
 FROM hkjn/golang
 
 ARG goarch
+ARG lnd_version
 
 ENV CGO_ENABLED=0 \
     GOOS=linux \
