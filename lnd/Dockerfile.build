@@ -4,20 +4,17 @@ ARG goarch
 
 ENV CGO_ENABLED=0 \
     GOOS=linux \
-    GOARCH=${goarch}
+    GOARCH=${goarch} \
+    LND_VERSION=${lnd_version}
 
-# todo: drop once permission issues in hkjn/golang have been fixed.
-USER root
-RUN chown -R go:go /home/go
-USER go
-RUN pwd && ls -hsal
-
-RUN mkdir -p src/github.com/lightningnetwork && \
-    cd src/github.com/lightningnetwork && \
-    git clone https://github.com/lightningnetwork/lnd && \
-    cd lnd && \
+RUN mkdir -p src/github.com/lightningnetwork/lnd && \
+    cd src/github.com/lightningnetwork/lnd && \
+    git clone https://github.com/lightningnetwork/lnd . && \
+    git checkout ${LND_VERSION} && \
+    echo "Building at ${LND_VERSION}: $(git show)" && \
     go get -v github.com/Masterminds/glide && \
     glide install && \
     go install . ./cmd/...
+
 WORKDIR /home/go/bin
 ENTRYPOINT echo "Binaries available in $(pwd): $(ls -R)"

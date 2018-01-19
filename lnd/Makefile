@@ -4,7 +4,7 @@ VERSION=$(shell cat VERSION)
 
 pre-build:
 	@echo "Building lnd in container.."
-	docker build --build-arg goarch=$(DOCKER_ARCH) -t lnd-build -f Dockerfile.build .
+	docker build --build-arg goarch=$(DOCKER_ARCH) --build-arg lnd_version=${VERSION} -t lnd-build -f Dockerfile.build .
 	@echo "Running lnd container.."
 	docker run --name lnd-build lnd-build
 	@echo "Copying out build artifacts.."
