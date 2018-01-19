@@ -3,16 +3,15 @@ Description=bitcoind
 After=network-online.target
 
 [Service]
-ExecStartPre=-/usr/bin/docker pull hkjn/bitcoin
+ExecStartPre=-/usr/bin/docker pull hkjn/bitcoin:v0.15.1
 ExecStartPre=-/usr/bin/docker stop bitcoin
 ExecStartPre=-/usr/bin/docker rm bitcoin
+TimeoutStartSec=10000
 ExecStart=/bin/bash -c " \
   docker run --name bitcoin \
-             -p 8333:8333 \
-             --memory=1050m \
-             --cpu-shares=128 \
+             -p 8332-8333:8332-8333 \
              -v /crypt/bitcoin:/home/bitcoin/.bitcoin \
-             hkjn/bitcoin -dbcache=800 -onlynet=ipv4 -printtoconsole"
+             hkjn/bitcoin:v0.15.1 -dbcache=800 -onlynet=ipv4 -printtoconsole"
 TimeoutStopSec=1000
 Restart=always
 
