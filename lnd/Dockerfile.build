@@ -19,9 +19,9 @@ RUN mkdir -p src/github.com/lightningnetwork/lnd && \
 WORKDIR /home/go/src/github.com/lightningnetwork/lnd
 
 # TODO: Stop applying patch needed for mainnet once lnd has official support for it.
-COPY 0001-Support-mainnet-bitcoin.patch .
+COPY 0001-Add-mainnet-bitcoin-support.patch .
 RUN echo "Applying patch.." && \
-    patch -p1 < 0001-Support-mainnet-bitcoin.patch && \
+    patch -p1 < *.patch && \
     go install . ./cmd/...
 
 WORKDIR /home/go/bin

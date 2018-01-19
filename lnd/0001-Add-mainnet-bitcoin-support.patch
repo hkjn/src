@@ -1,8 +1,9 @@
-From 8ad09c444d3832a722e101737472af0f9294446f Mon Sep 17 00:00:00 2001
-From: junderw <junderwood@bitcoinbank.co.jp>
-Date: Sun, 14 Jan 2018 22:58:25 +0900
-Subject: [PATCH] Support mainnet bitcoin
+From 4767c1c747e4ca742d0ff613883d54739045607e Mon Sep 17 00:00:00 2001
+From: Henrik Jonsson <me@hkjn.me>
+Date: Fri, 19 Jan 2018 17:19:34 +0000
+Subject: [PATCH] Add mainnet bitcoin support
 
+Based on https://github.com/junderw/lnd.
 ---
  chainparams.go   | 6 ++++++
  chainregistry.go | 4 ++--
@@ -27,10 +28,10 @@ index 0c7fd34..791cb31 100644
  // network.
  var bitcoinSimNetParams = bitcoinNetParams{
 diff --git a/chainregistry.go b/chainregistry.go
-index 675ad5c..99915b7 100644
+index 160d91f..7e85f8d 100644
 --- a/chainregistry.go
 +++ b/chainregistry.go
-@@ -108,7 +108,7 @@ func newChainControlFromConfig(cfg *config, chanDB *channeldb.DB,
+@@ -111,7 +111,7 @@ func newChainControlFromConfig(cfg *config, chanDB *channeldb.DB,
  			TimeLockDelta: cfg.Bitcoin.TimeLockDelta,
  		}
  		cc.feeEstimator = lnwallet.StaticFeeEstimator{
@@ -39,7 +40,7 @@ index 675ad5c..99915b7 100644
  		}
  	case litecoinChain:
  		cc.routingPolicy = htlcswitch.ForwardingPolicy{
-@@ -275,7 +275,7 @@ func newChainControlFromConfig(cfg *config, chanDB *channeldb.DB,
+@@ -380,7 +380,7 @@ func newChainControlFromConfig(cfg *config, chanDB *channeldb.DB,
  			// if we're using btcd as a backend, then we can use
  			// live fee estimates, rather than a statically coded
  			// value.
@@ -49,18 +50,18 @@ index 675ad5c..99915b7 100644
  				*rpcConfig, fallBackFeeRate,
  			)
 diff --git a/config.go b/config.go
-index 4ce84be..f4c3da2 100644
+index 3258512..0ef7898 100644
 --- a/config.go
 +++ b/config.go
-@@ -84,6 +84,7 @@ type chainConfig struct {
- 	RPCCert    string `long:"rpccert" description:"File containing the daemon's certificate file"`
- 	RawRPCCert string `long:"rawrpccert" description:"The raw bytes of the daemon's PEM-encoded certificate chain which will be used to authenticate the RPC connection."`
+@@ -83,6 +83,7 @@ type chainConfig struct {
+ 
+ 	Node string `long:"node" description:"The blockchain interface to use." choice:"btcd" choice:"bitcoind" choice:"neutrino"`
  
 +	MainNet  bool `long:"mainnet" description:"Use the main network"`
  	TestNet3 bool `long:"testnet" description:"Use the test network"`
  	SimNet   bool `long:"simnet" description:"Use the simulation test network"`
  	RegTest  bool `long:"regtest" description:"Use the regression test network"`
-@@ -316,6 +317,10 @@ func loadConfig() (*config, error) {
+@@ -332,6 +333,10 @@ func loadConfig() (*config, error) {
  		// number of network flags passed; assign active network params
  		// while we're at it.
  		numNets := 0
