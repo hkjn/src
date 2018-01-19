@@ -4,41 +4,46 @@
 FROM hkjn/arch
 
 ARG bitcoin_version
-ENV BITCOIN_VERSION=${bitcoin_version}
+ARG lightning_version
+
+ENV BITCOIN_VERSION=${bitcoin_version} \
+    LIGHTNING_VERSION=${lightning_version}
 
 # Install dependencies.
 RUN pacman -Syyu --noconfirm && \
     pacman -S --noconfirm git base-devel boost libevent
 
-# Install old Berkeley DB 4.8, which is the only officially supported version.
-WORKDIR /usr/local/src/
-RUN curl https://aur.archlinux.org/cgit/aur.git/snapshot/db4.8.tar.gz -o db.tar.gz && \
-    tar xzfv db.tar.gz
-WORKDIR /usr/local/src/db4.8/
-
 RUN useradd -m bitcoin && \
     chown -R bitcoin:bitcoin /usr/local/src
 USER bitcoin
-RUN makepkg -sr
 
-USER root
-RUN pacman --noconfirm -U /usr/local/src/db4.8/db4.8-4.8.30-*.pkg.tar.xz
-
-WORKDIR /usr/local/src/
-RUN git clone https://github.com/bitcoin/bitcoin.git
 WORKDIR /usr/local/src/bitcoin/
+RUN git clone https://github.com/bitcoin/bitcoin .
 
 RUN git checkout ${BITCOIN_VERSION} && \
-    echo "Building at: $(git show)"
-RUN ./autogen.sh && ./configure --disable-wallet
-RUN make && make install
+    echo "Building bitcoin at: $(git show)"
+
+RUN ./autogen.sh && \
+    ./configure --disable-wallet
+
+RUN make && \
+    make install
+
+WORKDIR /usr/local/src/lightning
+RUN git clone https://github.com/elementsproject/lightning . && \
+    git checkout ${LIGHTNING_VERSION} && \
+    echo "Building lightning at $(git show)"
+
+RUN make && \
+    make install
 
 WORKDIR /usr/lib/
 RUN mkdir -p /build/lib /build/bin && \
     cp -v libboost_chrono.so.* libboost_filesystem.so.* libboost_program_options.so.* \
           libboost_system.so.* libboost_thread.so.* libdb_cxx-5.3.so libevent-?.?.so.* \
           libevent_pthreads-?.?.so.* libstdc++.so.* /build/lib/ && \
-    cp -v /usr/local/bin/{bitcoin-cli,bitcoind,bitcoin-tx} /build/bin/ && \
+    cp -v /usr/local/bin/{bitcoin-cli,bitcoind,bitcoin-tx,lightningd,lighting-cli} /build/bin/ && \
     cp -v /usr/local/src/bitcoin/share/rpcuser/rpcuser.py /build/bin/
+
 WORKDIR /build
 ENTRYPOINT echo "Build outputs available in $(pwd): $(ls -hsalR)"
