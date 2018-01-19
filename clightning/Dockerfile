@@ -1,4 +1,6 @@
 # TODO: switch to hkjn/alpine, or at least hkjn/arch
+# TODO: can make this Dockerfile.build and add a runtime image as well
+# TODO: seems that bitcoin-cli and other binaries is also required here.. compile bitcoin as well?
 FROM debian
 
 RUN apt-get -y update && \
