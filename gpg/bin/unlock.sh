@@ -77,7 +77,6 @@ debug "Using recipients ${RECIPIENTS}"
 
 if [[ $CHECKSUM_BEFORE != $CHECKSUM_AFTER ]]; then
 	info "Contents changed, re-encrypting ${CLEAR} -> $CRYPT"
-	local st
 	set +e
 	st=$(gpg --yes --output /crypt/${PASSWORD_SUB}/$(basename ${CRYPT}) --encrypt --armor ${RECIPIENTS} ${CLEAR})
 	set -e
