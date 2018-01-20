@@ -37,6 +37,7 @@ trap cleanup EXIT
 
 debug "Using recipients ${PASSWORD_RECIPIENTS}"
 cd ${PASSWORD_SUB}
+MISMATCH=0
 for f in *.pgp; do
 	debug "${f} encrypted with:"
 	# Note that we need to munge out the recipient keys with --list-packets, then convert them to long format
@@ -55,6 +56,9 @@ for f in *.pgp; do
 			info "${recipient}"
 		else
 			error "Missing recipient '${recipient}' for '${f}'"
+			MISMATCH=1
+			# todo: could check if extra unexpected recipients are present too.
 		fi
 	done
 done
+exit ${MISMATCH}
