@@ -38,12 +38,20 @@ trap cleanup EXIT
 debug "Using recipients ${PASSWORD_RECIPIENTS}"
 cd ${PASSWORD_SUB}
 for f in *.pgp; do
-	info "${f} encrypted with:"
+	debug "${f} encrypted with:"
+	# Note that we need to munge out the recipient keys with --list-packets, then convert them to long format
+	# in order to compare what they should be.
 	set +e
-	actual_recipients=$(gpg --batch --list-packets ${f} 2>&1 | grep 'encrypted with')
+	actual_recipients=$(gpg --batch --list-packets ${f} 2>&1 | grep 'encrypted with' | grep -o -P '[[:xdigit:]]{16}')
 	set -e
+	actual_keys=""
+	for key in ${actual_recipients}; do
+		long_key=$(gpg -k "${key}" | grep -o -P '[[:xdigit:]]{40}')
+		actual_keys="${actual_keys} ${long_key}"
+	done
+	debug "Long keys: ${actual_keys}"
 	for recipient in ${PASSWORD_RECIPIENTS}; do
-		if echo "${actual_recipients}" | grep -q ${recipient}; then
+		if echo "${actual_keys}" | grep -q ${recipient}; then
 			info "${recipient}"
 		else
 			error "Missing recipient '${recipient}' for '${f}'"
