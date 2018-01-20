@@ -14,7 +14,9 @@ RUN pacman --noconfirm -Syyy && \
     pacman --noconfirm -S python
 USER bitcoin
 
+COPY ["entrypoint.sh", "/usr/local/bin/"]
+
 WORKDIR /home/bitcoin
-ENTRYPOINT ["bitcoind"]
-CMD ["-printtoconsole"]
+ENTRYPOINT ["entrypoint.sh"]
+CMD [""]
 
