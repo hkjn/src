@@ -12,6 +12,7 @@
 #
 declare BASE=/crypt
 declare PASSWORD_SUB=${PASSWORD_SUB:-""}
+declare KEEP_KEY_IN_MEMORY=${KEEP_KEY_IN_MEMORY:-""}
 
 set -euo pipefail
 
@@ -21,8 +22,10 @@ source "/usr/local/bin/logging.sh"
 cleanup() {
 	info "Securely removing '${CLEAR}'.."
 	srm -v ${CLEAR}*
-	info "Dropping GPG identities from agent.."
-	echo RELOADAGENT | gpg-connect-agent
+	if [[ ! "${KEEP_KEY_IN_MEMORY}" ]]; then
+		info "Dropping GPG identities from agent.."
+		echo RELOADAGENT | gpg-connect-agent
+	fi
 }
 
 [[ "$#" -eq 1 ]] || fatal "Usage: $0 [encrypted file]"
@@ -74,8 +77,11 @@ debug "Using recipients ${RECIPIENTS}"
 
 if [[ $CHECKSUM_BEFORE != $CHECKSUM_AFTER ]]; then
 	info "Contents changed, re-encrypting ${CLEAR} -> $CRYPT"
-	gpg --yes --output /crypt/${PASSWORD_SUB}/$(basename ${CRYPT}) --encrypt --armor ${RECIPIENTS} ${CLEAR}
-	if [[ $? -ne 0 ]]; then
+	local st
+	set +e
+	st=$(gpg --yes --output /crypt/${PASSWORD_SUB}/$(basename ${CRYPT}) --encrypt --armor ${RECIPIENTS} ${CLEAR})
+	set -e
+	if [[ ${st} -ne 0 ]]; then
 		fatal "Error encrypting file."
 	fi
 fi
