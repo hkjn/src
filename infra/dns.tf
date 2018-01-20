@@ -77,16 +77,6 @@ resource "google_dns_record_set" "hkjn_mail" {
 #	]
 #}
 
-resource "google_dns_record_set" "hkjn_admin0" {
-  name = "admin0.${google_dns_managed_zone.hkjn_zone.dns_name}"
-  type = "A"
-  ttl  = 100
-  managed_zone = "${google_dns_managed_zone.hkjn_zone.name}"
-  rrdatas = [
-    "${var.admin0_ip}",
-  ]
-}
-
 resource "google_dns_record_set" "hkjn_admin1" {
   name = "admin1.${google_dns_managed_zone.hkjn_zone.dns_name}"
   type = "A"

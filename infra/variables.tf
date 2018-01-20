@@ -88,10 +88,6 @@ variable "ubuntu_image" {
   default = "ubuntu-1710-artful-v20171122"
 }
 
-variable "admin0_ip" {
-  default = "35.195.244.206"
-}
-
 variable "admin1_ip" {
   default = "51.15.200.169"
 }
