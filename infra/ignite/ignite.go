@@ -17,9 +17,6 @@ import (
 	"strings"
 )
 
-// SecretServiceBaseDomain is the base domain for the service.
-const SecretServiceBaseDomain = "admin1.hkjn.me"
-
 type (
 	fileVerification struct {
 		Hash string `json:"hash,omitempty"`
@@ -552,7 +549,7 @@ func (s Secret) checksum(url string) (string, error) {
 }
 
 // getSecretChecksums returns the checksums of secrets in given combination of node and project version.
-func (nc NodeConfig) getSecretChecksums(sshash string, pconfs ProjectConfigs) (Checksums, error) {
+func (nc NodeConfig) getSecretChecksums(sshash, ssbasedomain string, pconfs ProjectConfigs) (Checksums, error) {
 	result := Checksums{}
 	fetched := map[string]bool{}
 	for _, pv := range nc.ProjectVersions {
@@ -571,7 +568,7 @@ func (nc NodeConfig) getSecretChecksums(sshash string, pconfs ProjectConfigs) (C
 			return nil, err
 		}
 		for _, secret := range secrets {
-			url := secret.GetURL(SecretServiceBaseDomain, sshash, pv)
+			url := secret.GetURL(ssbasedomain, sshash, pv)
 			if fetched[url] {
 				continue
 			}
@@ -593,12 +590,12 @@ func (nc NodeConfig) getSecretChecksums(sshash string, pconfs ProjectConfigs) (C
 }
 
 // GetChecksums returns the checksums specified by the config.
-func (conf *Config) GetChecksums(sshash string) (Checksums, error) {
+func (conf *Config) GetChecksums(sshash, ssbasedomain string) (Checksums, error) {
 	result := Checksums{}
 	// TODO: Should include non-secret checksums here too, or otherwise make sure that fetch_checksums.go will include those.
 	for node, nc := range conf.NodeConfigs {
 		log.Printf("Fetching checksums for node %q..\n", node)
-		newchecksums, err := nc.getSecretChecksums(sshash, conf.ProjectConfigs)
+		newchecksums, err := nc.getSecretChecksums(sshash, ssbasedomain, conf.ProjectConfigs)
 		if err != nil {
 			return nil, err
 		}
