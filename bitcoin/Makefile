@@ -1,7 +1,7 @@
 include ../make/Makefile
 NAME=bitcoin
-VERSION=v0.15.1-lightning
-BITCOIN_VERSION=v0.15.1
+VERSION=f4c942e3-lightning
+BITCOIN_VERSION=f4c942e3
 LIGHTNING_VERSION=ced486
 
 pre-build:
