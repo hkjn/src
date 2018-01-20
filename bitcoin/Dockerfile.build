@@ -43,8 +43,8 @@ RUN mkdir -p /build/lib /build/bin && \
     cp -v libboost_chrono.so.* libboost_filesystem.so.* libboost_program_options.so.* \
           libboost_system.so.* libboost_thread.so.* libdb_cxx-5.3.so libevent-?.?.so.* \
           libevent_pthreads-?.?.so.* libstdc++.so.* /build/lib/ && \
-    cp -v /usr/local/bin/{bitcoin-cli,bitcoind,bitcoin-tx,lightningd,lighting-cli} /build/bin/ && \
-    cp -v /usr/local/src/bitcoin/share/rpcuser/rpcuser.py /build/bin/
+    cp -v /usr/local/bin/{bitcoin-cli,bitcoind,bitcoin-tx,lightningd,lightning-cli} /build/bin/ && \
+    cp -v /usr/local/src/bitcoin/share/rpcauth/rpcauth.py /build/bin/
 
 WORKDIR /build
 ENTRYPOINT echo "Build outputs available in $(pwd): $(ls -hsalR)"
