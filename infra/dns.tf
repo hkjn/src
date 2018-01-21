@@ -15,7 +15,7 @@ resource "google_dns_record_set" "hkjn_prod" {
   rrdatas      = ["${module.scaleway.public_ip}"]
 }
 
-resource "google_dns_record_set" "hkjn_prod" {
+resource "google_dns_record_set" "hkjn_ln" {
   count = "${var.hkjnprod_enabled ? 1 : 0}"
   name = "ln.${google_dns_managed_zone.hkjn_zone.dns_name}"
   type = "A"
