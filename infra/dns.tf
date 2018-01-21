@@ -15,6 +15,15 @@ resource "google_dns_record_set" "hkjn_prod" {
   rrdatas      = ["${module.scaleway.public_ip}"]
 }
 
+resource "google_dns_record_set" "hkjn_prod" {
+  count = "${var.hkjnprod_enabled ? 1 : 0}"
+  name = "ln.${google_dns_managed_zone.hkjn_zone.dns_name}"
+  type = "A"
+  ttl  = 150
+  managed_zone = "${google_dns_managed_zone.hkjn_zone.name}"
+  rrdatas      = ["${module.scaleway.public_ip}"]
+}
+
 resource "google_dns_record_set" "hkjn_web" {
   name = "${google_dns_managed_zone.hkjn_zone.dns_name}"
   type = "A"

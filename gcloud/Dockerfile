@@ -1,7 +1,7 @@
 FROM hkjn/alpine
 
 # via https://cloud.google.com/sdk/docs/quickstart-linux
-ENV GCLOUD_VERSION=183.0.0-linux-x86_64
+ENV GCLOUD_VERSION=185.0.0-linux-x86_64
 
 RUN apk add --no-cache curl python bash && \
     adduser -D gcloud -s /bin/bash
