@@ -8,9 +8,7 @@ set -euo pipefail
 lightning-cli connect 03939ff69d65a13c4bb2585042e7eb7e75a7c77289ab5794d1b973721d86c6839c 213.113.59.152
 # dx/dy
 lightning-cli connect 03d04b48cb2f277055f765c330de3c3c84f4e7d72129624bdb9b272d1113f13f14 76.10.136.25
-# Blockstream store
-lightning-cli connect 02f6725f9c1c40333b67faea92fd211c183050f28df32cac3f9d69685fe9665432 104.198.32.198
-# SLEEPYARK
+# Blockstream store / SLEEPYARK
 lightning-cli connect 02f6725f9c1c40333b67faea92fd211c183050f28df32cac3f9d69685fe9665432 104.198.32.198
 # COINGAMING
 lightning-cli connect 03b7ca940bc33b882dc1f1bee353a6cf205b1a7472d8ae24d45370a8f510c27d23 18.195.40.124
