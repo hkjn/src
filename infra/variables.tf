@@ -69,7 +69,7 @@ variable "gcloud_region" {
 # $ gcloud compute images list | grep coreos-alpha
 #
 variable "coreos_alpha_image" {
-  default = "coreos-alpha-1632-0-0-v20171220"
+  default = "coreos-alpha-1662-0-0-v20180119"
 }
 
 #
