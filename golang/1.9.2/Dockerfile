@@ -19,7 +19,7 @@ RUN set -eux && \
     apk del .build-deps && \
     adduser -D go -u 500 -g 500 -s /bin/bash && \
     mkdir -p /home/go/src && \
-    chown -R go:go /usr/local/go/
+    chown -R go:go /usr/local/go/ /home/go
 
 ENV GOPATH /home/go
 ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
