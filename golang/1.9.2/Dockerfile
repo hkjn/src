@@ -24,5 +24,7 @@ RUN set -eux && \
 ENV GOPATH /home/go
 ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 
+RUN go get -v github.com/golang/dep/cmd/dep
+
 WORKDIR $GOPATH
 USER go
