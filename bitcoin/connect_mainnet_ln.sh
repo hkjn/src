@@ -16,9 +16,3 @@ lightning-cli connect 02f6725f9c1c40333b67faea92fd211c183050f28df32cac3f9d69685f
 lightning-cli connect 03b7ca940bc33b882dc1f1bee353a6cf205b1a7472d8ae24d45370a8f510c27d23 18.195.40.124
 # #RECKLESS
 lightning-cli connect 035f1498c929d4cefba4701ae36a554691f526ff60b1766badd5a49b3c8b68e1d8 78.63.23.25~
-~
-~
-~
-~
-~
-
