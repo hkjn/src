@@ -9,9 +9,12 @@ ExecStartPre=-/usr/bin/docker rm bitcoin-ln
 TimeoutStartSec=10000
 ExecStart=/bin/bash -c " \
   docker run --name bitcoin-ln \
+             -p 80:80 \
+             -p 443:443 \
              -p 8332:8332 \
              -p 8333:8333 \
              -p 9735:9735 \
+             -v /etc/secrets/acme:/etc/secrets/acme \
              -v /crypt/bitcoin:/home/bitcoin/.bitcoin \
              -v /crypt/lightning:/home/bitcoin/.lightning \
              hkjn/clightning:hack -dbcache=800 -onlynet=ipv4 -printtoconsole"
