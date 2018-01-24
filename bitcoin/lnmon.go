@@ -36,18 +36,23 @@ type (
 		Version     string        `json:"version"`
 		Blockheight int           `json:"blockheight"`
 	}
+
+	peer struct {
+		State     string   `json:"state"`
+		Netaddr   []string `json:"netaddr"`
+		PeerId    string   `json:"peerid"`
+		Connected bool     `json:"connected"`
+		Owner     string   `json:"owner"`
+	}
 	// getpeers is the format of the getpeers response from lightning-cli.
 	getpeers struct {
-		NodeId      string        `json:"id"`
-		Port        int           `json:"port"`
-		Address     []addressInfo `json:"address"`
-		Version     string        `json:"version"`
-		Blockheight int           `json:"blockheight"`
+		Peers []peer `json:"peers"`
 	}
 	lightningdInfo struct {
-		pid     int
-		args    []string
-		getinfo getinfo
+		pid      int
+		args     []string
+		getinfo  getinfo
+		getpeers getpeers
 	}
 	info struct {
 		bitcoind   bitcoindInfo
@@ -110,8 +115,16 @@ func (c cli) GetInfo() (*getinfo, error) {
 	return &info, nil
 }
 
-func (c cli) GetPeers() (string, error) {
-	return "", nil
+func (c cli) GetPeers() (*getpeers, error) {
+	peersstring, err := c.exec("getpeers")
+	if err != nil {
+		return nil, err
+	}
+	var peers getpeers
+	if err := json.Unmarshal([]byte(peersstring), &peers); err != nil {
+		return nil, err
+	}
+	return &peers, nil
 }
 
 func (c cli) GetNodes() (string, error) {
@@ -169,7 +182,13 @@ func getLnInfo() (*lightningdInfo, error) {
 	}
 	info.getinfo = *getinfo
 	log.Printf("lightningd getinfo response: %+v\n", getinfo)
-	// log.Println(lnInfo)
+
+	getpeers, err := c.GetPeers()
+	if err != nil {
+		return nil, err
+	}
+	info.getpeers = *getpeers
+	log.Printf("lightningd getpeers response: %+v\n", getpeers)
 	return &info, nil
 }
 
@@ -214,10 +233,19 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		s += `<p><code>lightningd</code> is <strong>not running</strong>.</p>`
 	} else {
 		s += `<p><code>lightningd</code> is <strong>running</strong>.</p>`
-		s += fmt.Sprintf(`<p>Our id is <code>%s</code></p>.`, state.lightningd.getinfo.NodeId)
-		s += fmt.Sprintf(`<p>Our address is is <code>%s:%d</code></p>.`, state.lightningd.getinfo.Address[0].Address, state.lightningd.getinfo.Address[0].Port)
-		s += fmt.Sprintf(`<p>Our version is is <code>%s:%d</code></p>.`, state.lightningd.getinfo.Version)
-		s += fmt.Sprintf(`<p>Our blockheight is is <code>%s:%d</code></p>.`, state.lightningd.getinfo.Blockheight)
+		s += fmt.Sprintf(`<p>Our id is <code>%s</code>.</p>`, state.lightningd.getinfo.NodeId)
+		s += fmt.Sprintf(`<p>Our address is is <code>%s:%d</code>.</p>`, state.lightningd.getinfo.Address[0].Address, state.lightningd.getinfo.Address[0].Port)
+		s += fmt.Sprintf(`<p>Our version is is <code>%s</code>.</p>`, state.lightningd.getinfo.Version)
+		s += fmt.Sprintf(`<p>Our blockheight is is <code>%d</code>.</p>`, state.lightningd.getinfo.Blockheight)
+
+		s += fmt.Sprintf(`<h3>We have %d lightning peers</h3>`, len(state.lightningd.getpeers.Peers))
+		for _, peer := range state.lightningd.getpeers.Peers {
+			if len(peer.Netaddr) > 0 {
+				s += fmt.Sprintf(`<p><code>%s</code> running at <code>%s</code> is in state <code>%s</code>.</p>`, peer.PeerId, peer.Netaddr[0], peer.State)
+			} else {
+				s += fmt.Sprintf(`<p><code>%s</code> is in state <code>%s</code>.</p>`, peer.PeerId, peer.State)
+			}
+		}
 	}
 	s += "</html>"
 	fmt.Fprintf(w, s)
