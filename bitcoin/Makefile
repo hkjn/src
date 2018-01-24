@@ -1,8 +1,8 @@
 include ../make/Makefile
 NAME=bitcoin
 VERSION=f4c942e3-lightning
-BITCOIN_VERSION=f4c942e3
-LIGHTNING_VERSION=ced486
+BITCOIN_VERSION=126000
+LIGHTNING_VERSION=feb7340
 
 pre-build:
 	@echo "Building bitcoin in container.."
