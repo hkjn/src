@@ -137,7 +137,8 @@ func getBtcInfo() (*bitcoindInfo, error) {
 		return nil, err
 	}
 	parts := strings.Split(s, " ")
-	if len(parts) < 1 {
+	// FIXMEH: crashes if pgrep returns non-success, seems like there's still >= 1 parts..
+	if len(parts) < 1 || len(parts[0]) == 0 {
 		return &bitcoindInfo{}, nil
 	}
 	pid, err := strconv.Atoi(parts[0])
@@ -161,7 +162,7 @@ func getLnInfo() (*lightningdInfo, error) {
 		return nil, err
 	}
 	parts := strings.Split(s, " ")
-	if len(parts) < 1 {
+	if len(parts) < 1 || len(parts[0]) == 0 {
 		return &lightningdInfo{}, nil
 	}
 	pid, err := strconv.Atoi(parts[0])
