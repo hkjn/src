@@ -13,18 +13,19 @@ ENV BITCOIN_VERSION=${bitcoin_version} \
 RUN pacman -Syyu --noconfirm && \
     pacman -S --noconfirm git base-devel boost libevent python
 
-RUN useradd -m bitcoin && \
-    chown -R bitcoin:bitcoin /usr/local/src
-USER bitcoin
 
 WORKDIR /usr/local/src/bitcoin/
-RUN git clone https://github.com/bitcoin/bitcoin .
+RUN useradd -m bitcoin && \
+    chown -R bitcoin:bitcoin /usr/local/src && \
+    mkdir /usr/local/src/lightning
 
+USER bitcoin
+
+RUN git clone https://github.com/bitcoin/bitcoin .
 RUN git checkout ${BITCOIN_VERSION}
 
 RUN ./autogen.sh && \
     ./configure --disable-wallet
-
 
 RUN echo "Building bitcoin at: $(git show)" && \
     make
