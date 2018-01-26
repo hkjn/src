@@ -61,23 +61,34 @@ type (
 	listPeersResponse struct {
 		Peers []peer `json:"peers"`
 	}
+	node struct {
+		NodeId        string        `json:"nodeid"`
+		Alias         string        `json:"alias"`
+		Color         string        `json:"color"`
+		LastTimestamp int64         `json:"last_timestamp"`
+		Addresses     []addressInfo `json:"addresses"`
+	}
+	// listnNodesResponse si the format of the listnodes response from lightning-cli.
+	listNodesResponse struct {
+		Nodes []node `json:"nodes"`
+	}
 	lightningdState struct {
 		pid   int
 		args  []string
 		info  getInfoResponse
 		peers listPeersResponse
+		nodes listNodesResponse
 	}
 	state struct {
+		// aliases maps LN node ids to their human-readable aliases
+		aliases    map[string]string
 		bitcoind   bitcoindState
 		lightningd lightningdState
 	}
 )
 
-var (
-	allState state
-	// btcInfo bitcoindInfo
-	// lnInfo  lightningdInfo
-)
+// TODO: eliminate global variable
+var allState state
 
 func (s bitcoindState) String() string {
 	if s.pid == 0 {
@@ -123,6 +134,19 @@ func (c cli) GetInfo() (*getInfoResponse, error) {
 	}
 	resp := getInfoResponse{}
 	if err := json.Unmarshal([]byte(infostring), &resp); err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
+// ListNodes returns the lightning-cli response to listnodes.
+func (c cli) ListNodes() (*listNodesResponse, error) {
+	respstring, err := c.exec("listnodes")
+	if err != nil {
+		return nil, err
+	}
+	resp := listNodesResponse{}
+	if err := json.Unmarshal([]byte(respstring), &resp); err != nil {
 		return nil, err
 	}
 	return &resp, nil
@@ -204,11 +228,19 @@ func getLnState() (*lightningdState, error) {
 		return nil, err
 	}
 	s.peers = *peers
-	log.Printf("lightningd listpeers response: %+v\n", peers)
+	// log.Printf("lightningd listpeers response: %+v\n", peers)
+
+	nodes, err := c.ListNodes()
+	if err != nil {
+		return nil, err
+	}
+	s.nodes = *nodes
+	// log.Printf("lightningd listnodes response: %+v\n", nodes)
 	return &s, nil
 }
 
 func refresh() {
+	allState.aliases = map[string]string{}
 	for {
 		btcState, err := getBtcState()
 		if err != nil {
@@ -223,8 +255,6 @@ func refresh() {
 		allState.lightningd = *lnState
 
 		// lightning-cli getinfo
-		// lightning-cli getpeers
-		// lightning-cli getnodes
 		// lightning-cli getchannels
 
 		// lightning-cli listfunds
@@ -250,6 +280,10 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		s += `<p><code>lightningd</code> is <strong>running</strong>.</p>`
 		s += fmt.Sprintf(`<p>Our id is <code>%s</code>.</p>`, allState.lightningd.info.NodeId)
+		alias, exists := allState.aliases[allState.lightningd.info.NodeId]
+		if exists {
+			s += fmt.Sprintf(`<p>Our alias is <code>%s</code>.</p>`, alias)
+		}
 		s += fmt.Sprintf(`<p>Our address is is <code>%s:%d</code>.</p>`, allState.lightningd.info.Address[0].Address, allState.lightningd.info.Address[0].Port)
 		s += fmt.Sprintf(`<p>Our version is is <code>%s</code>.</p>`, allState.lightningd.info.Version)
 		s += fmt.Sprintf(`<p>Our blockheight is is <code>%d</code>.</p>`, allState.lightningd.info.Blockheight)
@@ -257,7 +291,12 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		s += fmt.Sprintf(`<h3>We have %d lightning peers:</h3>`, len(allState.lightningd.peers.Peers))
 		s += fmt.Sprintf(`<ul>`)
 		for _, peer := range allState.lightningd.peers.Peers {
-			s += fmt.Sprintf(`<li><code>%s</code> is `, peer.PeerId)
+			alias, exists := allState.aliases[peer.PeerId]
+			if exists {
+				s += fmt.Sprintf("<li><code>%s</code> (<code>%s</code>) is ", alias, peer.PeerId)
+			} else {
+				s += fmt.Sprintf(`<li><code>%s</code> is `, peer.PeerId)
+			}
 			if peer.Connected {
 				s += fmt.Sprintf(`<strong>connected</strong> at <code>%s</code>.`, peer.Netaddr[0])
 				s += fmt.Sprintf(`<ul>`)
@@ -275,7 +314,20 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 			s += fmt.Sprintf(`</li>`)
 		}
 		s += fmt.Sprintf(`</ul>`)
+
+		s += fmt.Sprintf(`<h3>We know of %d lightning nodes:</h3>`, len(allState.lightningd.nodes.Nodes))
+		s += fmt.Sprintf(`<ul>`)
+		for _, node := range allState.lightningd.nodes.Nodes {
+			s += fmt.Sprintf(`<li><code>%s</code>: <code>%s</code></li>`, node.Alias, node.NodeId)
+			_, exists := allState.aliases[node.NodeId]
+			if !exists {
+				log.Printf("Learned alias %q for node %q\n", node.Alias, node.NodeId)
+				allState.aliases[node.NodeId] = node.Alias
+			}
+		}
+		s += fmt.Sprintf(`</ul>`)
 	}
+
 	s += "</html>"
 	fmt.Fprintf(w, s)
 }
