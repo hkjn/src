@@ -37,12 +37,25 @@ type (
 		Blockheight int           `json:"blockheight"`
 	}
 
+	channel struct {
+		State                     string `json:"state"`
+		Owner                     string `json:"owner"`
+		ShortChannelId            string `json:"short_channel_id"`
+		FundingTxId               string `json:"funding_txid"`
+		MsatoshiToUs              int64  `json:"msatoshi_to_us"`
+		MsatoshiTotal             int64  `json:"msatoshi_total"`
+		DustLimitSatoshis         int64  `json:"dust_limit_satoshis"`
+		MaxHtlcValueInFlightMsats int64  `json:"max_htlc_value_in_flight_msats"`
+		ChannelReserveSatoshis    int64  `json:"channel_reserve_satoshis"`
+		HtlcMinimumMsat           int64  `json:"htlc_minimum_msat"`
+		ToSelfDelay               int64  `json:"to_self_delay"`
+		MaxAcceptedHtlcs          int64  `json:"max_accepted_htlcs"`
+	}
 	peer struct {
-		State     string   `json:"state"`
-		Netaddr   []string `json:"netaddr"`
-		PeerId    string   `json:"peerid"`
-		Connected bool     `json:"connected"`
-		Owner     string   `json:"owner"`
+		PeerId    string    `json:"id"`
+		Connected bool      `json:"connected"`
+		Netaddr   []string  `json:"netaddr"`
+		Channels  []channel `json:"channels"`
 	}
 	// listpeers is the format of the listpeers response from lightning-cli.
 	listpeers struct {
@@ -241,14 +254,27 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		s += fmt.Sprintf(`<p>Our version is is <code>%s</code>.</p>`, state.lightningd.info.Version)
 		s += fmt.Sprintf(`<p>Our blockheight is is <code>%d</code>.</p>`, state.lightningd.info.Blockheight)
 
-		s += fmt.Sprintf(`<h3>We have %d lightning peers</h3>`, len(state.lightningd.peers.Peers))
+		s += fmt.Sprintf(`<h3>We have %d lightning peers:</h3>`, len(state.lightningd.peers.Peers))
+		s += fmt.Sprintf(`<ul>`)
 		for _, peer := range state.lightningd.peers.Peers {
-			if len(peer.Netaddr) > 0 {
-				s += fmt.Sprintf(`<p><code>%s</code> running at <code>%s</code> is in state <code>%s</code>.</p>`, peer.PeerId, peer.Netaddr[0], peer.State)
+			s += fmt.Sprintf(`<li><code>%s</code> is `, peer.PeerId)
+			if peer.Connected {
+				s += fmt.Sprintf(`<strong>connected</strong> at <code>%s</code>.`, peer.Netaddr[0])
+				s += fmt.Sprintf(`<ul>`)
+				if len(peer.Channels) > 0 {
+					for _, channel := range peer.Channels {
+						s += fmt.Sprintf(`<li><code>%s</code>: <code>%s</code></li>`, channel.State, channel.ShortChannelId)
+					}
+				} else {
+					s += fmt.Sprintf(`<li>No channels.</li>`)
+				}
+				s += fmt.Sprintf(`</ul>`)
 			} else {
-				s += fmt.Sprintf(`<p><code>%s</code> is in state <code>%s</code>.</p>`, peer.PeerId, peer.State)
+				s += "not connected."
 			}
+			s += fmt.Sprintf(`</li>`)
 		}
+		s += fmt.Sprintf(`</ul>`)
 	}
 	s += "</html>"
 	fmt.Fprintf(w, s)
