@@ -28,7 +28,7 @@ type (
 		Address     string `json:"address"`
 		Port        int    `json:"port"`
 	}
-	// getinfo is the format of the getpeers response from lightning-cli.
+	// getinfo is the format of the getinfo response from lightning-cli.
 	getinfo struct {
 		NodeId      string        `json:"id"`
 		Port        int           `json:"port"`
@@ -44,15 +44,15 @@ type (
 		Connected bool     `json:"connected"`
 		Owner     string   `json:"owner"`
 	}
-	// getpeers is the format of the getpeers response from lightning-cli.
-	getpeers struct {
+	// listpeers is the format of the listpeers response from lightning-cli.
+	listpeers struct {
 		Peers []peer `json:"peers"`
 	}
 	lightningdInfo struct {
-		pid      int
-		args     []string
-		getinfo  getinfo
-		getpeers getpeers
+		pid   int
+		args  []string
+		info  getinfo
+		peers listpeers
 	}
 	info struct {
 		bitcoind   bitcoindInfo
@@ -115,14 +115,14 @@ func (c cli) GetInfo() (*getinfo, error) {
 	return &info, nil
 }
 
-// TODO: s/Get/ListPeers
-func (c cli) GetPeers() (*getpeers, error) {
-	peersstring, err := c.exec("listpeers")
+// ListPeers returns the lightning-cli response to listpeers.
+func (c cli) ListPeers() (*listpeers, error) {
+	respstring, err := c.exec("listpeers")
 	if err != nil {
 		return nil, err
 	}
-	var peers getpeers
-	if err := json.Unmarshal([]byte(peersstring), &peers); err != nil {
+	var peers listpeers
+	if err := json.Unmarshal([]byte(respstring), &peers); err != nil {
 		return nil, err
 	}
 	return &peers, nil
@@ -138,7 +138,7 @@ func getBtcInfo() (*bitcoindInfo, error) {
 		return nil, err
 	}
 	parts := strings.Split(s, " ")
-	// FIXMEH: crashes if pgrep returns non-success, seems like there's still >= 1 parts..
+	// Note: seems to get >= 1 parts even if pgrep returns non-success, seems like there's still >= 1 parts..
 	if len(parts) < 1 || len(parts[0]) == 0 {
 		return &bitcoindInfo{}, nil
 	}
@@ -163,6 +163,7 @@ func getLnInfo() (*lightningdInfo, error) {
 		return nil, err
 	}
 	parts := strings.Split(s, " ")
+	// Note: seems to get >= 1 parts even if pgrep returns non-success.
 	if len(parts) < 1 || len(parts[0]) == 0 {
 		return &lightningdInfo{}, nil
 	}
@@ -182,15 +183,15 @@ func getLnInfo() (*lightningdInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	info.getinfo = *getinfo
+	info.info = *getinfo
 	log.Printf("lightningd getinfo response: %+v\n", getinfo)
 
-	getpeers, err := c.GetPeers()
+	peers, err := c.ListPeers()
 	if err != nil {
 		return nil, err
 	}
-	info.getpeers = *getpeers
-	log.Printf("lightningd getpeers response: %+v\n", getpeers)
+	info.peers = *peers
+	log.Printf("lightningd listpeers response: %+v\n", peers)
 	return &info, nil
 }
 
@@ -235,13 +236,13 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		s += `<p><code>lightningd</code> is <strong>not running</strong>.</p>`
 	} else {
 		s += `<p><code>lightningd</code> is <strong>running</strong>.</p>`
-		s += fmt.Sprintf(`<p>Our id is <code>%s</code>.</p>`, state.lightningd.getinfo.NodeId)
-		s += fmt.Sprintf(`<p>Our address is is <code>%s:%d</code>.</p>`, state.lightningd.getinfo.Address[0].Address, state.lightningd.getinfo.Address[0].Port)
-		s += fmt.Sprintf(`<p>Our version is is <code>%s</code>.</p>`, state.lightningd.getinfo.Version)
-		s += fmt.Sprintf(`<p>Our blockheight is is <code>%d</code>.</p>`, state.lightningd.getinfo.Blockheight)
+		s += fmt.Sprintf(`<p>Our id is <code>%s</code>.</p>`, state.lightningd.info.NodeId)
+		s += fmt.Sprintf(`<p>Our address is is <code>%s:%d</code>.</p>`, state.lightningd.info.Address[0].Address, state.lightningd.info.Address[0].Port)
+		s += fmt.Sprintf(`<p>Our version is is <code>%s</code>.</p>`, state.lightningd.info.Version)
+		s += fmt.Sprintf(`<p>Our blockheight is is <code>%d</code>.</p>`, state.lightningd.info.Blockheight)
 
-		s += fmt.Sprintf(`<h3>We have %d lightning peers</h3>`, len(state.lightningd.getpeers.Peers))
-		for _, peer := range state.lightningd.getpeers.Peers {
+		s += fmt.Sprintf(`<h3>We have %d lightning peers</h3>`, len(state.lightningd.peers.Peers))
+		for _, peer := range state.lightningd.peers.Peers {
 			if len(peer.Netaddr) > 0 {
 				s += fmt.Sprintf(`<p><code>%s</code> running at <code>%s</code> is in state <code>%s</code>.</p>`, peer.PeerId, peer.Netaddr[0], peer.State)
 			} else {
