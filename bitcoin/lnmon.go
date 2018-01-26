@@ -18,8 +18,8 @@ import (
 )
 
 type (
-	cli          struct{}
-	bitcoindInfo struct {
+	cli           struct{}
+	bitcoindState struct {
 		pid  int
 		args []string
 	}
@@ -28,8 +28,8 @@ type (
 		Address     string `json:"address"`
 		Port        int    `json:"port"`
 	}
-	// getinfo is the format of the getinfo response from lightning-cli.
-	getinfo struct {
+	// getInfoResponse is the format of the getinfo response from lightning-cli.
+	getInfoResponse struct {
 		NodeId      string        `json:"id"`
 		Port        int           `json:"port"`
 		Address     []addressInfo `json:"address"`
@@ -57,41 +57,41 @@ type (
 		Netaddr   []string  `json:"netaddr"`
 		Channels  []channel `json:"channels"`
 	}
-	// listpeers is the format of the listpeers response from lightning-cli.
-	listpeers struct {
+	// listPeersResponse is the format of the listpeers response from lightning-cli.
+	listPeersResponse struct {
 		Peers []peer `json:"peers"`
 	}
-	lightningdInfo struct {
+	lightningdState struct {
 		pid   int
 		args  []string
-		info  getinfo
-		peers listpeers
+		info  getInfoResponse
+		peers listPeersResponse
 	}
-	info struct {
-		bitcoind   bitcoindInfo
-		lightningd lightningdInfo
+	state struct {
+		bitcoind   bitcoindState
+		lightningd lightningdState
 	}
 )
 
 var (
-	state info
+	allState state
 	// btcInfo bitcoindInfo
 	// lnInfo  lightningdInfo
 )
 
-func (info bitcoindInfo) String() string {
-	if info.pid == 0 {
-		return "bitcoindInfo{not running}"
+func (s bitcoindState) String() string {
+	if s.pid == 0 {
+		return "bitcoindState{not running}"
 	} else {
-		return fmt.Sprintf("bitcoindInfo{pid: %d, args: %q}", info.pid, strings.Join(info.args, " "))
+		return fmt.Sprintf("bitcoindState{pid: %d, args: %q}", s.pid, strings.Join(s.args, " "))
 	}
 }
 
-func (info lightningdInfo) String() string {
-	if info.pid == 0 {
-		return "lightningdInfo{not running}"
+func (s lightningdState) String() string {
+	if s.pid == 0 {
+		return "lightningdState{not running}"
 	} else {
-		return fmt.Sprintf("lightningdInfo{pid: %d, args: %q}", info.pid, strings.Join(info.args, " "))
+		return fmt.Sprintf("lightningdState{pid: %d, args: %q}", s.pid, strings.Join(s.args, " "))
 	}
 }
 
@@ -116,111 +116,111 @@ func (c cli) exec(cmd string) (string, error) {
 	return execCmd("lightning-cli", cmd)
 }
 
-func (c cli) GetInfo() (*getinfo, error) {
+func (c cli) GetInfo() (*getInfoResponse, error) {
 	infostring, err := c.exec("getinfo")
 	if err != nil {
 		return nil, err
 	}
-	var info getinfo
-	if err := json.Unmarshal([]byte(infostring), &info); err != nil {
+	resp := getInfoResponse{}
+	if err := json.Unmarshal([]byte(infostring), &resp); err != nil {
 		return nil, err
 	}
-	return &info, nil
+	return &resp, nil
 }
 
 // ListPeers returns the lightning-cli response to listpeers.
-func (c cli) ListPeers() (*listpeers, error) {
+func (c cli) ListPeers() (*listPeersResponse, error) {
 	respstring, err := c.exec("listpeers")
 	if err != nil {
 		return nil, err
 	}
-	var peers listpeers
-	if err := json.Unmarshal([]byte(respstring), &peers); err != nil {
+	resp := listPeersResponse{}
+	if err := json.Unmarshal([]byte(respstring), &resp); err != nil {
 		return nil, err
 	}
-	return &peers, nil
+	return &resp, nil
 }
 
 func (c cli) GetNodes() (string, error) {
 	return "", nil
 }
 
-func getBtcInfo() (*bitcoindInfo, error) {
-	s, err := execCmd("pgrep", "-a", "bitcoind")
+// getBtcState returns the current bitcoind state.
+func getBtcState() (*bitcoindState, error) {
+	btcState, err := execCmd("pgrep", "-a", "bitcoind")
 	if err != nil {
 		return nil, err
 	}
-	parts := strings.Split(s, " ")
+	parts := strings.Split(btcState, " ")
 	// Note: seems to get >= 1 parts even if pgrep returns non-success, seems like there's still >= 1 parts..
 	if len(parts) < 1 || len(parts[0]) == 0 {
-		return &bitcoindInfo{}, nil
+		return &bitcoindState{}, nil
 	}
 	pid, err := strconv.Atoi(parts[0])
 	if err != nil {
 		return nil, err
 	}
-	info := bitcoindInfo{
+	s := bitcoindState{
 		pid:  pid,
 		args: []string{},
 	}
 	for _, arg := range parts[1:] {
-		info.args = append(info.args, arg)
+		s.args = append(s.args, arg)
 	}
-	// log.Println(btcInfo)
-	return &info, nil
+	return &s, nil
 }
 
-func getLnInfo() (*lightningdInfo, error) {
-	s, err := execCmd("pgrep", "-a", "lightningd")
+func getLnState() (*lightningdState, error) {
+	lightningState, err := execCmd("pgrep", "-a", "lightningd")
 	if err != nil {
 		return nil, err
 	}
-	parts := strings.Split(s, " ")
+	parts := strings.Split(lightningState, " ")
 	// Note: seems to get >= 1 parts even if pgrep returns non-success.
 	if len(parts) < 1 || len(parts[0]) == 0 {
-		return &lightningdInfo{}, nil
+		return &lightningdState{}, nil
 	}
 	pid, err := strconv.Atoi(parts[0])
 	if err != nil {
 		return nil, err
 	}
-	info := lightningdInfo{
+	s := lightningdState{
 		pid:  pid,
 		args: []string{},
 	}
 	for _, arg := range parts[1:] {
-		info.args = append(info.args, arg)
+		s.args = append(s.args, arg)
 	}
 	c := cli{}
-	getinfo, err := c.GetInfo()
+	info, err := c.GetInfo()
 	if err != nil {
 		return nil, err
 	}
-	info.info = *getinfo
-	log.Printf("lightningd getinfo response: %+v\n", getinfo)
+	s.info = *info
+	log.Printf("lightningd getinfo response: %+v\n", info)
 
 	peers, err := c.ListPeers()
 	if err != nil {
 		return nil, err
 	}
-	info.peers = *peers
+	s.peers = *peers
 	log.Printf("lightningd listpeers response: %+v\n", peers)
-	return &info, nil
+	return &s, nil
 }
 
 func refresh() {
 	for {
-		btcInfo, err := getBtcInfo()
+		btcState, err := getBtcState()
 		if err != nil {
-			log.Fatalf("Failed to get bitcoind info: %v\n", err)
+			log.Fatalf("Failed to get bitcoind state: %v\n", err)
 		}
-		state.bitcoind = *btcInfo
+		allState.bitcoind = *btcState
 
-		lnInfo, err := getLnInfo()
+		lnState, err := getLnState()
 		if err != nil {
-			log.Fatalf("Failed to get lightningd info: %v\n", err)
+			log.Fatalf("Failed to get lightningd state: %v\n", err)
 		}
-		state.lightningd = *lnInfo
+		allState.lightningd = *lnState
 
 		// lightning-cli getinfo
 		// lightning-cli getpeers
@@ -239,31 +239,31 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	s += "<h1>Hello!</h1>"
 	s += `<p>This is an experiment running at ln.hkjn.me with Lightning Network and Bitcoin by <a href="https://hkjn.me">hkjn</a>.</p>`
 	s += `<h2><code>bitcoind</code> info</h2>`
-	if state.bitcoind.pid == 0 {
+	if allState.bitcoind.pid == 0 {
 		s += `<p><code>bitcoind</code> is <strong>not running</strong>.</p>`
 	} else {
 		s += `<p><code>bitcoind</code> is <strong>running</strong>.</p>`
 	}
 	s += `<h2><code>lightningd</code> info</h2>`
-	if state.lightningd.pid == 0 {
+	if allState.lightningd.pid == 0 {
 		s += `<p><code>lightningd</code> is <strong>not running</strong>.</p>`
 	} else {
 		s += `<p><code>lightningd</code> is <strong>running</strong>.</p>`
-		s += fmt.Sprintf(`<p>Our id is <code>%s</code>.</p>`, state.lightningd.info.NodeId)
-		s += fmt.Sprintf(`<p>Our address is is <code>%s:%d</code>.</p>`, state.lightningd.info.Address[0].Address, state.lightningd.info.Address[0].Port)
-		s += fmt.Sprintf(`<p>Our version is is <code>%s</code>.</p>`, state.lightningd.info.Version)
-		s += fmt.Sprintf(`<p>Our blockheight is is <code>%d</code>.</p>`, state.lightningd.info.Blockheight)
+		s += fmt.Sprintf(`<p>Our id is <code>%s</code>.</p>`, allState.lightningd.info.NodeId)
+		s += fmt.Sprintf(`<p>Our address is is <code>%s:%d</code>.</p>`, allState.lightningd.info.Address[0].Address, allState.lightningd.info.Address[0].Port)
+		s += fmt.Sprintf(`<p>Our version is is <code>%s</code>.</p>`, allState.lightningd.info.Version)
+		s += fmt.Sprintf(`<p>Our blockheight is is <code>%d</code>.</p>`, allState.lightningd.info.Blockheight)
 
-		s += fmt.Sprintf(`<h3>We have %d lightning peers:</h3>`, len(state.lightningd.peers.Peers))
+		s += fmt.Sprintf(`<h3>We have %d lightning peers:</h3>`, len(allState.lightningd.peers.Peers))
 		s += fmt.Sprintf(`<ul>`)
-		for _, peer := range state.lightningd.peers.Peers {
+		for _, peer := range allState.lightningd.peers.Peers {
 			s += fmt.Sprintf(`<li><code>%s</code> is `, peer.PeerId)
 			if peer.Connected {
 				s += fmt.Sprintf(`<strong>connected</strong> at <code>%s</code>.`, peer.Netaddr[0])
 				s += fmt.Sprintf(`<ul>`)
 				if len(peer.Channels) > 0 {
 					for _, channel := range peer.Channels {
-						s += fmt.Sprintf(`<li><code>%s</code>: <code>%s</code></li>`, channel.State, channel.ShortChannelId)
+						s += fmt.Sprintf(`<li><code>%s</code>: channel id <code>%s</code>, funding tx id <code>%s</code></li>`, channel.State, channel.ShortChannelId, channel.FundingTxId)
 					}
 				} else {
 					s += fmt.Sprintf(`<li>No channels.</li>`)
