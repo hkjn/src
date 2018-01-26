@@ -302,7 +302,11 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 				s += fmt.Sprintf(`<ul>`)
 				if len(peer.Channels) > 0 {
 					for _, channel := range peer.Channels {
-						s += fmt.Sprintf(`<li><code>%s</code>: channel id <code>%s</code>, funding tx id <code>%s</code></li>`, channel.State, channel.ShortChannelId, channel.FundingTxId)
+						if len(channel.ShortChannelId) > 0 {
+							s += fmt.Sprintf(`<li><code>%s</code>: channel id <code>%s</code>, funding tx id <code>%s</code></li>`, channel.State, channel.ShortChannelId, channel.FundingTxId)
+						} else {
+							s += fmt.Sprintf(`<li><code>%s</code>: funding tx id <code>%s</code></li>`, channel.State, channel.FundingTxId)
+						}
 					}
 				} else {
 					s += fmt.Sprintf(`<li>No channels.</li>`)
