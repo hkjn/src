@@ -91,7 +91,7 @@ func execCmd(cmd string, arg ...string) (string, error) {
 	c.Stderr = &stderr
 	if err := c.Run(); err != nil {
 		if _, ok := err.(*exec.ExitError); ok {
-			log.Printf("Command %q exited with non-zero status: %v, stderr=%s\n", cmd, err, stderr.String())
+			log.Printf("Command %q exited with non-zero status: %v, stderr=%s\n", fmt.Sprintf(cmd, strings.Join(arg, " ")), err, stderr.String())
 			return stderr.String(), nil
 		}
 		return "", err
@@ -115,8 +115,9 @@ func (c cli) GetInfo() (*getinfo, error) {
 	return &info, nil
 }
 
+// TODO: s/Get/ListPeers
 func (c cli) GetPeers() (*getpeers, error) {
-	peersstring, err := c.exec("getpeers")
+	peersstring, err := c.exec("listpeers")
 	if err != nil {
 		return nil, err
 	}
