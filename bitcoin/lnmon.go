@@ -51,11 +51,12 @@ type (
 		ToSelfDelay               int64  `json:"to_self_delay"`
 		MaxAcceptedHtlcs          int64  `json:"max_accepted_htlcs"`
 	}
-	peer struct {
-		PeerId    string    `json:"id"`
-		Connected bool      `json:"connected"`
-		Netaddr   []string  `json:"netaddr"`
-		Channels  []channel `json:"channels"`
+	channels []channel
+	peer     struct {
+		PeerId    string   `json:"id"`
+		Connected bool     `json:"connected"`
+		Netaddr   []string `json:"netaddr"`
+		Channels  channels `json:"channels"`
 	}
 	// listPeersResponse is the format of the listpeers response from lightning-cli.
 	listPeersResponse struct {
@@ -165,12 +166,8 @@ func (c cli) ListPeers() (*listPeersResponse, error) {
 	return &resp, nil
 }
 
-func (c cli) GetNodes() (string, error) {
-	return "", nil
-}
-
-// getBtcState returns the current bitcoind state.
-func getBtcState() (*bitcoindState, error) {
+// getBitcoindState returns the current bitcoind state.
+func getBitcoindState() (*bitcoindState, error) {
 	btcState, err := execCmd("pgrep", "-a", "bitcoind")
 	if err != nil {
 		return nil, err
@@ -194,7 +191,8 @@ func getBtcState() (*bitcoindState, error) {
 	return &s, nil
 }
 
-func getLnState() (*lightningdState, error) {
+// getLightningState returns the current lightningd state.
+func getLightningdState() (*lightningdState, error) {
 	lightningState, err := execCmd("pgrep", "-a", "lightningd")
 	if err != nil {
 		return nil, err
@@ -242,13 +240,13 @@ func getLnState() (*lightningdState, error) {
 func refresh() {
 	allState.aliases = map[string]string{}
 	for {
-		btcState, err := getBtcState()
+		btcState, err := getBitcoindState()
 		if err != nil {
 			log.Fatalf("Failed to get bitcoind state: %v\n", err)
 		}
 		allState.bitcoind = *btcState
 
-		lnState, err := getLnState()
+		lnState, err := getLightningdState()
 		if err != nil {
 			log.Fatalf("Failed to get lightningd state: %v\n", err)
 		}
