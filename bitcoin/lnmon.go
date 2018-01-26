@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -37,6 +38,7 @@ type (
 		Blockheight int           `json:"blockheight"`
 	}
 
+	// channel describes an individual channel.
 	channel struct {
 		State                     string `json:"state"`
 		Owner                     string `json:"owner"`
@@ -51,8 +53,12 @@ type (
 		ToSelfDelay               int64  `json:"to_self_delay"`
 		MaxAcceptedHtlcs          int64  `json:"max_accepted_htlcs"`
 	}
+	// channels describes several channel structures.
 	channels []channel
-	peer     struct {
+	// peers describes several peers.
+	peers []peer
+	// peer describes a single peer.
+	peer struct {
 		PeerId    string   `json:"id"`
 		Connected bool     `json:"connected"`
 		Netaddr   []string `json:"netaddr"`
@@ -60,8 +66,9 @@ type (
 	}
 	// listPeersResponse is the format of the listpeers response from lightning-cli.
 	listPeersResponse struct {
-		Peers []peer `json:"peers"`
+		Peers peers `json:"peers"`
 	}
+	// node describes a single node.
 	node struct {
 		NodeId        string        `json:"nodeid"`
 		Alias         string        `json:"alias"`
@@ -91,6 +98,59 @@ type (
 // TODO: eliminate global variable
 var allState state
 
+// Implement sort.Interface for channels to sort them in reasonable order.
+func (cs channels) Len() int      { return len(cs) }
+func (cs channels) Swap(i, j int) { cs[i], cs[j] = cs[j], cs[i] }
+func (cs channels) Less(i, j int) bool {
+	// Note: there's several more states, we just order the ones  we care about here.
+	statePrio := map[string]int{
+		"CHANNELD_NORMAL":          0,
+		"CHANNELD_AWAITING_LOCKIN": 1,
+	}
+	getPrio := func(s string) int {
+		prio, exists := statePrio[s]
+		if !exists {
+			// Unknown state sorts after known ones.
+			return 10
+		}
+		return prio
+	}
+	return getPrio(cs[i].State) < getPrio(cs[j].State)
+}
+
+// Implement sort.Interface for peers to sort them in reasonable order.
+func (ps peers) Len() int      { return len(ps) }
+func (ps peers) Swap(i, j int) { ps[i], ps[j] = ps[j], ps[i] }
+func (ps peers) Less(i, j int) bool {
+	if !ps[i].Connected && ps[j].Connected {
+		// Unconnected peers are "less" than connected ones.
+		return true
+	}
+	if ps[i].Connected && !ps[j].Connected {
+		// Connected peers are never "less" than unconnected ones.
+		return false
+	}
+	if len(ps[i].Channels) < len(ps[j].Channels) {
+		// Peers with fewer channels are "less" than ones with more of them.
+		return true
+	}
+	if len(ps[i].Channels) > len(ps[j].Channels) {
+		// Peers with more channels are never "less" than ones with fewer of them.
+		return false
+	}
+	if len(ps[i].Channels) > 1 && len(ps[j].Channels) > 1 {
+		// If we and the other peer has at least one channel, let us be "less" than
+		// our peer if our first channel is "less" than theirs.
+		cs := channels{ps[i].Channels[0], ps[j].Channels[0]}
+		sort.Sort(cs)
+		return cs.Less(0, 1)
+	}
+	// Tie-breaker: alphabetic ordering of peer id.
+	return ps[i].PeerId < ps[j].PeerId
+
+}
+
+// String returns a human-readable description of the bitcoind state.
 func (s bitcoindState) String() string {
 	if s.pid == 0 {
 		return "bitcoindState{not running}"
@@ -288,6 +348,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 		s += fmt.Sprintf(`<h3>We have %d lightning peers:</h3>`, len(allState.lightningd.peers.Peers))
 		s += fmt.Sprintf(`<ul>`)
+		sort.Sort(sort.Reverse(allState.lightningd.peers.Peers))
 		for _, peer := range allState.lightningd.peers.Peers {
 			alias, exists := allState.aliases[peer.PeerId]
 			if exists {
