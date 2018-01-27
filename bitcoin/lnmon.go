@@ -176,7 +176,7 @@ func execCmd(cmd string, arg ...string) (string, error) {
 	c.Stderr = &stderr
 	if err := c.Run(); err != nil {
 		if _, ok := err.(*exec.ExitError); ok {
-			log.Printf("Command %q exited with non-zero status: %v, stderr=%s\n", fmt.Sprintf(cmd, strings.Join(arg, " ")), err, stderr.String())
+			log.Printf("Command %q exited with non-zero status: %v, stderr=%s\n", fmt.Sprintf("%s %s", cmd, strings.Join(arg, " ")), err, stderr.String())
 			return stderr.String(), nil
 		}
 		return "", err
@@ -358,7 +358,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			if peer.Connected {
 				s += fmt.Sprintf(`<strong>connected</strong> at <code>%s</code>.`, peer.Netaddr[0])
-				s += fmt.Sprintf(`<ul>`)
+				s += "<ul>"
 				if len(peer.Channels) > 0 {
 					for _, channel := range peer.Channels {
 						if len(channel.ShortChannelId) > 0 {
@@ -373,6 +373,19 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 				s += fmt.Sprintf(`</ul>`)
 			} else {
 				s += "not connected."
+				s += "<ul>"
+				if len(peer.Channels) > 0 {
+					for _, channel := range peer.Channels {
+						if len(channel.ShortChannelId) > 0 {
+							s += fmt.Sprintf(`<li><code>%s</code>: channel id <code>%s</code>, funding tx id <code>%s</code></li>`, channel.State, channel.ShortChannelId, channel.FundingTxId)
+						} else {
+							s += fmt.Sprintf(`<li><code>%s</code>: funding tx id <code>%s</code></li>`, channel.State, channel.FundingTxId)
+						}
+					}
+				} else {
+					s += fmt.Sprintf(`<li>No channels.</li>`)
+				}
+				s += "</ul>"
 			}
 			s += fmt.Sprintf(`</li>`)
 		}
