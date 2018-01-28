@@ -10,6 +10,8 @@ FROM hkjn/golang
 
 WORKDIR /home/go/src/hkjn.me/probes
 COPY *.go ./
+COPY dnsprobe ./dnsprobe
+COPY webprobe ./webprobe
 USER root
 RUN chown -R go:go /home/go/
 USER go
