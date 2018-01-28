@@ -12,4 +12,5 @@ pre-build:
 	@echo "Copying out build artifacts.."
 	docker cp bbuild:/build/bin .
 	docker cp bbuild:/build/lib .
+	docker cp bbuild:/build/libexec .
 	docker rm bbuild

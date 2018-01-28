@@ -7,6 +7,7 @@ FROM hkjn/arch
 
 COPY bin/ /usr/local/bin/
 COPY lib/ /usr/lib/
+COPY libexec/ /usr/local/libexec/c-lightning/
 
 RUN useradd -m bitcoin
 USER root
