@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
+	"expvar"
 	"fmt"
 	"log"
 	"net/http"
@@ -96,7 +97,10 @@ type (
 )
 
 // TODO: eliminate global variable
-var allState state
+var (
+	allState state
+	counts   = expvar.NewMap("counters")
+)
 
 // Implement sort.Interface for channels to sort them in reasonable order.
 func (cs channels) Len() int      { return len(cs) }
@@ -159,12 +163,20 @@ func (s bitcoindState) String() string {
 	}
 }
 
+func (s bitcoindState) isRunning() bool {
+	return s.pid != 0
+}
+
 func (s lightningdState) String() string {
 	if s.pid == 0 {
 		return "lightningdState{not running}"
 	} else {
 		return fmt.Sprintf("lightningdState{pid: %d, args: %q}", s.pid, strings.Join(s.args, " "))
 	}
+}
+
+func (s lightningdState) isRunning() bool {
+	return s.pid != 0
 }
 
 // execCmd executes specified command with arguments and returns the output.
@@ -299,18 +311,30 @@ func getLightningdState() (*lightningdState, error) {
 
 func refresh() {
 	allState.aliases = map[string]string{}
+	bitcoindRunning := expvar.NewInt("bitcoind.running")
+	lightningdRunning := expvar.NewInt("lightningd.running")
 	for {
 		btcState, err := getBitcoindState()
 		if err != nil {
 			log.Fatalf("Failed to get bitcoind state: %v\n", err)
 		}
 		allState.bitcoind = *btcState
+		if allState.bitcoind.isRunning() {
+			bitcoindRunning.Set(1)
+		} else {
+			bitcoindRunning.Set(0)
+		}
 
 		lnState, err := getLightningdState()
 		if err != nil {
 			log.Fatalf("Failed to get lightningd state: %v\n", err)
 		}
 		allState.lightningd = *lnState
+		if allState.lightningd.isRunning() {
+			lightningdRunning.Set(1)
+		} else {
+			lightningdRunning.Set(0)
+		}
 
 		// lightning-cli getinfo
 		// lightning-cli getchannels
