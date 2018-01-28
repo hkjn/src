@@ -5,6 +5,12 @@
 #
 FROM hkjn/arch
 
+ARG bitcoin_version
+ARG lightningd_version
+
+ENV BITCOIN_VERSION=bitcoin_version \
+    LIGHTNINGD_VERSION=lightningd_version
+
 COPY bin/ /usr/local/bin/
 COPY lib/ /usr/lib/
 COPY libexec/ /usr/local/libexec/c-lightning/

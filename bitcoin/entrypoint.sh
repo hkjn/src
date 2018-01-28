@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-declare IP_ADDR=${IP_ADDR:-""}
+declare IP_ADDR=${IP_ADDR:-"163.172.162.18"}
 declare LOG_LEVEL=${LOG_LEVEL:-"info"}
 declare ALIAS=${ALIAS:-"ln.hkjn.me"}
 
