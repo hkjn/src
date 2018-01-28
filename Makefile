@@ -1,6 +1,6 @@
-.PHONY : all blocksci bitcoin btcd clightning fileserver gcloud golang googleauth gpg lnd proto s3cmd workspace
+.PHONY : all blocksci bitcoin btcd clightning config fileserver gcloud golang googleauth gpg lnd proto s3cmd workspace
 
-all: blocksci bitcoin btcd clightning fileserver gcloud golang googleauth gpg lnd proto s3cmd workspace
+all: blocksci bitcoin btcd clightning config fileserver gcloud golang googleauth gpg lnd proto s3cmd workspace
 
 blocksci:
 	@echo "Making blocksci.."
@@ -17,6 +17,10 @@ btcd:
 clightning:
 	@echo "Making clightning.."
 	$(MAKE) -C clightning
+
+config:
+	@echo "Making config.."
+	$(MAKE) -C config
 
 fileserver:
 	@echo "Making fileserver.."
