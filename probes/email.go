@@ -96,14 +96,14 @@ func SendAlertEmail(name, desc string, badness int, records prober.Records) erro
 	subject := fmt.Sprintf("%s failed (badness %d)", name, badness)
 	from := mail.NewEmail("Alert email sender", Config.Alert.Sender)
 	to := mail.NewEmail("Alert email recipient", Config.Alert.Recipient)
-	email := mail.NewSingleEmail(from, subject, to, nil, html.String())
+	email := mail.NewSingleEmail(from, subject, to, html.String(), html.String())
 
 	resp, err := sgClient.Send(email)
 	if err != nil {
 		return fmt.Errorf("failed to send mail: %v", err)
 	}
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("unexpected response from sendgrid, want status 200: %v", resp)
+	if !(resp.StatusCode >= 200 && resp.StatusCode <= 299) {
+		return fmt.Errorf("unexpected response from sendgrid, want status 200-299: %v", resp)
 	}
 	glog.Infof("sent alert email to %s\n", Config.Alert.Recipient)
 	return nil
