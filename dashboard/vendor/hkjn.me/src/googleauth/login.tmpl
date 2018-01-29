@@ -1,0 +1,63 @@
+{{define "scripts"}}
+<script src="https://apis.google.com/js/client:platform.js" async defer></script>
+
+<script>
+	{{template "jquery"}}
+
+	var helper = (function() {
+  var BASE_API_PATH = 'plus/v1/';
+  var authResult = undefined;
+
+  return {
+    /**
+     * Hides the sign-in button and connects the server-side app after
+     * the user successfully signs in.
+     */
+    signInCallback: function(authResult) {
+      if (authResult['access_token']) {
+        this.logIn(authResult.code);
+      } else if (authResult["error"]) {
+        $('#authResult').append('Logged out');
+      }
+    },
+    logIn: function(code) {
+      window.location.replace(
+        window.location.origin + "/connect?state=" +
+        $("#state").html() + "&code=" + code);
+    }
+  };
+})();
+
+
+function signInCallback(authResult) {
+  helper.signInCallback(authResult);
+}
+</script>
+{{end}}
+
+{{define "login"}}
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	{{template "scripts"}}
+</head>
+<body>
+
+<span class style="display: none" id="state">{{.StateURI}}</span>
+
+<div id="gConnect">
+<span id="signinButton">
+  <span
+    class="g-signin"
+    data-callback="signInCallback"
+    data-clientid="{{.ClientId}}"
+    data-accesstype="offline"
+    data-cookiepolicy="single_host_origin"
+    data-scope="profile">
+  </span>
+</span>
+</div>
+</body>
+</html>
+{{end}}

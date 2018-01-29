@@ -1,0 +1,7 @@
+dashboard.env
+version.env
+overrides.yaml
+.#*
+*~
+/gomon
+.*.sw?

@@ -1,0 +1,17 @@
+#!/bin/bash
+set -euo pipefail
+
+DOCKER_USER="hkjn"
+DOCKER_IMAGE="dashboard"
+
+ARCH="$(uname -m)"
+TAG="$DOCKER_USER/$DOCKER_IMAGE:$ARCH"
+
+echo "Building $TAG.."
+
+docker build -t $TAG .
+NO_PUSH=${NO_PUSH:-""}
+[[ "$NO_PUSH" ]] || docker push $TAG
+
+echo "Creating version.env.."
+echo 'DASHBOARD_VERSION='1.0.0-$(git log -1 --pretty=format:"%h") > version.env
