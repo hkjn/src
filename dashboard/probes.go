@@ -10,6 +10,7 @@ import (
 
 	"hkjn.me/src/prober"
 	"hkjn.me/src/probes/dnsprobe"
+	"hkjn.me/src/probes/varsprobe"
 	"hkjn.me/src/probes/webprobe"
 )
 
@@ -20,6 +21,7 @@ var (
 	createOnce     = sync.Once{}
 )
 
+// getWebProbes returns the web probes.
 func getWebProbes() prober.Probes {
 	probes := prober.Probes{}
 	for _, p := range probecfg.WebProbes {
@@ -34,6 +36,22 @@ func getWebProbes() prober.Probes {
 	return probes
 }
 
+// getVarsProbes returns the vars probes.
+func getVarsProbes() prober.Probes {
+	probes := prober.Probes{}
+	for _, p := range probecfg.VarsProbes {
+		probes = append(probes,
+			varsprobe.New(
+				p.Target,
+				varsprobe.Name(p.Name),
+				varsprobe.Key(p.Key),
+				varsprobe.WantValue(p.WantValue),
+			))
+	}
+	return probes
+}
+
+// getDnsProbes returns the dns probes.
 func getDnsProbes() prober.Probes {
 	probes := prober.Probes{}
 	for _, p := range probecfg.DnsProbes {

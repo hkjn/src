@@ -27,6 +27,9 @@ Failure details follow:<br/>
 			Target, Want, Name string
 			WantStatus         int
 		}
+		VarsProbes []struct {
+			Target, Name, Key, WantValue string
+		}
 		DnsProbes []struct {
 			Target  string
 			Records struct {
