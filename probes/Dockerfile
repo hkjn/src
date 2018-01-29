@@ -8,8 +8,10 @@
 #
 FROM hkjn/golang
 
-WORKDIR /home/go/src/hkjn.me/probes
+WORKDIR /home/go/src/hkjn.me/src/probes
+
 COPY *.go ./
+COPY prober ../prober
 COPY dnsprobe ./dnsprobe
 COPY webprobe ./webprobe
 USER root
