@@ -96,7 +96,7 @@ func SendAlertEmail(name, desc string, badness int, records prober.Records) erro
 	subject := fmt.Sprintf("%s failed (badness %d)", name, badness)
 	from := mail.NewEmail("Alert email sender", Config.Alert.Sender)
 	to := mail.NewEmail("Alert email recipient", Config.Alert.Recipient)
-	email := mail.NewSingleEmail(from, subject, to, "", html.String())
+	email := mail.NewSingleEmail(from, subject, to, nil, html.String())
 
 	resp, err := sgClient.Send(email)
 	if err != nil {
