@@ -316,9 +316,11 @@ func refresh() {
 	for {
 		btcState, err := getBitcoindState()
 		if err != nil {
-			log.Fatalf("Failed to get bitcoind state: %v\n", err)
+			log.Printf("Failed to get bitcoind state: %v\n", err)
+			allState.bitcoind = bitcoindState{}
+		} else {
+			allState.bitcoind = *btcState
 		}
-		allState.bitcoind = *btcState
 		if allState.bitcoind.isRunning() {
 			bitcoindRunning.Set(1)
 		} else {
@@ -327,9 +329,11 @@ func refresh() {
 
 		lnState, err := getLightningdState()
 		if err != nil {
-			log.Fatalf("Failed to get lightningd state: %v\n", err)
+			log.Printf("Failed to get lightningd state: %v\n", err)
+			allState.lightningd = lightningdState{}
+		} else {
+			allState.lightningd = *lnState
 		}
-		allState.lightningd = *lnState
 		if allState.lightningd.isRunning() {
 			lightningdRunning.Set(1)
 		} else {
