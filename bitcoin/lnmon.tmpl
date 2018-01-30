@@ -1,0 +1,44 @@
+<html>
+<body>
+<h1>Hello!</h1>
+<p>This is an experiment running at ln.hkjn.me with Lightning Network and Bitcoin by <a href="https://hkjn.me">hkjn</a>.</p>
+
+<h2><code>bitcoind</code> info</h2>
+{{ if .Bitcoind.IsRunning -}}
+<p><code>bitcoind</code> is <strong>running</strong>.</p>
+{{ else }}
+<p><code>bitcoind</code> is <strong>not running</strong>.</p>
+{{- end }}
+
+<h2><code>lightningd</code> info</h2>
+{{ if .Lightningd.IsRunning -}}
+<p><code>lightningd</code> is <strong>running</strong></p>
+<p>Our id is <code>{{ .Lightningd.Info.NodeId}}</code>.</p>
+{{ with .Lightningd.Alias -}}
+<p>Our alias is <code>{{ . }}</code>.</p>
+{{ else }}
+<p>Unknown alias for our own node.</p>
+{{- end }}
+<p>Our address is is <code>{{ .Lightningd.Info.Address }}</code>.</p>
+<p>Our version is is <code>{{ .Lightningd.Info.Version }}</code>.</p>
+<p>Our blockheight is is <code>{{ .Lightningd.Info.Blockheight }}</code>.</p>
+
+<h3>We have {{ .Lightningd.Peers.Peers.String }}</h3>
+<ul>
+{{ range .Lightningd.Peers.Peers -}}
+<li><code>{{ . }}</code></li>
+{{- end }}
+</ul>
+
+<h3>We know of {{ .Lightningd.Nodes.Nodes.String }}</h3>
+<ul>
+{{ range .Lightningd.Nodes.Nodes -}}
+<li><code>{{ . }}</code></li>
+{{- end }}
+</ul>
+{{ else }}
+<p><code>lightningd</code> is <strong>not running</strong>.</p>
+{{- end }}
+
+</body>
+</html>

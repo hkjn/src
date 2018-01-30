@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"expvar"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -30,13 +31,14 @@ type (
 		Address     string `json:"address"`
 		Port        int    `json:"port"`
 	}
+	address []addressInfo
 	// getInfoResponse is the format of the getinfo response from lightning-cli.
 	getInfoResponse struct {
-		NodeId      string        `json:"id"`
-		Port        int           `json:"port"`
-		Address     []addressInfo `json:"address"`
-		Version     string        `json:"version"`
-		Blockheight int           `json:"blockheight"`
+		NodeId      string  `json:"id"`
+		Port        int     `json:"port"`
+		Address     address `json:"address"`
+		Version     string  `json:"version"`
+		Blockheight int     `json:"blockheight"`
 	}
 
 	// channel describes an individual channel.
@@ -77,22 +79,25 @@ type (
 		LastTimestamp int64         `json:"last_timestamp"`
 		Addresses     []addressInfo `json:"addresses"`
 	}
-	// listnNodesResponse si the format of the listnodes response from lightning-cli.
+	// nodes describes several nodes.
+	nodes []node
+	// listNodesResponse si the format of the listnodes response from lightning-cli.
 	listNodesResponse struct {
-		Nodes []node `json:"nodes"`
+		Nodes nodes `json:"nodes"`
 	}
 	lightningdState struct {
 		pid   int
 		args  []string
-		info  getInfoResponse
-		peers listPeersResponse
-		nodes listNodesResponse
+		Alias string
+		Info  getInfoResponse
+		Peers listPeersResponse
+		Nodes listNodesResponse
 	}
 	state struct {
 		// aliases maps LN node ids to their human-readable aliases
 		aliases    map[string]string
-		bitcoind   bitcoindState
-		lightningd lightningdState
+		Bitcoind   bitcoindState
+		Lightningd lightningdState
 	}
 )
 
@@ -101,6 +106,25 @@ var (
 	allState state
 	counts   = expvar.NewMap("counters")
 )
+
+// getFile returns the contents of the specified file.
+func getFile(f string) ([]byte, error) {
+	// Asset is defined in bindata.go.
+	return Asset(f)
+}
+
+// String returns a human-readable description of the address.
+func (addr address) String() string {
+	if len(addr) != 1 {
+		return fmt.Sprintf("<unsupported address of len %d: %v>", len(addr), addr)
+	}
+	return fmt.Sprintf("%s:%d", addr[0].Address, addr[0].Port)
+}
+
+// String returns a human-readable description of the nodes.
+func (ns nodes) String() string {
+	return fmt.Sprintf("%d nodes", len(ns))
+}
 
 // Implement sort.Interface for channels to sort them in reasonable order.
 func (cs channels) Len() int      { return len(cs) }
@@ -151,7 +175,11 @@ func (ps peers) Less(i, j int) bool {
 	}
 	// Tie-breaker: alphabetic ordering of peer id.
 	return ps[i].PeerId < ps[j].PeerId
+}
 
+// String returns a human-readable description of the peers.
+func (ps peers) String() string {
+	return fmt.Sprintf("%d peers", len(ps))
 }
 
 // String returns a human-readable description of the bitcoind state.
@@ -163,7 +191,7 @@ func (s bitcoindState) String() string {
 	}
 }
 
-func (s bitcoindState) isRunning() bool {
+func (s bitcoindState) IsRunning() bool {
 	return s.pid != 0
 }
 
@@ -175,7 +203,7 @@ func (s lightningdState) String() string {
 	}
 }
 
-func (s lightningdState) isRunning() bool {
+func (s lightningdState) IsRunning() bool {
 	return s.pid != 0
 }
 
@@ -290,21 +318,22 @@ func getLightningdState() (*lightningdState, error) {
 	if err != nil {
 		return nil, err
 	}
-	s.info = *info
+	s.Info = *info
 	log.Printf("lightningd getinfo response: %+v\n", info)
 
 	peers, err := c.ListPeers()
 	if err != nil {
 		return nil, err
 	}
-	s.peers = *peers
+	s.Peers = *peers
+	sort.Sort(sort.Reverse(s.Peers.Peers))
 	// log.Printf("lightningd listpeers response: %+v\n", peers)
 
 	nodes, err := c.ListNodes()
 	if err != nil {
 		return nil, err
 	}
-	s.nodes = *nodes
+	s.Nodes = *nodes
 	// log.Printf("lightningd listnodes response: %+v\n", nodes)
 	return &s, nil
 }
@@ -317,11 +346,11 @@ func refresh() {
 		btcState, err := getBitcoindState()
 		if err != nil {
 			log.Printf("Failed to get bitcoind state: %v\n", err)
-			allState.bitcoind = bitcoindState{}
+			allState.Bitcoind = bitcoindState{}
 		} else {
-			allState.bitcoind = *btcState
+			allState.Bitcoind = *btcState
 		}
-		if allState.bitcoind.isRunning() {
+		if allState.Bitcoind.IsRunning() {
 			bitcoindRunning.Set(1)
 		} else {
 			bitcoindRunning.Set(0)
@@ -330,19 +359,29 @@ func refresh() {
 		lnState, err := getLightningdState()
 		if err != nil {
 			log.Printf("Failed to get lightningd state: %v\n", err)
-			allState.lightningd = lightningdState{}
+			allState.Lightningd = lightningdState{}
 		} else {
-			allState.lightningd = *lnState
+			allState.Lightningd = *lnState
 		}
-		if allState.lightningd.isRunning() {
+		if allState.Lightningd.IsRunning() {
+			for _, node := range allState.Lightningd.Nodes.Nodes {
+				_, exists := allState.aliases[node.NodeId]
+				if !exists {
+					log.Printf("Learned alias %q for node %q\n", node.Alias, node.NodeId)
+					allState.aliases[node.NodeId] = node.Alias
+				}
+				if node.NodeId == allState.Lightningd.Info.NodeId {
+					allState.Lightningd.Alias = node.Alias
+				}
+			}
+		}
+		if allState.Lightningd.IsRunning() {
 			lightningdRunning.Set(1)
 		} else {
 			lightningdRunning.Set(0)
 		}
 
-		// lightning-cli getinfo
 		// lightning-cli getchannels
-
 		// lightning-cli listfunds
 		// lightning-cli listinvoice
 		// lightning-cli listpayments
@@ -351,91 +390,35 @@ func refresh() {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	s := "<html>"
-	s += "<h1>Hello!</h1>"
-	s += `<p>This is an experiment running at ln.hkjn.me with Lightning Network and Bitcoin by <a href="https://hkjn.me">hkjn</a>.</p>`
-	s += `<h2><code>bitcoind</code> info</h2>`
-	if allState.bitcoind.pid == 0 {
-		s += `<p><code>bitcoind</code> is <strong>not running</strong>.</p>`
-	} else {
-		s += `<p><code>bitcoind</code> is <strong>running</strong>.</p>`
+	log.Printf("[%v] HTTP %s %s\n", r.RemoteAddr, r.Method, r.URL)
+	if r.Method != "GET" {
+		log.Printf("Serving 400 for HTTP %s %q\n", r.Method, r.URL.Path)
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "400 Bad Request")
+		return
 	}
-	s += `<h2><code>lightningd</code> info</h2>`
-	if allState.lightningd.pid == 0 {
-		s += `<p><code>lightningd</code> is <strong>not running</strong>.</p>`
-	} else {
-		s += `<p><code>lightningd</code> is <strong>running</strong>.</p>`
-		s += fmt.Sprintf(`<p>Our id is <code>%s</code>.</p>`, allState.lightningd.info.NodeId)
-		alias, exists := allState.aliases[allState.lightningd.info.NodeId]
-		if exists {
-			s += fmt.Sprintf(`<p>Our alias is <code>%s</code>.</p>`, alias)
-		} else {
-			s += fmt.Sprintf(`<p>Unknown alias for our own node.</p>`)
-		}
-		s += fmt.Sprintf(`<p>Our address is is <code>%s:%d</code>.</p>`, allState.lightningd.info.Address[0].Address, allState.lightningd.info.Address[0].Port)
-		s += fmt.Sprintf(`<p>Our version is is <code>%s</code>.</p>`, allState.lightningd.info.Version)
-		s += fmt.Sprintf(`<p>Our blockheight is is <code>%d</code>.</p>`, allState.lightningd.info.Blockheight)
-
-		s += fmt.Sprintf(`<h3>We have %d lightning peers:</h3>`, len(allState.lightningd.peers.Peers))
-		s += fmt.Sprintf(`<ul>`)
-		sort.Sort(sort.Reverse(allState.lightningd.peers.Peers))
-		for _, peer := range allState.lightningd.peers.Peers {
-			alias, exists := allState.aliases[peer.PeerId]
-			if exists {
-				s += fmt.Sprintf("<li><code>%s</code> (<code>%s</code>) is ", alias, peer.PeerId)
-			} else {
-				s += fmt.Sprintf(`<li><code>%s</code> is `, peer.PeerId)
-			}
-			if peer.Connected {
-				s += fmt.Sprintf(`<strong>connected</strong> at <code>%s</code>.`, peer.Netaddr[0])
-				s += "<ul>"
-				if len(peer.Channels) > 0 {
-					for _, channel := range peer.Channels {
-						if len(channel.ShortChannelId) > 0 {
-							s += fmt.Sprintf(`<li><code>%s</code>: channel id <code>%s</code>, funding tx id <code>%s</code></li>`, channel.State, channel.ShortChannelId, channel.FundingTxId)
-						} else {
-							s += fmt.Sprintf(`<li><code>%s</code>: funding tx id <code>%s</code></li>`, channel.State, channel.FundingTxId)
-						}
-					}
-				} else {
-					s += fmt.Sprintf(`<li>No channels.</li>`)
-				}
-				s += fmt.Sprintf(`</ul>`)
-			} else {
-				s += "not connected."
-				s += "<ul>"
-				if len(peer.Channels) > 0 {
-					for _, channel := range peer.Channels {
-						if len(channel.ShortChannelId) > 0 {
-							s += fmt.Sprintf(`<li><code>%s</code>: channel id <code>%s</code>, funding tx id <code>%s</code></li>`, channel.State, channel.ShortChannelId, channel.FundingTxId)
-						} else {
-							s += fmt.Sprintf(`<li><code>%s</code>: funding tx id <code>%s</code></li>`, channel.State, channel.FundingTxId)
-						}
-					}
-				} else {
-					s += fmt.Sprintf(`<li>No channels.</li>`)
-				}
-				s += "</ul>"
-			}
-			s += fmt.Sprintf(`</li>`)
-		}
-		s += fmt.Sprintf(`</ul>`)
-
-		s += fmt.Sprintf(`<h3>We know of %d lightning nodes:</h3>`, len(allState.lightningd.nodes.Nodes))
-		s += fmt.Sprintf(`<ul>`)
-		for _, node := range allState.lightningd.nodes.Nodes {
-			s += fmt.Sprintf(`<li><code>%s</code>: <code>%s</code></li>`, node.Alias, node.NodeId)
-			_, exists := allState.aliases[node.NodeId]
-			if !exists {
-				log.Printf("Learned alias %q for node %q\n", node.Alias, node.NodeId)
-				allState.aliases[node.NodeId] = node.Alias
-			}
-		}
-		s += fmt.Sprintf(`</ul>`)
+	if r.URL.Path != "/" {
+		log.Printf("Serving 404 for GET %q\n", r.URL.Path)
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprintf(w, "404 Page Not Found")
+		return
+	}
+	// TODO: read and parse .tmpl once on startup
+	s, err := getFile("lnmon.tmpl")
+	if err != nil {
+		http.Error(w, "Well, that's embarrassing. Please try again later.", http.StatusInternalServerError)
+		log.Fatalf("Failed to read lnmon.tmpl: %v\n", err)
+	}
+	tmpl, err := template.New("index").Parse(string(s))
+	if err != nil {
+		http.Error(w, "Well, that's embarrassing. Please try again later.", http.StatusInternalServerError)
+		log.Fatalf("Failed to parse .tmpl: %v\n", err)
 	}
 
-	s += "</html>"
-	fmt.Fprintf(w, s)
+	if err := tmpl.Execute(w, allState); err != nil {
+		http.Error(w, "Well, that's embarrassing. Please try again later.", http.StatusInternalServerError)
+		log.Fatalf("Failed to execute template: %v\n", err)
+	}
 }
 
 func main() {
