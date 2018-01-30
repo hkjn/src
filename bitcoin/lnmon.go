@@ -369,6 +369,8 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		alias, exists := allState.aliases[allState.lightningd.info.NodeId]
 		if exists {
 			s += fmt.Sprintf(`<p>Our alias is <code>%s</code>.</p>`, alias)
+		} else {
+			s += fmt.Sprintf(`<p>Unknown alias for our own node.</p>`)
 		}
 		s += fmt.Sprintf(`<p>Our address is is <code>%s:%d</code>.</p>`, allState.lightningd.info.Address[0].Address, allState.lightningd.info.Address[0].Port)
 		s += fmt.Sprintf(`<p>Our version is is <code>%s</code>.</p>`, allState.lightningd.info.Version)
