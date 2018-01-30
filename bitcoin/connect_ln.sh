@@ -14,12 +14,12 @@ lightning-cli connect 039514e5d704c59a0eba65d25fc5fe559a1641243ccdf80c980b1fc10c
 lightning-cli connect 03ecffae58fab10791a46e89ae00cffb8260875bcdc22549d2dd79d0795e96bf00 194.71.109.91
 # Tokensoft.io
 lightning-cli connect 0235447c7485ff2b945bac5fbc366d54a87389bab8cacf1b64b26ec01e96bd165a 34.236.113.58
-# CASSANDRA
-lightning-cli connect 03745b275bed1ab74c6c2f3dc6d1f870c5927397997c99dfaba283f73ccfab0d33 79.136.120.4
 # UNITEDBOUNCE
 lightning-cli connect 029113620f929df927a4877ae6727b214418c366bf09ebbd4552eda235f48c00f5 68.129.210.251
 
 # Unresponsive as of 2018-01-26, disabled:
+# CASSANDRA
+# lightning-cli connect 03745b275bed1ab74c6c2f3dc6d1f870c5927397997c99dfaba283f73ccfab0d33 79.136.120.4
 # HectorJ from reddit
 # lightning-cli connect 0207481a19a3f51a48f134e95afa67cfeffdb38a99b5ad3494a320c4918aaaf579 163.172.174.151
 # COINGAMING
