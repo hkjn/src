@@ -6,6 +6,8 @@ set -euo pipefail
 lightning-cli connect 02f6725f9c1c40333b67faea92fd211c183050f28df32cac3f9d69685fe9665432 104.198.32.198
 # #RECKLESS
 lightning-cli connect 035f1498c929d4cefba4701ae36a554691f526ff60b1766badd5a49b3c8b68e1d8 78.63.23.25
+# mainnet.yalls.org
+lightning-cli connect 02dbc4081c4cc5719507b0f209b00fbfbd8db66ee1f4bdace4b91cee024f0fdf32 34.200.241.1
 # Bitrefill
 lightning-cli connect 039514e5d704c59a0eba65d25fc5fe559a1641243ccdf80c980b1fc10ca9c30ca2 52.211.235.81
 # ln.keff.org
