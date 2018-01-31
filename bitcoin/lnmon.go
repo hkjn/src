@@ -408,16 +408,19 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Well, that's embarrassing. Please try again later.", http.StatusInternalServerError)
 		log.Fatalf("Failed to read lnmon.tmpl: %v\n", err)
+		return
 	}
 	tmpl, err := template.New("index").Parse(string(s))
 	if err != nil {
 		http.Error(w, "Well, that's embarrassing. Please try again later.", http.StatusInternalServerError)
 		log.Fatalf("Failed to parse .tmpl: %v\n", err)
+		return
 	}
 
 	if err := tmpl.Execute(w, allState); err != nil {
 		http.Error(w, "Well, that's embarrassing. Please try again later.", http.StatusInternalServerError)
 		log.Fatalf("Failed to execute template: %v\n", err)
+		return
 	}
 }
 
