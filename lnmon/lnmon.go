@@ -1,4 +1,4 @@
-// lnmon.go is a simple wrapper around c-lightning's lightning-cli for monitoring state.
+// lnmon.go is a simple wrapper around bitcoin-cli and lightning-cli for monitoring their state.
 package main
 
 import (
@@ -60,11 +60,13 @@ type (
 	channels []channel
 	// peers describes several peers.
 	peers []peer
+	// netaddr describes the network addresses for a peer.
+	netaddr []string
 	// peer describes a single peer.
 	peer struct {
 		PeerId    string   `json:"id"`
 		Connected bool     `json:"connected"`
-		Netaddr   []string `json:"netaddr"`
+		Netaddr   netaddr  `json:"netaddr"`
 		Channels  channels `json:"channels"`
 	}
 	// listPeersResponse is the format of the listpeers response from lightning-cli.
@@ -111,6 +113,32 @@ var (
 func getFile(f string) ([]byte, error) {
 	// Asset is defined in bindata.go.
 	return Asset(f)
+}
+
+// String returns a human-readable description of the peer.
+func (n netaddr) String() string {
+	if len(n) < 1 {
+		return "netaddr{}"
+	}
+	return fmt.Sprintf("%s", n[0])
+}
+
+// String returns a human-readable description of the peer.
+func (p peer) String() string {
+	parts := []string{
+		fmt.Sprintf("id: %s", p.PeerId),
+		fmt.Sprintf("connected: %v", p.Connected),
+	}
+	if p.Connected {
+		parts = append(parts, fmt.Sprintf("netaddr: %s", p.Netaddr))
+	}
+	if len(p.Channels) > 0 {
+		parts = append(parts, fmt.Sprintf("channels: %s", p.Channels))
+	}
+	return fmt.Sprintf(
+		"peer{%s}",
+		strings.Join(parts, ", "),
+	)
 }
 
 // String returns a human-readable description of the address.
@@ -175,6 +203,29 @@ func (ps peers) Less(i, j int) bool {
 	}
 	// Tie-breaker: alphabetic ordering of peer id.
 	return ps[i].PeerId < ps[j].PeerId
+}
+
+// String returns a human-readable description of the channels.
+func (cs channels) String() string {
+	if len(cs) == 0 {
+		return "channels{}"
+	}
+	if len(cs) > 1 {
+		// TODO: Find how this is supported by protocol.
+		return "<unsupported multiple channels>"
+	}
+	return cs[0].String()
+}
+
+// String returns a human-readable description of the channel.
+func (c channel) String() string {
+	parts := []string{
+		fmt.Sprintf("state: %s", c.State),
+	}
+	if c.FundingTxId != "" {
+		parts = append(parts, fmt.Sprintf("funding_txid: %s", c.FundingTxId))
+	}
+	return fmt.Sprintf("channel{%s}", strings.Join(parts, ", "))
 }
 
 // String returns a human-readable description of the peers.
