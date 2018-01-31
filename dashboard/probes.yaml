@@ -24,11 +24,11 @@ webprobes:
     name: DecenterIndex
     want: IrSn3zx2GbM
     wantstatus: 200
-  - target: http://ln.hkjn.me/debug/vars
+  - target: https://ln.hkjn.me/debug/vars
     name: LightningdRunning
     want: lightningd.running
     wantstatus: 200
-  - target: http://ln.hkjn.me/debug/vars
+  - target: https://ln.hkjn.me/debug/vars
     name: BitcoindRunning
     want: bitcoind.running
     wantstatus: 200
