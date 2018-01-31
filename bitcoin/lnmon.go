@@ -445,6 +445,14 @@ func main() {
 			Cache:      autocert.DirCache("/etc/secrets/acme/"),
 			HostPolicy: autocert.HostWhitelist(hostname),
 		}
+		// Configure extra tcp/80 server for http-01 challenge:
+		// https://godoc.org/golang.org/x/crypto/acme/autocert#Manager.HTTPHandler
+		httpServer := &http.Server{
+			Handler: m.HTTPHandler(nil),
+			Addr:    ":80",
+		}
+		go httpServer.ListenAndServe()
+
 		s.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
 		log.Fatal(s.ListenAndServeTLS("", ""))
 	} else {
