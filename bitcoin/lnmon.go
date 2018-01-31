@@ -419,7 +419,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := tmpl.Execute(w, allState); err != nil {
 		http.Error(w, "Well, that's embarrassing. Please try again later.", http.StatusInternalServerError)
-		log.Fatalf("Failed to execute template: %v\n", err)
+		log.Printf("Failed to execute template: %v\n", err)
 		return
 	}
 }
