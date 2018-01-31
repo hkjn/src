@@ -32,10 +32,14 @@ webprobes:
     name: BitcoindRunning
     want: bitcoind.running
     wantstatus: 200
-  - target: http://blockpress.me
+  - target: https://blockpress.me
     name: BlockpressIndex
     want: 
     wantstatus: 200
+  - target: http://blockpress.me/shouldberedirected
+    name: BlockpressRedirector
+    want: Found
+    wantstatus: 302
   - target: https://cities.hkjn.me
     name: CitiesIndex
     want: dream city
