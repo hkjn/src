@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
-	"expvar"
 	"fmt"
 	"html/template"
 	"log"
@@ -17,6 +16,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/crypto/acme/autocert"
 )
 
@@ -105,9 +106,30 @@ type (
 
 // TODO: eliminate global variable
 var (
-	allState state
-	counts   = expvar.NewMap("counters")
+	allState        state
+	bitcoindRunning = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "bitcoind_running",
+		Help: "Whether bitcoind process is running (1) or not (0).",
+	})
+	lightningdRunning = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "lightningd_running",
+		Help: "Whether lightningd process is running (1) or not (0).",
+	})
+	numChannels = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "channels_total",
+			Help: "Number of channels per state.",
+		},
+		[]string{"state"},
+	)
 )
+
+func init() {
+	// Metrics have to be registered to be exposed:
+	prometheus.MustRegister(bitcoindRunning)
+	prometheus.MustRegister(lightningdRunning)
+	prometheus.MustRegister(numChannels)
+}
 
 // getFile returns the contents of the specified file.
 func getFile(f string) ([]byte, error) {
@@ -378,6 +400,8 @@ func getLightningdState() (*lightningdState, error) {
 	}
 	s.Peers = *peers
 	sort.Sort(sort.Reverse(s.Peers.Peers))
+	// s.Peers.Peers
+	// numChannels.With(prometheus.Labels{"state": s}).Set()
 	// log.Printf("lightningd listpeers response: %+v\n", peers)
 
 	nodes, err := c.ListNodes()
@@ -391,8 +415,6 @@ func getLightningdState() (*lightningdState, error) {
 
 func refresh() {
 	allState.aliases = map[string]string{}
-	bitcoindRunning := expvar.NewInt("bitcoind.running")
-	lightningdRunning := expvar.NewInt("lightningd.running")
 	for {
 		btcState, err := getBitcoindState()
 		if err != nil {
@@ -476,6 +498,10 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	// The Handler function provides a default handler to expose metrics
+	// via an HTTP server. "/metrics" is the usual endpoint for that.
+	http.Handle("/metrics", promhttp.Handler())
+
 	go refresh()
 
 	http.HandleFunc("/", indexHandler)
