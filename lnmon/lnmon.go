@@ -472,7 +472,7 @@ func getLightningdState() (*lightningdState, error) {
 	numPeers.With(prometheus.Labels{"connected": "1"}).Set(float64(s.Peers.Peers.NumConnected()))
 	numPeers.With(prometheus.Labels{"connected": "0"}).Set(float64(len(s.Peers.Peers) - s.Peers.Peers.NumConnected()))
 	for state, n := range s.Peers.Peers.NumChannelsByState() {
-		log.Printf("We have %d channels in state %q\n", n, state)
+		// log.Printf("We have %d channels in state %q\n", n, state)
 		numChannels.With(prometheus.Labels{"state": state}).Set(float64(n))
 	}
 	totalChannelCapacity.With(prometheus.Labels{"criteria": "total"}).Set(float64(s.Peers.Peers.TotalChannelCapacity()))
