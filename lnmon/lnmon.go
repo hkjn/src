@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
-	"expvar"
 	"fmt"
 	"html/template"
 	"log"
@@ -17,6 +16,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/crypto/acme/autocert"
 )
 
@@ -105,9 +106,51 @@ type (
 
 // TODO: eliminate global variable
 var (
-	allState state
-	counts   = expvar.NewMap("counters")
+	allState        state
+	bitcoindRunning = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: "bitcoind",
+		Name:      "running",
+		Help:      "Whether bitcoind process is running (1) or not (0).",
+	})
+	lightningdRunning = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: "lightningd",
+		Name:      "running",
+		Help:      "Whether lightningd process is running (1) or not (0).",
+	})
+	numPeers = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "lightningd",
+			Name:      "num_peers",
+			Help:      "Number of Lightning peers of this node.",
+		},
+		[]string{"connected"},
+	)
+	numChannels = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "lightningd",
+			Name:      "num_channels",
+			Help:      "Number of channels per state.",
+		},
+		[]string{"state"},
+	)
+	totalChannelCapacity = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "lightningd",
+			Name:      "total_channel_capacity_msatoshi",
+			Help:      "Capacity of channels in millisatoshi.",
+		},
+		[]string{"criteria"},
+	)
 )
+
+func init() {
+	// Metrics have to be registered to be exposed:
+	prometheus.MustRegister(bitcoindRunning)
+	prometheus.MustRegister(lightningdRunning)
+	prometheus.MustRegister(numChannels)
+	prometheus.MustRegister(totalChannelCapacity)
+	prometheus.MustRegister(numPeers)
+}
 
 // getFile returns the contents of the specified file.
 func getFile(f string) ([]byte, error) {
@@ -203,6 +246,54 @@ func (ps peers) Less(i, j int) bool {
 	}
 	// Tie-breaker: alphabetic ordering of peer id.
 	return ps[i].PeerId < ps[j].PeerId
+}
+
+// NumConnected returns the number of connected peers.
+func (ps peers) NumConnected() int {
+	n := 0
+	for _, p := range ps {
+		if p.Connected {
+			n += 1
+		}
+	}
+	return n
+}
+
+// NumChannelsByState returns a map from channel state to number of channels in that state.
+func (ps peers) NumChannelsByState() map[string]int {
+	byState := map[string]int{}
+	for _, p := range ps {
+		for _, c := range p.Channels {
+			byState[c.State] += 1
+		}
+	}
+	return byState
+}
+
+// TotalChannelCapacity returns the total capacity of all CHANNELD_NORMAL channels.
+func (ps peers) TotalChannelCapacity() int64 {
+	sum := int64(0)
+	for _, p := range ps {
+		for _, c := range p.Channels {
+			if c.State == "CHANNELD_NORMAL" {
+				sum += c.MsatoshiTotal
+			}
+		}
+	}
+	return sum
+}
+
+// ToUsChannelCapacity returns the capacity of all CHANNELD_NORMAL channels towards us.
+func (ps peers) ToUsChannelCapacity() int64 {
+	sum := int64(0)
+	for _, p := range ps {
+		for _, c := range p.Channels {
+			if c.State == "CHANNELD_NORMAL" {
+				sum += c.MsatoshiToUs
+			}
+		}
+	}
+	return sum
 }
 
 // String returns a human-readable description of the channels.
@@ -378,6 +469,15 @@ func getLightningdState() (*lightningdState, error) {
 	}
 	s.Peers = *peers
 	sort.Sort(sort.Reverse(s.Peers.Peers))
+	numPeers.With(prometheus.Labels{"connected": "1"}).Set(float64(s.Peers.Peers.NumConnected()))
+	numPeers.With(prometheus.Labels{"connected": "0"}).Set(float64(len(s.Peers.Peers) - s.Peers.Peers.NumConnected()))
+	for state, n := range s.Peers.Peers.NumChannelsByState() {
+		log.Printf("We have %d channels in state %q\n", n, state)
+		numChannels.With(prometheus.Labels{"state": state}).Set(float64(n))
+	}
+	totalChannelCapacity.With(prometheus.Labels{"criteria": "total"}).Set(float64(s.Peers.Peers.TotalChannelCapacity()))
+	totalChannelCapacity.With(prometheus.Labels{"criteria": "to_us"}).Set(float64(s.Peers.Peers.ToUsChannelCapacity()))
+	totalChannelCapacity.With(prometheus.Labels{"criteria": "to_them"}).Set(float64(s.Peers.Peers.TotalChannelCapacity() - s.Peers.Peers.ToUsChannelCapacity()))
 	// log.Printf("lightningd listpeers response: %+v\n", peers)
 
 	nodes, err := c.ListNodes()
@@ -391,8 +491,6 @@ func getLightningdState() (*lightningdState, error) {
 
 func refresh() {
 	allState.aliases = map[string]string{}
-	bitcoindRunning := expvar.NewInt("bitcoind.running")
-	lightningdRunning := expvar.NewInt("lightningd.running")
 	for {
 		btcState, err := getBitcoindState()
 		if err != nil {
@@ -476,6 +574,10 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	// The Handler function provides a default handler to expose metrics
+	// via an HTTP server. "/metrics" is the usual endpoint for that.
+	http.Handle("/metrics", promhttp.Handler())
+
 	go refresh()
 
 	http.HandleFunc("/", indexHandler)
