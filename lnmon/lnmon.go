@@ -108,17 +108,28 @@ type (
 var (
 	allState        state
 	bitcoindRunning = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "bitcoind_running",
-		Help: "Whether bitcoind process is running (1) or not (0).",
+		Namespace: "bitcoin",
+		Name:      "running",
+		Help:      "Whether bitcoind process is running (1) or not (0).",
 	})
 	lightningdRunning = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "lightningd_running",
-		Help: "Whether lightningd process is running (1) or not (0).",
+		Namespace: "lightningd",
+		Name:      "running",
+		Help:      "Whether lightningd process is running (1) or not (0).",
 	})
-	numChannels = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "channels_total",
-			Help: "Number of channels per state.",
+	numPeers = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "lightningd",
+			Name:      "num_peers",
+			Help:      "Number of Lightning peers of this node.",
+		},
+		[]string{"connected"},
+	)
+	numChannels = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "lightningd",
+			Name:      "num_channels",
+			Help:      "Number of channels per state.",
 		},
 		[]string{"state"},
 	)
@@ -129,6 +140,7 @@ func init() {
 	prometheus.MustRegister(bitcoindRunning)
 	prometheus.MustRegister(lightningdRunning)
 	prometheus.MustRegister(numChannels)
+	prometheus.MustRegister(numPeers)
 }
 
 // getFile returns the contents of the specified file.
@@ -225,6 +237,28 @@ func (ps peers) Less(i, j int) bool {
 	}
 	// Tie-breaker: alphabetic ordering of peer id.
 	return ps[i].PeerId < ps[j].PeerId
+}
+
+// NumConnected returns the number of connected peers.
+func (ps peers) NumConnected() int {
+	n := 0
+	for _, p := range ps {
+		if p.Connected {
+			n += 1
+		}
+	}
+	return n
+}
+
+// NumChannelsByState returns a map from channel state to number of channels in that state.
+func (ps peers) NumChannelsByState() map[string]int {
+	byState := map[string]int{}
+	for _, p := range ps {
+		for _, c := range p.Channels {
+			byState[c.State] += 1
+		}
+	}
+	return byState
 }
 
 // String returns a human-readable description of the channels.
@@ -400,8 +434,12 @@ func getLightningdState() (*lightningdState, error) {
 	}
 	s.Peers = *peers
 	sort.Sort(sort.Reverse(s.Peers.Peers))
-	// s.Peers.Peers
-	// numChannels.With(prometheus.Labels{"state": s}).Set()
+	numPeers.With(prometheus.Labels{"connected": "1"}).Set(float64(s.Peers.Peers.NumConnected()))
+	numPeers.With(prometheus.Labels{"connected": "0"}).Set(float64(len(s.Peers.Peers) - s.Peers.Peers.NumConnected()))
+	for state, n := range s.Peers.Peers.NumChannelsByState() {
+		log.Printf("We have %d channels in state %q\n", n, state)
+		numChannels.With(prometheus.Labels{"state": state}).Set(float64(n))
+	}
 	// log.Printf("lightningd listpeers response: %+v\n", peers)
 
 	nodes, err := c.ListNodes()
