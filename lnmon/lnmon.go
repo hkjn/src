@@ -125,6 +125,13 @@ var (
 		},
 		[]string{"connected"},
 	)
+	numNodes = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Namespace: "lightningd",
+			Name:      "num_nodes",
+			Help:      "Number of Lightning nodes known by this node.",
+		},
+	)
 	numChannels = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "lightningd",
@@ -150,6 +157,7 @@ func init() {
 	prometheus.MustRegister(numChannels)
 	prometheus.MustRegister(totalChannelCapacity)
 	prometheus.MustRegister(numPeers)
+	prometheus.MustRegister(numNodes)
 }
 
 // getFile returns the contents of the specified file.
@@ -434,7 +442,9 @@ func getBitcoindState() (*bitcoindState, error) {
 }
 
 // getLightningState returns the current lightningd state.
-func getLightningdState() (*lightningdState, error) {
+//
+// TODO: refactor aliases to be stored alongside nodes/peers.
+func getLightningdState(aliases map[string]string) (*lightningdState, error) {
 	lightningState, err := execCmd("pgrep", "-a", "lightningd")
 	if err != nil {
 		return nil, err
@@ -485,6 +495,7 @@ func getLightningdState() (*lightningdState, error) {
 		return nil, err
 	}
 	s.Nodes = *nodes
+	numNodes.Set(float64(len(s.Nodes.Nodes)))
 	// log.Printf("lightningd listnodes response: %+v\n", nodes)
 	return &s, nil
 }
@@ -505,7 +516,7 @@ func refresh() {
 			bitcoindRunning.Set(0)
 		}
 
-		lnState, err := getLightningdState()
+		lnState, err := getLightningdState(allState.aliases)
 		if err != nil {
 			log.Printf("Failed to get lightningd state: %v\n", err)
 			allState.Lightningd = lightningdState{}
