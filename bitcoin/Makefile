@@ -1,8 +1,8 @@
 include ../make/Makefile
 NAME=bitcoin
-VERSION=f4c942e3-lightning
-BITCOIN_VERSION=126000
-LIGHTNING_VERSION=bab3b1a1
+VERSION=latest-lightning
+BITCOIN_VERSION=895fbd7
+LIGHTNING_VERSION=bbdab02
 
 # FIXMEH: first hit this assert on startup:
 # https://github.com/ElementsProject/lightning/blob/master/lightningd/peer_control.c#L2750
