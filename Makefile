@@ -1,6 +1,6 @@
-.PHONY : all blocksci bitcoin btcd clightning config fileserver gcloud golang googleauth gpg lnd prober probes proto s3cmd workspace
+.PHONY : all blocksci bitcoin btcd clightning config fileserver gcloud golang googleauth gpg lnd openvpn prober probes proto s3cmd workspace
 
-all: blocksci bitcoin btcd clightning config fileserver gcloud golang googleauth gpg lnd prober probes proto s3cmd workspace
+all: blocksci bitcoin btcd clightning config fileserver gcloud golang googleauth gpg lnd openvpn prober probes proto s3cmd workspace
 
 blocksci:
 	@echo "Making blocksci.."
@@ -45,6 +45,10 @@ gpg:
 lnd:
 	@echo "Making lnd.."
 	$(MAKE) -C lnd
+
+openvpn:
+	@echo "Making openvpn.."
+	$(MAKE) -C openvpn
 
 prober:
 	@echo "Making prober.."
