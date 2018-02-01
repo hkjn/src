@@ -108,7 +108,7 @@ type (
 var (
 	allState        state
 	bitcoindRunning = prometheus.NewGauge(prometheus.GaugeOpts{
-		Namespace: "bitcoin",
+		Namespace: "bitcoind",
 		Name:      "running",
 		Help:      "Whether bitcoind process is running (1) or not (0).",
 	})
@@ -133,6 +133,14 @@ var (
 		},
 		[]string{"state"},
 	)
+	totalChannelCapacity = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "lightningd",
+			Name:      "total_channel_capacity_msatoshi",
+			Help:      "Capacity of channels in millisatoshi.",
+		},
+		[]string{"criteria"},
+	)
 )
 
 func init() {
@@ -140,6 +148,7 @@ func init() {
 	prometheus.MustRegister(bitcoindRunning)
 	prometheus.MustRegister(lightningdRunning)
 	prometheus.MustRegister(numChannels)
+	prometheus.MustRegister(totalChannelCapacity)
 	prometheus.MustRegister(numPeers)
 }
 
@@ -259,6 +268,32 @@ func (ps peers) NumChannelsByState() map[string]int {
 		}
 	}
 	return byState
+}
+
+// TotalChannelCapacity returns the total capacity of all CHANNELD_NORMAL channels.
+func (ps peers) TotalChannelCapacity() int64 {
+	sum := int64(0)
+	for _, p := range ps {
+		for _, c := range p.Channels {
+			if c.State == "CHANNELD_NORMAL" {
+				sum += c.MsatoshiTotal
+			}
+		}
+	}
+	return sum
+}
+
+// ToUsChannelCapacity returns the capacity of all CHANNELD_NORMAL channels towards us.
+func (ps peers) ToUsChannelCapacity() int64 {
+	sum := int64(0)
+	for _, p := range ps {
+		for _, c := range p.Channels {
+			if c.State == "CHANNELD_NORMAL" {
+				sum += c.MsatoshiToUs
+			}
+		}
+	}
+	return sum
 }
 
 // String returns a human-readable description of the channels.
@@ -440,6 +475,9 @@ func getLightningdState() (*lightningdState, error) {
 		log.Printf("We have %d channels in state %q\n", n, state)
 		numChannels.With(prometheus.Labels{"state": state}).Set(float64(n))
 	}
+	totalChannelCapacity.With(prometheus.Labels{"criteria": "total"}).Set(float64(s.Peers.Peers.TotalChannelCapacity()))
+	totalChannelCapacity.With(prometheus.Labels{"criteria": "to_us"}).Set(float64(s.Peers.Peers.ToUsChannelCapacity()))
+	totalChannelCapacity.With(prometheus.Labels{"criteria": "to_them"}).Set(float64(s.Peers.Peers.TotalChannelCapacity() - s.Peers.Peers.ToUsChannelCapacity()))
 	// log.Printf("lightningd listpeers response: %+v\n", peers)
 
 	nodes, err := c.ListNodes()
