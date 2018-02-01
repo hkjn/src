@@ -82,6 +82,17 @@ resource "google_compute_disk" "admin2-disk" {
   size  = "50"
 }
 
+#
+# builder.hkjn.me persistent disk
+#
+resource "google_compute_disk" "builder_disk" {
+  count        = "${var.builder_enabled ? 1 : 0}"
+  name  = "builder-disk"
+  type  = "pd-ssd"
+  zone  = "europe-west3-b"
+  size  = "200"
+}
+
 # GCP instances
 #
 # TODO: Set sshd port in bootstrap:
@@ -146,6 +157,9 @@ resource "google_compute_instance" "builder" {
   tags         = ["ssh", "http"]
   disk {
     image = "${var.coreos_alpha_image}"
+  }
+  attached_disk {
+    source = "${google_compute_disk.builder_disk.self_link}"
   }
   network_interface {
     network = "${google_compute_network.default.name}"
