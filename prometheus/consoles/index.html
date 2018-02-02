@@ -54,7 +54,8 @@ new PromConsole.Graph({
 new PromConsole.Graph({
     node: document.querySelector("#numPeersGraph"),
     expr: "lightningd_num_peers",
-    renderer: "area"
+    renderer: "area",
+    min: 0.0
 });
 </script>
 
@@ -86,7 +87,8 @@ new PromConsole.Graph({
 new PromConsole.Graph({
     node: document.querySelector("#freeMemoryGraph"),
     expr: "node_memory_MemAvailable",
-    renderer: "line"
+    renderer: "line",
+    min: 0.0
 });
 </script>
 
