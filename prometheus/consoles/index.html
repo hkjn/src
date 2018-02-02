@@ -1,0 +1,22 @@
+{{ template "head" . }}
+
+{{ template "prom_right_table_head" }}
+{{ template "prom_right_table_tail" }}
+
+{{ template "prom_content_head" . }}
+<h1>Overview</h1>
+<p>This is a work-in-progress console for bitcoind/lightningd.</p>
+
+<div id="freeMemoryGraph"></div>
+<script>
+new PromConsole.Graph({
+	  node: document.querySelector("#freeMemoryGraph"),
+	    expr: "node_memory_MemAvailable",
+	      renderer: "line"
+})
+</script>
+
+<p>End of index</p>
+{{ template "prom_content_tail" . }}
+
+{{ template "tail" }}
