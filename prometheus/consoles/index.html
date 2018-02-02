@@ -30,7 +30,8 @@ new PromConsole.Graph({
 new PromConsole.Graph({
     node: document.querySelector("#numChannelsGraph"),
     expr: "lightningd_num_channels",
-    renderer: "area"
+    renderer: "area",
+    min: 0.0
 });
 </script>
 
