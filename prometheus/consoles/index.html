@@ -24,6 +24,18 @@ new PromConsole.Graph({
 });
 </script>
 
+<h4>Total capacity of our channels</h4>
+<div id="channelCapacityGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#channelCapacityGraph"),
+    expr: 'lightningd_total_channel_capacity_msatoshi{criteria=~"to_them|to_us"}/100000000000',
+    renderer: "area",
+    yUnits: "BTC",
+    yTitle: "Capacity"
+});
+</script>
+
 <h4>Number of channels on the network</h4>
 <div id="numChannelsGraph"></div>
 <script>
@@ -33,18 +45,6 @@ new PromConsole.Graph({
     renderer: "area",
     min: 0.0,
     yTitle: "Number of channels"
-});
-</script>
-
-<h4>Capacity of channels</h4>
-<div id="channelCapacityGraph"></div>
-<script>
-new PromConsole.Graph({
-    node: document.querySelector("#channelCapacityGraph"),
-    expr: 'lightningd_total_channel_capacity_msatoshi{criteria=~"to_them|to_us"}/100000000000',
-    renderer: "area",
-    yUnits: "BTC",
-    yTitle: "Capacity"
 });
 </script>
 
