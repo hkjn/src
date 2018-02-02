@@ -366,8 +366,13 @@ func execCmd(cmd string, arg ...string) (string, error) {
 	c.Stderr = &stderr
 	if err := c.Run(); err != nil {
 		if _, ok := err.(*exec.ExitError); ok {
-			log.Printf("Command %q exited with non-zero status: %v, stderr=%s\n", fmt.Sprintf("%s %s", cmd, strings.Join(arg, " ")), err, stderr.String())
-			return stderr.String(), nil
+			// Command exited with non-zero status.
+			errstring := stderr.String()
+			errmsg := fmt.Sprintf("Command %q exited with non-zero status: %v", fmt.Sprintf("%s %s", cmd, strings.Join(arg, " ")), err)
+			if errstring != "" {
+				errmsg += fmt.Sprintf(", stderr=%q", stderr.String())
+			}
+			return "", fmt.Errorf(errmsg)
 		}
 		return "", err
 	}
@@ -418,14 +423,14 @@ func (c cli) ListPeers() (*listPeersResponse, error) {
 
 // getBitcoindState returns the current bitcoind state.
 func getBitcoindState() (*bitcoindState, error) {
-	btcState, err := execCmd("pgrep", "-a", "bitcoind")
+	ps, err := execCmd("pgrep", "-a", "bitcoind")
 	if err != nil {
 		return nil, err
 	}
-	parts := strings.Split(btcState, " ")
+	parts := strings.Split(ps, " ")
 	// Note: seems to get >= 1 parts even if pgrep returns non-success, seems like there's still >= 1 parts..
 	if len(parts) < 1 || len(parts[0]) == 0 {
-		return &bitcoindState{}, nil
+		return nil, fmt.Errorf("failed to parse bitcoind status: %v", ps)
 	}
 	pid, err := strconv.Atoi(parts[0])
 	if err != nil {
@@ -445,14 +450,14 @@ func getBitcoindState() (*bitcoindState, error) {
 //
 // TODO: refactor aliases to be stored alongside nodes/peers.
 func getLightningdState(aliases map[string]string) (*lightningdState, error) {
-	lightningState, err := execCmd("pgrep", "-a", "lightningd")
+	ps, err := execCmd("pgrep", "-a", "lightningd")
 	if err != nil {
 		return nil, err
 	}
-	parts := strings.Split(lightningState, " ")
+	parts := strings.Split(ps, " ")
 	// Note: seems to get >= 1 parts even if pgrep returns non-success.
 	if len(parts) < 1 || len(parts[0]) == 0 {
-		return &lightningdState{}, nil
+		return nil, fmt.Errorf("failed to parse lightningd status: %v", ps)
 	}
 	pid, err := strconv.Atoi(parts[0])
 	if err != nil {
