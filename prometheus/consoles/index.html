@@ -5,15 +5,30 @@
 
 {{ template "prom_content_head" . }}
 <h1>Overview</h1>
+
 <p>This is a work-in-progress console for bitcoind/lightningd.</p>
 
+<h2>Bitcoind</h2>
+
+<h2>Lightning</h2>
+
+<h3>Channels</h3>
+<div id="numChannelsGraph"></div>
+
+<h2>System</h2>
 <div id="freeMemoryGraph"></div>
+
 <script>
 new PromConsole.Graph({
-	  node: document.querySelector("#freeMemoryGraph"),
-	    expr: "node_memory_MemAvailable",
-	      renderer: "line"
-})
+    node: document.querySelector("#freeMemoryGraph"),
+    expr: "node_memory_MemAvailable",
+    renderer: "line"
+});
+new PromConsole.Graph({
+    node: document.querySelector("#numChannelsGraph"),
+    expr: "lightningd_num_channels",
+    renderer: "area"
+});
 </script>
 
 <p>End of index</p>
