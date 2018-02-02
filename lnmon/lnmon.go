@@ -33,14 +33,21 @@ type (
 		Port        int    `json:"port"`
 	}
 	address []addressInfo
-	// getInfoResponse is the format of the getinfo response from lightning-cli.
-	getInfoResponse struct {
-		NodeId      string  `json:"id"`
-		Port        int     `json:"port"`
-		Address     address `json:"address"`
-		Version     string  `json:"version"`
-		Blockheight int     `json:"blockheight"`
+	// channelListing describes one channel from listchannels output.
+	channelListing struct {
+		Source               string `json:"source"`
+		Destination          string `json:"destination"`
+		ShortChannelId       string `json:"short_channel_id"`
+		Flags                int64  `json:"flags"`
+		Active               bool   `json:"active"`
+		Public               bool   `json:"public"`
+		LastUpdate           int64  `json:"last_update"`
+		BaseFeeMillisatoshis int64  `json:"base_fee_millisatoshi"`
+		FeePerMillionth      int64  `json:"fee_per_millionth"`
+		Delay                int64  `json:"delay"`
 	}
+	// channelListings describes several channels from listchannels output.
+	channelListings []channelListing
 
 	// channel describes an individual channel.
 	channel struct {
@@ -70,10 +77,6 @@ type (
 		Netaddr   netaddr  `json:"netaddr"`
 		Channels  channels `json:"channels"`
 	}
-	// listPeersResponse is the format of the listpeers response from lightning-cli.
-	listPeersResponse struct {
-		Peers peers `json:"peers"`
-	}
 	// node describes a single node.
 	node struct {
 		NodeId        string        `json:"nodeid"`
@@ -84,17 +87,35 @@ type (
 	}
 	// nodes describes several nodes.
 	nodes []node
+
+	// getInfoResponse is the format of the getinfo response from lightning-cli.
+	getInfoResponse struct {
+		NodeId      string  `json:"id"`
+		Port        int     `json:"port"`
+		Address     address `json:"address"`
+		Version     string  `json:"version"`
+		Blockheight int     `json:"blockheight"`
+	}
+	// listChannelsResponse is the format of the listchannels response from lightning-cli.
+	listChannelsResponse struct {
+		Channels []channelListing `json:"channels"`
+	}
+	// listPeersResponse is the format of the listpeers response from lightning-cli.
+	listPeersResponse struct {
+		Peers peers `json:"peers"`
+	}
 	// listNodesResponse si the format of the listnodes response from lightning-cli.
 	listNodesResponse struct {
 		Nodes nodes `json:"nodes"`
 	}
 	lightningdState struct {
-		pid   int
-		args  []string
-		Alias string
-		Info  getInfoResponse
-		Peers listPeersResponse
-		Nodes listNodesResponse
+		pid      int
+		args     []string
+		Alias    string
+		Info     getInfoResponse
+		Peers    peers
+		Nodes    nodes
+		Channels channelListings
 	}
 	state struct {
 		// aliases maps LN node ids to their human-readable aliases
@@ -117,6 +138,13 @@ var (
 		Name:      "running",
 		Help:      "Whether lightningd process is running (1) or not (0).",
 	})
+	numChannels = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Namespace: "lightningd",
+			Name:      "num_channels",
+			Help:      "Number of Lightning channels this node knows about.",
+		},
+	)
 	numPeers = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "lightningd",
@@ -132,11 +160,11 @@ var (
 			Help:      "Number of Lightning nodes known by this node.",
 		},
 	)
-	numChannels = prometheus.NewGaugeVec(
+	ourChannels = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "lightningd",
-			Name:      "num_channels",
-			Help:      "Number of channels per state.",
+			Name:      "our_channels",
+			Help:      "Number of channels per state to and from our node.",
 		},
 		[]string{"state"},
 	)
@@ -154,10 +182,11 @@ func init() {
 	// Metrics have to be registered to be exposed:
 	prometheus.MustRegister(bitcoindRunning)
 	prometheus.MustRegister(lightningdRunning)
-	prometheus.MustRegister(numChannels)
 	prometheus.MustRegister(totalChannelCapacity)
-	prometheus.MustRegister(numPeers)
+	prometheus.MustRegister(numChannels)
 	prometheus.MustRegister(numNodes)
+	prometheus.MustRegister(numPeers)
+	prometheus.MustRegister(ourChannels)
 }
 
 // getFile returns the contents of the specified file.
@@ -304,6 +333,19 @@ func (ps peers) ToUsChannelCapacity() int64 {
 	return sum
 }
 
+// String returns a human-readable description of the channel listings.
+func (cls channelListings) String() string {
+	if len(cls) == 0 {
+		return "channelListings{}"
+	}
+	return fmt.Sprintf("%d channels", len(cls))
+}
+
+// String returns a human-readable description of the channel listing.
+func (cl channelListing) String() string {
+	return "not implemented"
+}
+
 // String returns a human-readable description of the channels.
 func (cs channels) String() string {
 	if len(cs) == 0 {
@@ -395,6 +437,19 @@ func (c cli) GetInfo() (*getInfoResponse, error) {
 	return &resp, nil
 }
 
+// ListChannels returns the lightning-cli response to listchannels.
+func (c cli) ListChannels() (*listChannelsResponse, error) {
+	respstring, err := c.exec("listchannels")
+	if err != nil {
+		return nil, err
+	}
+	resp := listChannelsResponse{}
+	if err := json.Unmarshal([]byte(respstring), &resp); err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
 // ListNodes returns the lightning-cli response to listnodes.
 func (c cli) ListNodes() (*listNodesResponse, error) {
 	respstring, err := c.exec("listnodes")
@@ -478,30 +533,42 @@ func getLightningdState(aliases map[string]string) (*lightningdState, error) {
 	s.Info = *info
 	log.Printf("lightningd getinfo response: %+v\n", info)
 
+	channels, err := c.ListChannels()
+	if err != nil {
+		return nil, err
+	}
+	s.Channels = channels.Channels
+	numChannels.Set(float64(len(s.Channels)))
+	log.Printf("Learned of %d channels.\n", len(s.Channels))
+
 	peers, err := c.ListPeers()
 	if err != nil {
 		return nil, err
 	}
-	s.Peers = *peers
-	sort.Sort(sort.Reverse(s.Peers.Peers))
-	numPeers.With(prometheus.Labels{"connected": "1"}).Set(float64(s.Peers.Peers.NumConnected()))
-	numPeers.With(prometheus.Labels{"connected": "0"}).Set(float64(len(s.Peers.Peers) - s.Peers.Peers.NumConnected()))
-	for state, n := range s.Peers.Peers.NumChannelsByState() {
+	s.Peers = peers.Peers
+	log.Printf("Learned of %d peers.\n", len(s.Peers))
+
+	sort.Sort(sort.Reverse(s.Peers))
+	numPeers.With(prometheus.Labels{"connected": "1"}).Set(float64(s.Peers.NumConnected()))
+	numPeers.With(prometheus.Labels{"connected": "0"}).Set(float64(len(s.Peers) - s.Peers.NumConnected()))
+	for state, n := range s.Peers.NumChannelsByState() {
 		// log.Printf("We have %d channels in state %q\n", n, state)
-		numChannels.With(prometheus.Labels{"state": state}).Set(float64(n))
+		ourChannels.With(prometheus.Labels{"state": state}).Set(float64(n))
 	}
-	totalChannelCapacity.With(prometheus.Labels{"criteria": "total"}).Set(float64(s.Peers.Peers.TotalChannelCapacity()))
-	totalChannelCapacity.With(prometheus.Labels{"criteria": "to_us"}).Set(float64(s.Peers.Peers.ToUsChannelCapacity()))
-	totalChannelCapacity.With(prometheus.Labels{"criteria": "to_them"}).Set(float64(s.Peers.Peers.TotalChannelCapacity() - s.Peers.Peers.ToUsChannelCapacity()))
+	totalChannelCapacity.With(prometheus.Labels{"criteria": "total"}).Set(float64(s.Peers.TotalChannelCapacity()))
+	totalChannelCapacity.With(prometheus.Labels{"criteria": "to_us"}).Set(float64(s.Peers.ToUsChannelCapacity()))
+	totalChannelCapacity.With(prometheus.Labels{"criteria": "to_them"}).Set(float64(s.Peers.TotalChannelCapacity() - s.Peers.ToUsChannelCapacity()))
 	// log.Printf("lightningd listpeers response: %+v\n", peers)
 
 	nodes, err := c.ListNodes()
 	if err != nil {
 		return nil, err
 	}
-	s.Nodes = *nodes
-	numNodes.Set(float64(len(s.Nodes.Nodes)))
+	s.Nodes = nodes.Nodes
+	numNodes.Set(float64(len(s.Nodes)))
+	log.Printf("Learned of %d nodes.\n", len(s.Nodes))
 	// log.Printf("lightningd listnodes response: %+v\n", nodes)
+
 	return &s, nil
 }
 
@@ -529,7 +596,7 @@ func refresh() {
 			allState.Lightningd = *lnState
 		}
 		if allState.Lightningd.IsRunning() {
-			for _, node := range allState.Lightningd.Nodes.Nodes {
+			for _, node := range allState.Lightningd.Nodes {
 				_, exists := allState.aliases[node.NodeId]
 				if !exists {
 					log.Printf("Learned alias %q for node %q\n", node.Alias, node.NodeId)
