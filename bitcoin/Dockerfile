@@ -6,10 +6,10 @@
 FROM hkjn/arch
 
 ARG bitcoin_version
-ARG lightningd_version
+ARG lightning_version
 
 ENV BITCOIN_VERSION=bitcoin_version \
-    LIGHTNINGD_VERSION=lightningd_version
+    LIGHTNING_VERSION=lightning_version
 
 COPY bin/ /usr/local/bin/
 COPY lib/ /usr/lib/
