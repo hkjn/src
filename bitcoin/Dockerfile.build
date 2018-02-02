@@ -48,5 +48,9 @@ RUN mkdir -p /build/lib /build/bin && \
     cp -v /usr/local/bin/{bitcoin-cli,bitcoind,bitcoin-tx,lightningd,lightning-cli} /build/bin/ && \
     cp -v /usr/local/src/bitcoin/share/rpcauth/rpcauth.py /build/bin/
 
+COPY sqlversiontest.cpp /usr/lib
+RUN g++ -o sqlversiontest sqlversiontest.cpp -lsqlite3 && \
+    ./sqlversiontest
+
 WORKDIR /build
 ENTRYPOINT echo "Build outputs available in $(pwd): $(ls -hsalR)"
