@@ -14,7 +14,17 @@
 
 <h3>Channels</h3>
 
-<h4>Number of channels</h4>
+<h4>Number of channels to and from our node</h4>
+<div id="ourChannelsGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#ourChannelsGraph"),
+    expr: "lightningd_our_channels",
+    renderer: "area"
+});
+</script>
+
+<h4>Number of channels on the network</h4>
 <div id="numChannelsGraph"></div>
 <script>
 new PromConsole.Graph({
