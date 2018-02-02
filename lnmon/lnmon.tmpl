@@ -28,7 +28,7 @@ from this tool.</p>
 <p>We know of {{ .Lightningd.Nodes.String }}.</p>
 <p>We know of {{ .Lightningd.Channels.String }}.</p>
 
-<h3>We have {{ .Lightningd.Peers.String }}</h3>
+<h3>We have {{ .Lightningd.Peers.String }}:</h3>
 <ul>
 {{ range .Lightningd.Peers -}}
 <li><code>{{ . }}</code></li>
