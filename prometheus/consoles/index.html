@@ -13,36 +13,54 @@
 <h2>Lightning</h2>
 
 <h3>Channels</h3>
+
+<h4>Number of channels</h4>
 <div id="numChannelsGraph"></div>
-
-<div id="channelCapacityGraph"></div>
-
-<h3>Peers</h3>
-<div id="numPeersGraph"></div>
-
-<h2>System</h2>
-<div id="freeMemoryGraph"></div>
-
 <script>
-new PromConsole.Graph({
-    node: document.querySelector("#freeMemoryGraph"),
-    expr: "node_memory_MemAvailable",
-    renderer: "line"
-});
 new PromConsole.Graph({
     node: document.querySelector("#numChannelsGraph"),
     expr: "lightningd_num_channels",
     renderer: "area"
 });
+</script>
+
+<h4>Capacity of channels</h4>
+<div id="channelCapacityGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#channelCapacityGraph"),
+    expr: 'lightningd_total_channel_capacity_msatoshi{criteria=~"to_them|to_us"}',
+    renderer: "area"
+});
+</script>
+
+<h3>Peers</h3>
+<div id="numPeersGraph"></div>
+<script>
 new PromConsole.Graph({
     node: document.querySelector("#numPeersGraph"),
     expr: "lightningd_num_peers",
     renderer: "area"
 });
+</script>
+
+<h3>Nodes</h3>
+<div id="numNodesGraph"></div>
+<script>
 new PromConsole.Graph({
-    node: document.querySelector("#channelCapacityGraph"),
-    expr: 'lightningd_total_channel_capacity_msatoshi{criteria=~"to_them|to_us"}',
+    node: document.querySelector("#numNodesGraph"),
+    expr: "lightningd_num_nodes",
     renderer: "area"
+});
+</script>
+
+<h2>System</h2>
+<div id="freeMemoryGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#freeMemoryGraph"),
+    expr: "node_memory_MemAvailable",
+    renderer: "line"
 });
 </script>
 
