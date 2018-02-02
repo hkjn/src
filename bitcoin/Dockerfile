@@ -1,29 +1,49 @@
 #
-# Image for Bitcoin Core.
-#
-# The bin/ and lib/ directories were produced with Dockerfile.build.
+# Image for building Bitcoin Core binaries.
 #
 FROM hkjn/arch
 
 ARG bitcoin_version
 ARG lightning_version
 
-ENV BITCOIN_VERSION=bitcoin_version \
-    LIGHTNING_VERSION=lightning_version
+ENV BITCOIN_VERSION=${bitcoin_version} \
+    LIGHTNING_VERSION=${lightning_version}
 
-COPY bin/ /usr/local/bin/
-COPY lib/ /usr/lib/
-COPY libexec/ /usr/local/libexec/c-lightning/
+# Install dependencies.
+RUN pacman -Syyu --noconfirm && \
+    pacman -S --noconfirm git base-devel boost libevent python
 
-RUN useradd -m bitcoin
-USER root
-RUN pacman --noconfirm -Syyy && \
-    pacman --noconfirm -S python
+
+WORKDIR /usr/local/src/bitcoin/
+RUN useradd -m bitcoin && \
+    chown -R bitcoin:bitcoin /usr/local/src && \
+    mkdir /usr/local/src/lightning
+
 USER bitcoin
 
-COPY ["entrypoint.sh", "/usr/local/bin/"]
+RUN git clone https://github.com/bitcoin/bitcoin .
+RUN git checkout ${BITCOIN_VERSION}
 
-WORKDIR /home/bitcoin
+RUN ./autogen.sh && \
+    ./configure --disable-wallet
+
+RUN echo "Building bitcoin at: $(git show)" && \
+    make
+RUN make install
+
+WORKDIR /usr/local/src/lightning
+RUN git clone https://github.com/elementsproject/lightning . && \
+    git checkout ${LIGHTNING_VERSION} && \
+    echo "Building lightning at $(git show)"
+
+RUN make
+RUN make install
+
+WORKDIR /usr/lib/
+
+COPY sqlversiontest.cpp /usr/lib
+RUN g++ -o sqlversiontest sqlversiontest.cpp -lsqlite3 && \
+    ./sqlversiontest
+
+COPY entrypoint.sh /usr/local/bin
 ENTRYPOINT ["entrypoint.sh"]
-CMD [""]
-
