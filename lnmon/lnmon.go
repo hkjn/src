@@ -335,9 +335,6 @@ func (ps peers) ToUsChannelCapacity() int64 {
 
 // String returns a human-readable description of the channel listings.
 func (cls channelListings) String() string {
-	if len(cls) == 0 {
-		return "channelListings{}"
-	}
 	return fmt.Sprintf("%d channels", len(cls))
 }
 
@@ -549,8 +546,8 @@ func getLightningdState(aliases map[string]string) (*lightningdState, error) {
 	log.Printf("Learned of %d peers.\n", len(s.Peers))
 
 	sort.Sort(sort.Reverse(s.Peers))
-	numPeers.With(prometheus.Labels{"connected": "1"}).Set(float64(s.Peers.NumConnected()))
-	numPeers.With(prometheus.Labels{"connected": "0"}).Set(float64(len(s.Peers) - s.Peers.NumConnected()))
+	numPeers.With(prometheus.Labels{"connected": "connected"}).Set(float64(s.Peers.NumConnected()))
+	numPeers.With(prometheus.Labels{"connected": "unconnected"}).Set(float64(len(s.Peers) - s.Peers.NumConnected()))
 	for state, n := range s.Peers.NumChannelsByState() {
 		// log.Printf("We have %d channels in state %q\n", n, state)
 		ourChannels.With(prometheus.Labels{"state": state}).Set(float64(n))
