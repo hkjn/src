@@ -8,12 +8,17 @@
 
 <p>This is a work-in-progress console for bitcoind/lightningd.</p>
 
-<h2>Bitcoind</h2>
+<h2>Bitcoin</h2>
 
 <h2>Lightning</h2>
 
 <h3>Channels</h3>
 <div id="numChannelsGraph"></div>
+
+<div id="channelCapacityGraph"></div>
+
+<h3>Peers</h3>
+<div id="numPeersGraph"></div>
 
 <h2>System</h2>
 <div id="freeMemoryGraph"></div>
@@ -27,6 +32,16 @@ new PromConsole.Graph({
 new PromConsole.Graph({
     node: document.querySelector("#numChannelsGraph"),
     expr: "lightningd_num_channels",
+    renderer: "area"
+});
+new PromConsole.Graph({
+    node: document.querySelector("#numPeersGraph"),
+    expr: "lightningd_num_peers",
+    renderer: "area"
+});
+new PromConsole.Graph({
+    node: document.querySelector("#channelCapacityGraph"),
+    expr: 'lightningd_total_channel_capacity_msatoshi{criteria=~"to_them|to_us"}',
     renderer: "area"
 });
 </script>
