@@ -20,7 +20,8 @@
 new PromConsole.Graph({
     node: document.querySelector("#ourChannelsGraph"),
     expr: "lightningd_our_channels",
-    renderer: "area"
+    renderer: "area",
+    min: 0.0
 });
 </script>
 
@@ -32,7 +33,8 @@ new PromConsole.Graph({
     expr: 'lightningd_total_channel_capacity_msatoshi{criteria=~"to_them|to_us"}/100000000000',
     renderer: "area",
     yUnits: "BTC",
-    yTitle: "Capacity"
+    yTitle: "Capacity",
+    min: 0.0
 });
 </script>
 
@@ -79,7 +81,8 @@ new PromConsole.Graph({
 new PromConsole.Graph({
     node: document.querySelector("#upGraph"),
     expr: "up",
-    renderer: "area"
+    renderer: "area",
+    min: 0.0
 });
 </script>
 
