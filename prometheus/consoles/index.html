@@ -38,6 +38,19 @@ new PromConsole.Graph({
 });
 </script>
 
+<h4>Funds available to open channels</h4>
+<div id="fundsGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#fundsGraph"),
+    expr: 'lightningd_total_funds/100000000',
+    renderer: "area",
+    yUnits: "BTC",
+    yTitle: "Funds",
+    min: 0.0
+});
+</script>
+
 <h4>Number of channels on the network</h4>
 <div id="numChannelsGraph"></div>
 <script>
