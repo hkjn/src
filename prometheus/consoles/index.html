@@ -93,7 +93,7 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#upGraph"),
-    expr: "up",
+    expr: 'up{instance=~"ln.hkjn.me:.*"}',
     renderer: "area",
     min: 0.0
 });
