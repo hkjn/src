@@ -89,6 +89,10 @@ type (
 	nodes []node
 	// output describes an individual output.
 	output struct {
+		TxId string `json:"txid"`
+		// Output is the index of the txo.
+		Output int64 `json:"output"`
+		Value  int64 `json:"value"`
 	}
 	// outputs describes several outputs.
 	outputs []output
@@ -149,6 +153,13 @@ var (
 		Name:      "running",
 		Help:      "Whether lightningd process is running (1) or not (0).",
 	})
+	availableFunds = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Namespace: "lightningd",
+			Name:      "total_funds",
+			Help:      "Sum of all funds available for opening channels.",
+		},
+	)
 	numChannels = prometheus.NewGauge(
 		prometheus.GaugeOpts{
 			Namespace: "lightningd",
@@ -193,6 +204,7 @@ func init() {
 	// Metrics have to be registered to be exposed:
 	prometheus.MustRegister(bitcoindRunning)
 	prometheus.MustRegister(lightningdRunning)
+	prometheus.MustRegister(availableFunds)
 	prometheus.MustRegister(totalChannelCapacity)
 	prometheus.MustRegister(numChannels)
 	prometheus.MustRegister(numNodes)
@@ -309,14 +321,16 @@ func (ps peers) NumConnected() int {
 
 // String returns a human-readable description of the outputs.
 func (outs outputs) String() string {
-	if len(outs) < 1 {
-		return "outputs{0.0}"
+	return fmt.Sprintf("outputs totalling %v sat", outs.Sum())
+}
+
+// Sum returns the total value of all the outputs.
+func (outs outputs) Sum() int64 {
+	sum := int64(0)
+	for _, o := range outs {
+		sum += o.Value
 	}
-	sum := 42.0 // TODO: finish
-	// for _, o := range outs {
-	// sum += o.Value
-	// }
-	return fmt.Sprintf("outputs{%v}", sum)
+	return sum
 }
 
 // NumChannelsByState returns a map from channel state to number of channels in that state.
@@ -579,7 +593,8 @@ func getLightningdState(aliases map[string]string) (*lightningdState, error) {
 		return nil, err
 	}
 	s.Outputs = funds.Outputs
-	log.Printf("Learned of %d outputs: %v.\n", len(s.Outputs), s.Outputs)
+	availableFunds.Set(float64(s.Outputs.Sum()))
+	log.Printf("Learned of %d %v.\n", len(s.Outputs), s.Outputs)
 
 	peers, err := c.ListPeers()
 	if err != nil {
