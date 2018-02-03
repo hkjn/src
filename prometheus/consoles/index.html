@@ -132,6 +132,27 @@ new PromConsole.Graph({
 });
 </script>
 
+<h3>Network bytes transmitted</h3>
+<div id="networkTransmittedGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#networkTransmittedGraph"),
+    expr: 'rate(node_network_transmit_bytes{instance="ln.hkjn.me:9100"}[5m])',
+    renderer: "area",
+    min: 0.0
+});
+
+<h3>Network bytes received</h3>
+<div id="networkReceivedGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#networkReceivedGraph"),
+    expr: 'rate(node_network_receive_bytes{instance="ln.hkjn.me:9100"}[5m])',
+    renderer: "area",
+    min: 0.0
+});
+
+
 {{ template "prom_content_tail" . }}
 
 {{ template "tail" }}
