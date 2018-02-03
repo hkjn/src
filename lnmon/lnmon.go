@@ -343,8 +343,8 @@ func (ps peers) TotalChannelCapacity() int64 {
 	return sum
 }
 
-// ToUsChannelCapacity returns the capacity of all CHANNELD_NORMAL channels towards us.
-func (ps peers) ToUsChannelCapacity() int64 {
+// ToUsChannelBalance returns the balance of all CHANNELD_NORMAL channels towards us.
+func (ps peers) ToUsChannelBalance() int64 {
 	sum := int64(0)
 	for _, p := range ps {
 		for _, c := range p.Channels {
@@ -595,9 +595,11 @@ func getLightningdState(aliases map[string]string) (*lightningdState, error) {
 		// log.Printf("We have %d channels in state %q\n", n, state)
 		ourChannels.With(prometheus.Labels{"state": state}).Set(float64(n))
 	}
-	totalChannelCapacity.With(prometheus.Labels{"criteria": "total"}).Set(float64(s.Peers.TotalChannelCapacity()))
-	totalChannelCapacity.With(prometheus.Labels{"criteria": "to_us"}).Set(float64(s.Peers.ToUsChannelCapacity()))
-	totalChannelCapacity.With(prometheus.Labels{"criteria": "to_them"}).Set(float64(s.Peers.TotalChannelCapacity() - s.Peers.ToUsChannelCapacity()))
+	totalCap := float64(s.Peers.TotalChannelCapacity())
+	toUsBalance := float64(s.Peers.ToUsChannelBalance())
+	totalChannelCapacity.With(prometheus.Labels{"criteria": "total"}).Set(totalCap)
+	totalChannelCapacity.With(prometheus.Labels{"criteria": "to_us"}).Set(toUsBalance)
+	totalChannelCapacity.With(prometheus.Labels{"criteria": "to_them"}).Set(totalCap - toUsBalance)
 	// log.Printf("lightningd listpeers response: %+v\n", peers)
 
 	nodes, err := c.ListNodes()
