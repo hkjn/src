@@ -104,8 +104,30 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#freeMemoryGraph"),
-    expr: "node_memory_MemAvailable",
+    expr: 'node_memory_MemAvailable{instance="ln.hkjn.me:9100"}',
     renderer: "line",
+    min: 0.0
+});
+</script>
+
+<h3>Disk reads</h3>
+<div id="diskReadsGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#diskReadsGraph"),
+    expr: 'rate(node_disk_bytes_read{instance="ln.hkjn.me:9100"}[5m])',
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
+<h3>Disk writes</h3>
+<div id="diskWritesGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#diskWritesGraph"),
+    expr: 'rate(node_disk_bytes_written{instance="ln.hkjn.me:9100"}[5m])',
+    renderer: "area",
     min: 0.0
 });
 </script>
