@@ -87,6 +87,11 @@ type (
 	}
 	// nodes describes several nodes.
 	nodes []node
+	// output describes an individual output.
+	output struct {
+	}
+	// outputs describes several outputs.
+	outputs []output
 
 	// getInfoResponse is the format of the getinfo response from lightning-cli.
 	getInfoResponse struct {
@@ -100,14 +105,19 @@ type (
 	listChannelsResponse struct {
 		Channels []channelListing `json:"channels"`
 	}
+	// listFundsResponse is the format of the listfunds response from lightning-cli.
+	listFundsResponse struct {
+		Outputs outputs `json:"outputs"`
+	}
 	// listPeersResponse is the format of the listpeers response from lightning-cli.
 	listPeersResponse struct {
 		Peers peers `json:"peers"`
 	}
-	// listNodesResponse si the format of the listnodes response from lightning-cli.
+	// listNodesResponse is the format of the listnodes response from lightning-cli.
 	listNodesResponse struct {
 		Nodes nodes `json:"nodes"`
 	}
+	// lightningState describes the last known state of the lightningd daemon.
 	lightningdState struct {
 		pid      int
 		args     []string
@@ -116,6 +126,7 @@ type (
 		Peers    peers
 		Nodes    nodes
 		Channels channelListings
+		Outputs  outputs
 	}
 	state struct {
 		// aliases maps LN node ids to their human-readable aliases
@@ -296,6 +307,18 @@ func (ps peers) NumConnected() int {
 	return n
 }
 
+// String returns a human-readable description of the outputs.
+func (outs outputs) String() string {
+	if len(outs) < 1 {
+		return "outputs{0.0}"
+	}
+	sum := 42.0 // TODO: finish
+	// for _, o := range outs {
+	// sum += o.Value
+	// }
+	return fmt.Sprintf("outputs{%v}", sum)
+}
+
 // NumChannelsByState returns a map from channel state to number of channels in that state.
 func (ps peers) NumChannelsByState() map[string]int {
 	byState := map[string]int{}
@@ -447,6 +470,19 @@ func (c cli) ListChannels() (*listChannelsResponse, error) {
 	return &resp, nil
 }
 
+// ListFunds returns the lightning-cli response to listfunds.
+func (c cli) ListFunds() (*listFundsResponse, error) {
+	respstring, err := c.exec("listfunds")
+	if err != nil {
+		return nil, err
+	}
+	resp := listFundsResponse{}
+	if err := json.Unmarshal([]byte(respstring), &resp); err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
 // ListNodes returns the lightning-cli response to listnodes.
 func (c cli) ListNodes() (*listNodesResponse, error) {
 	respstring, err := c.exec("listnodes")
@@ -537,6 +573,13 @@ func getLightningdState(aliases map[string]string) (*lightningdState, error) {
 	s.Channels = channels.Channels
 	numChannels.Set(float64(len(s.Channels)))
 	log.Printf("Learned of %d channels.\n", len(s.Channels))
+
+	funds, err := c.ListFunds()
+	if err != nil {
+		return nil, err
+	}
+	s.Outputs = funds.Outputs
+	log.Printf("Learned of %d outputs: %v.\n", len(s.Outputs), s.Outputs)
 
 	peers, err := c.ListPeers()
 	if err != nil {
