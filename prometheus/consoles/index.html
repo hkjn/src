@@ -46,7 +46,20 @@ new PromConsole.Graph({
     expr: 'lightningd_channel_to_us_balance_msatoshi/100000000000',
     renderer: "area",
     yUnits: "BTC",
-    yTitle: "Capacity",
+    yTitle: "Balance",
+    min: 0.0
+});
+</script>
+
+<h4>Balance to them in our channels</h4>
+<div id="channelToThemBalanceGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#channelToThemBalanceGraph"),
+    expr: '(lightningd_channel_capacity_msatoshi - lightningd_channel_to_us_balance_msatoshi)/100000000000',
+    renderer: "area",
+    yUnits: "BTC",
+    yTitle: "Balance",
     min: 0.0
 });
 </script>
