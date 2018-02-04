@@ -51,42 +51,53 @@ type (
 
 	// channel describes an individual channel.
 	channel struct {
-		State                     string `json:"state"`
-		Owner                     string `json:"owner"`
-		ShortChannelId            string `json:"short_channel_id"`
-		FundingTxId               string `json:"funding_txid"`
-		MsatoshiToUs              int64  `json:"msatoshi_to_us"`
-		MsatoshiTotal             int64  `json:"msatoshi_total"`
-		DustLimitSatoshis         int64  `json:"dust_limit_satoshis"`
-		MaxHtlcValueInFlightMsats int64  `json:"max_htlc_value_in_flight_msats"`
-		ChannelReserveSatoshis    int64  `json:"channel_reserve_satoshis"`
-		HtlcMinimumMsat           int64  `json:"htlc_minimum_msat"`
-		ToSelfDelay               int64  `json:"to_self_delay"`
-		MaxAcceptedHtlcs          int64  `json:"max_accepted_htlcs"`
+		State                     channelState `json:"state"`
+		Owner                     string       `json:"owner"`
+		ShortChannelId            string       `json:"short_channel_id"`
+		FundingTxId               string       `json:"funding_txid"`
+		MsatoshiToUs              int64        `json:"msatoshi_to_us"`
+		MsatoshiTotal             int64        `json:"msatoshi_total"`
+		DustLimitSatoshis         int64        `json:"dust_limit_satoshis"`
+		MaxHtlcValueInFlightMsats int64        `json:"max_htlc_value_in_flight_msats"`
+		ChannelReserveSatoshis    int64        `json:"channel_reserve_satoshis"`
+		HtlcMinimumMsat           int64        `json:"htlc_minimum_msat"`
+		ToSelfDelay               int64        `json:"to_self_delay"`
+		MaxAcceptedHtlcs          int64        `json:"max_accepted_htlcs"`
 	}
+	// alias is an optional human-readable alias for a node.
+	alias string
 	// channels describes several channel structures.
 	channels []channel
-	// peers describes several peers.
-	peers []peer
 	// netaddr describes the network addresses for a peer.
 	netaddr []string
 	// peer describes a single peer.
+	//
+	// TODO: finish unifying peer -> node types.
 	peer struct {
 		PeerId    string   `json:"id"`
 		Connected bool     `json:"connected"`
 		Netaddr   netaddr  `json:"netaddr"`
 		Channels  channels `json:"channels"`
 	}
+	// peers describes several peers.
+	peers []peer
 	// node describes a single node.
 	node struct {
-		NodeId        string        `json:"nodeid"`
-		Alias         string        `json:"alias"`
+		// isPeer is true if this node is one of our peers.
+		isPeer    bool
+		NodeId    string `json:"nodeid"`
+		Connected bool   `json:"connected"
+		// Netaddr is present for listpeer responses. Should unify with addresses from listnodes..`
+		Netaddr netaddr `json:"netaddr"`
+		// Channels holds the channels for peers.
+		Channels      channels      `json:"channels"`
+		Alias         alias         `json:"alias"`
 		Color         string        `json:"color"`
 		LastTimestamp int64         `json:"last_timestamp"`
 		Addresses     []addressInfo `json:"addresses"`
 	}
 	// nodes describes several nodes.
-	nodes []node
+	nodes map[alias]node
 	// output describes an individual output.
 	output struct {
 		TxId string `json:"txid"`
@@ -119,38 +130,39 @@ type (
 	}
 	// listNodesResponse is the format of the listnodes response from lightning-cli.
 	listNodesResponse struct {
-		Nodes nodes `json:"nodes"`
+		Nodes []node `json:"nodes"`
 	}
 	// lightningState describes the last known state of the lightningd daemon.
 	lightningdState struct {
 		pid      int
 		args     []string
-		Alias    string
+		Alias    alias
 		Info     getInfoResponse
 		Peers    peers
 		Nodes    nodes
 		Channels channelListings
 		Outputs  outputs
 	}
-	channelState int
-	state        struct {
-		// aliases maps LN node ids to their human-readable aliases
-		aliases    map[string]string
+	channelStateNum int
+	channelState    string
+	state           struct {
 		Bitcoind   bitcoindState
 		Lightningd lightningdState
 	}
 )
 
 // String returns the name of the state, e.g. "OPENINGD".
-func (s channelState) String() string {
+func (s channelStateNum) String() string {
 	if ChanneldNormalState <= s && s <= ClosingdSigexchangeState {
-		return states[s-1]
+		return string(states[s])
+
 	}
 	return fmt.Sprintf("Invalid channelstate %v", s)
 }
 
 const (
-	ChanneldNormalState channelState = 1 + iota
+	// Channel states are enumerated here. Note that states with lower numbers sort before higher.
+	ChanneldNormalState channelStateNum = 1 + iota
 	ChanneldAwaitingLockinState
 	OpeningdState
 	OnchaindTheirUnilateralState
@@ -160,13 +172,13 @@ const (
 
 // TODO: eliminate global variable
 var (
-	states = [...]string{
-		"OPENINGD",
-		"ONCHAIND_THEIR_UNILATERAL",
-		"ONCHAIND_OUR_UNILATERAL",
-		"CLOSINGD_SIGEXCHANGE",
-		"CHANNELD_NORMAL",
-		"CHANNELD_AWAITING_LOCKIN",
+	states = map[channelStateNum]channelState{
+		ChanneldNormalState:          "CHANNELD_NORMAL",
+		ChanneldAwaitingLockinState:  "CHANNELD_AWAITING_LOCKIN",
+		OpeningdState:                "OPENINGD",
+		OnchaindTheirUnilateralState: "ONCHAIND_THEIR_UNILATERAL",
+		OnchaindOurUnilateralState:   "ONCHAIND_OUR_UNILATERAL",
+		ClosingdSigexchangeState:     "CLOSINGD_SIGEXCHANGE",
 	}
 	allState        state
 	bitcoindRunning = prometheus.NewGauge(prometheus.GaugeOpts{
@@ -297,20 +309,7 @@ func (ns nodes) String() string {
 func (cs channels) Len() int      { return len(cs) }
 func (cs channels) Swap(i, j int) { cs[i], cs[j] = cs[j], cs[i] }
 func (cs channels) Less(i, j int) bool {
-	// Note: there's several more states, we just order the ones  we care about here.
-	statePrio := map[string]int{
-		"CHANNELD_NORMAL":          0,
-		"CHANNELD_AWAITING_LOCKIN": 1,
-	}
-	getPrio := func(s string) int {
-		prio, exists := statePrio[s]
-		if !exists {
-			// Unknown state sorts after known ones.
-			return 10
-		}
-		return prio
-	}
-	return getPrio(cs[i].State) < getPrio(cs[j].State)
+	return cs[i].State < cs[j].State
 }
 
 // Implement sort.Interface for peers to sort them in reasonable order.
@@ -370,8 +369,8 @@ func (outs outputs) Sum() int64 {
 }
 
 // NumChannelsByState returns a map from channel state to number of channels in that state.
-func (ps peers) NumChannelsByState() map[string]int {
-	byState := map[string]int{}
+func (ps peers) NumChannelsByState() map[channelState]int64 {
+	byState := map[channelState]int64{}
 	for _, p := range ps {
 		for _, c := range p.Channels {
 			byState[c.State] += 1
@@ -381,12 +380,10 @@ func (ps peers) NumChannelsByState() map[string]int {
 }
 
 // TotalChannelCapacity returns the total capacity of channels by state (e.g CHANNELD_NORMAL).
-func (ps peers) TotalChannelCapacity() map[string]int64 {
-	result := map[string]int64{}
-	//sum := int64(0)
+func (ps peers) TotalChannelCapacity() map[channelState]int64 {
+	result := map[channelState]int64{}
 	for _, p := range ps {
 		for _, c := range p.Channels {
-			// TODO: Use channelState type instead of string.
 			result[c.State] += c.MsatoshiTotal
 		}
 	}
@@ -394,8 +391,8 @@ func (ps peers) TotalChannelCapacity() map[string]int64 {
 }
 
 // ToUsChannelBalance returns the balance of channels by state (e.g CHANNELD_NORMAL).
-func (ps peers) ToUsChannelBalance() map[string]int64 {
-	result := map[string]int64{}
+func (ps peers) ToUsChannelBalance() map[channelState]int64 {
+	result := map[channelState]int64{}
 	for _, p := range ps {
 		for _, c := range p.Channels {
 			result[c.State] += c.MsatoshiToUs
@@ -583,9 +580,7 @@ func getBitcoindState() (*bitcoindState, error) {
 }
 
 // getLightningState returns the current lightningd state.
-//
-// TODO: refactor aliases to be stored alongside nodes/peers.
-func getLightningdState(aliases map[string]string) (*lightningdState, error) {
+func getLightningdState() (*lightningdState, error) {
 	ps, err := execCmd("pgrep", "-a", "lightningd")
 	if err != nil {
 		return nil, err
@@ -599,9 +594,11 @@ func getLightningdState(aliases map[string]string) (*lightningdState, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	s := lightningdState{
-		pid:  pid,
-		args: []string{},
+		pid:   pid,
+		args:  []string{},
+		Nodes: map[alias]node{},
 	}
 	for _, arg := range parts[1:] {
 		s.args = append(s.args, arg)
@@ -637,28 +634,31 @@ func getLightningdState(aliases map[string]string) (*lightningdState, error) {
 	s.Peers = peers.Peers
 	log.Printf("Learned of %d peers.\n", len(s.Peers))
 
+	// TODO: need to either combine node/peer types, or set peer.alias based on node.alias.
 	sort.Sort(sort.Reverse(s.Peers))
 	numPeers.With(prometheus.Labels{"connected": "connected"}).Set(float64(s.Peers.NumConnected()))
 	numPeers.With(prometheus.Labels{"connected": "unconnected"}).Set(float64(len(s.Peers) - s.Peers.NumConnected()))
 	for state, n := range s.Peers.NumChannelsByState() {
 		// log.Printf("We have %d channels in state %q\n", n, state)
-		ourChannels.With(prometheus.Labels{"state": state}).Set(float64(n))
+		ourChannels.With(prometheus.Labels{"state": string(state)}).Set(float64(n))
 	}
 	totalCap := s.Peers.TotalChannelCapacity()
 	for state, cap := range totalCap {
-		channelCapacity.With(prometheus.Labels{"state": state}).Set(float64(cap))
+		channelCapacity.With(prometheus.Labels{"state": string(state)}).Set(float64(cap))
 	}
 	toUsBalance := s.Peers.ToUsChannelBalance()
 	for state, balance := range toUsBalance {
-		channelToUsBalance.With(prometheus.Labels{"state": state}).Set(float64(balance))
+		channelToUsBalance.With(prometheus.Labels{"state": string(state)}).Set(float64(balance))
 	}
 	// log.Printf("lightningd listpeers response: %+v\n", peers)
 
-	nodes, err := c.ListNodes()
+	iodes, err := c.ListNodes()
 	if err != nil {
 		return nil, err
 	}
-	s.Nodes = nodes.Nodes
+	for _, n := range nodes.Nodes {
+		s.Nodes[n.Alias] = n
+	}
 	numNodes.Set(float64(len(s.Nodes)))
 	log.Printf("Learned of %d nodes.\n", len(s.Nodes))
 	// log.Printf("lightningd listnodes response: %+v\n", nodes)
@@ -667,7 +667,6 @@ func getLightningdState(aliases map[string]string) (*lightningdState, error) {
 }
 
 func refresh() {
-	allState.aliases = map[string]string{}
 	for {
 		btcState, err := getBitcoindState()
 		if err != nil {
@@ -682,24 +681,12 @@ func refresh() {
 			bitcoindRunning.Set(0)
 		}
 
-		lnState, err := getLightningdState(allState.aliases)
+		lnState, err := getLightningdState()
 		if err != nil {
 			log.Printf("Failed to get lightningd state: %v\n", err)
 			allState.Lightningd = lightningdState{}
 		} else {
 			allState.Lightningd = *lnState
-		}
-		if allState.Lightningd.IsRunning() {
-			for _, node := range allState.Lightningd.Nodes {
-				_, exists := allState.aliases[node.NodeId]
-				if !exists {
-					log.Printf("Learned alias %q for node %q\n", node.Alias, node.NodeId)
-					allState.aliases[node.NodeId] = node.Alias
-				}
-				if node.NodeId == allState.Lightningd.Info.NodeId {
-					allState.Lightningd.Alias = node.Alias
-				}
-			}
 		}
 		if allState.Lightningd.IsRunning() {
 			lightningdRunning.Set(1)
