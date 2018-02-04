@@ -87,11 +87,11 @@ type (
 		// channels holds the channels for peers.
 		channels channels `json:"channels"`
 
-		NodeId        string        `json:"nodeid"`
-		Alias         alias         `json:"alias"`
-		Color         string        `json:"color"`
-		LastTimestamp int64         `json:"last_timestamp"`
-		Addresses     []addressInfo `json:"addresses"`
+		NodeId        string  `json:"nodeid"`
+		Alias         alias   `json:"alias"`
+		Color         string  `json:"color"`
+		LastTimestamp int64   `json:"last_timestamp"`
+		Addresses     address `json:"addresses"`
 	}
 	// nodes describes several nodes.
 	nodes []node
@@ -121,17 +121,17 @@ type (
 	listFundsResponse struct {
 		Outputs outputs `json:"outputs"`
 	}
+	// allNodes is a map from node id to that node.
+	allNodes map[string]node
 	// lightningState describes the last known state of the lightningd daemon.
 	lightningdState struct {
-		pid   int
-		args  []string
-		Alias alias
-		Info  getInfoResponse
-		// TODO: Unify PeerNodes into Nodes.
-		PeerNodes nodes
-		Nodes     nodes
-		Channels  channelListings
-		Outputs   outputs
+		pid      int
+		args     []string
+		Alias    alias
+		Info     getInfoResponse
+		Nodes    allNodes
+		Channels channelListings
+		Outputs  outputs
 	}
 	channelStateNum int
 	channelState    string
@@ -290,6 +290,12 @@ func (n node) String() string {
 		fmt.Sprintf("isPeer: %v", n.isPeer),
 		fmt.Sprintf("connected: %v", n.connected),
 	}
+	if n.Alias != "" {
+		parts = append(parts, fmt.Sprintf("Alias: %s", n.Alias))
+	}
+	if n.Color != "" {
+		parts = append(parts, fmt.Sprintf("Color: %s", n.Color))
+	}
 	if n.connected {
 		parts = append(parts, fmt.Sprintf("Addresses: %s", n.Addresses))
 	}
@@ -304,8 +310,11 @@ func (n node) String() string {
 
 // String returns a human-readable description of the address.
 func (addr address) String() string {
+	if len(addr) < 1 {
+		return fmt.Sprintf("address{}")
+	}
 	if len(addr) != 1 {
-		return fmt.Sprintf("<unsupported address of len %d: %v>", len(addr), addr)
+		return fmt.Sprintf("<unsupported address of len %d>", len(addr))
 	}
 	return fmt.Sprintf("%s:%d", addr[0].Address, addr[0].Port)
 }
@@ -322,14 +331,48 @@ func (cs channels) Less(i, j int) bool {
 	return cs[i].State < cs[j].State
 }
 
+func (ns allNodes) String() string {
+	return fmt.Sprintf("%d nodes", len(ns))
+}
+
+// updateNodes updates the nodes with new node information.
+func (s lightningdState) updateNodes(newNodes nodes) {
+	for _, nn := range newNodes {
+		on, exists := s.Nodes[nn.NodeId]
+		if !exists {
+			// log.Printf("Learned about new node %v", nn)
+			s.Nodes[nn.NodeId] = nn
+		} else {
+			// log.Printf("Updating any stale info we had on old node %v to new %v\n", on, nn)
+			if on.Alias != "" && nn.Alias == "" {
+				// Preserve alias if we knew it.
+				nn.Alias = on.Alias
+			}
+			if on.Color != "" && nn.Color == "" {
+				// Preserve color if we knew it.
+				nn.Color = on.Color
+			}
+			if on.isPeer {
+				// Note: We avoid marking peers as non-peers when listnodes returns with isPeer=false. This could be less hacky.
+				nn.isPeer = true
+				nn.connected = on.connected
+				nn.channels = on.channels
+			}
+			// TODO: may or may not want to update on.Addresses and on.last_timestamp
+			s.Nodes[nn.NodeId] = nn
+		}
+	}
+}
+
 // Peers returns all nodes that are our peers.
-func (ns nodes) Peers() nodes {
+func (ns allNodes) Peers() nodes {
 	result := nodes{}
 	for _, n := range ns {
 		if n.isPeer {
 			result = append(result, n)
 		}
 	}
+	sort.Sort(sort.Reverse(result))
 	return result
 }
 
@@ -401,6 +444,10 @@ func (outs outputs) Sum() int64 {
 func (ns nodes) NumChannelsByState() map[channelState]int64 {
 	byState := map[channelState]int64{}
 	for _, n := range ns {
+		if !n.isPeer {
+			// Nodes that are not our peers can't have cbannels with us.
+			continue
+		}
 		for _, c := range n.channels {
 			byState[c.State] += 1
 		}
@@ -413,6 +460,10 @@ func (ns nodes) TotalChannelCapacity() map[channelState]int64 {
 	result := map[channelState]int64{}
 	for _, n := range ns {
 		for _, c := range n.channels {
+			if !n.isPeer {
+				// Nodes that are not our peers can't have cbannels towards us.
+				continue
+			}
 			result[c.State] += c.MsatoshiTotal
 		}
 	}
@@ -423,6 +474,10 @@ func (ns nodes) TotalChannelCapacity() map[channelState]int64 {
 func (ns nodes) ToUsChannelBalance() map[channelState]int64 {
 	result := map[channelState]int64{}
 	for _, n := range ns {
+		if !n.isPeer {
+			// Nodes that are not our peers can't have cbannels towards us.
+			continue
+		}
 		for _, c := range n.channels {
 			result[c.State] += c.MsatoshiToUs
 		}
@@ -630,7 +685,7 @@ func getLightningdState() (*lightningdState, error) {
 	s := lightningdState{
 		pid:   pid,
 		args:  []string{},
-		Nodes: nodes{},
+		Nodes: allNodes{},
 	}
 	for _, arg := range parts[1:] {
 		s.args = append(s.args, arg)
@@ -659,37 +714,41 @@ func getLightningdState() (*lightningdState, error) {
 	availableFunds.Set(float64(s.Outputs.Sum()))
 	log.Printf("Learned of %d %v.\n", len(s.Outputs), s.Outputs)
 
+	log.Printf("Before doing listpeers we know about %d nodes.\n", len(s.Nodes))
 	peerNodes, err := c.ListPeers()
 	if err != nil {
 		return nil, err
 	}
-	s.PeerNodes = *peerNodes
-	log.Printf("Learned of %d peer nodes.\n", len(s.PeerNodes))
+	log.Printf("Doing listpeers we learned about %d peer nodes: %v.\n", len(*peerNodes), *peerNodes)
+	s.updateNodes(*peerNodes)
+	log.Printf("After updating with listpeers results, we now know of %d nodes: %v.\n", len(s.Nodes), s.Nodes)
 
-	sort.Sort(sort.Reverse(s.PeerNodes))
-	numPeers.With(prometheus.Labels{"connected": "connected"}).Set(float64(s.PeerNodes.NumConnected()))
-	numPeers.With(prometheus.Labels{"connected": "unconnected"}).Set(float64(len(s.PeerNodes) - s.PeerNodes.NumConnected()))
-	for state, n := range s.PeerNodes.NumChannelsByState() {
+	peers := s.Nodes.Peers() // TODO: could do the below with entire s.Nodes too; methods filter out non-peers where applicable.
+	numPeers.With(prometheus.Labels{"connected": "connected"}).Set(float64(peers.NumConnected()))
+	numPeers.With(prometheus.Labels{"connected": "unconnected"}).Set(float64(len(peers) - peers.NumConnected()))
+	for state, n := range s.Nodes.Peers().NumChannelsByState() {
 		// log.Printf("We have %d channels in state %q\n", n, state)
 		ourChannels.With(prometheus.Labels{"state": string(state)}).Set(float64(n))
 	}
-	totalCap := s.PeerNodes.TotalChannelCapacity()
+	totalCap := peers.TotalChannelCapacity()
 	for state, cap := range totalCap {
 		channelCapacity.With(prometheus.Labels{"state": string(state)}).Set(float64(cap))
 	}
-	toUsBalance := s.PeerNodes.ToUsChannelBalance()
+	toUsBalance := peers.ToUsChannelBalance()
 	for state, balance := range toUsBalance {
 		channelToUsBalance.With(prometheus.Labels{"state": string(state)}).Set(float64(balance))
 	}
 	// log.Printf("lightningd listpeers response: %+v\n", peers)
 
+	log.Printf("Before doing listnodes we know about %d nodes.\n", len(s.Nodes))
 	nodes, err := c.ListNodes()
 	if err != nil {
 		return nil, err
 	}
-	s.Nodes = *nodes
+	log.Printf("Doing listnodes we learned about %d nodes.\n", len(*nodes))
+	s.updateNodes(*nodes)
+	log.Printf("After updating with listnodes results, we now know of %d nodes.\n", len(s.Nodes))
 	numNodes.Set(float64(len(s.Nodes)))
-	log.Printf("Learned of %d nodes.\n", len(s.Nodes))
 	// log.Printf("lightningd listnodes response: %+v\n", nodes)
 
 	return &s, nil
@@ -700,7 +759,6 @@ func refresh() {
 		btcState, err := getBitcoindState()
 		if err != nil {
 			log.Printf("Failed to get bitcoind state: %v\n", err)
-			allState.Bitcoind = bitcoindState{}
 		} else {
 			allState.Bitcoind = *btcState
 		}
@@ -710,10 +768,10 @@ func refresh() {
 			bitcoindRunning.Set(0)
 		}
 
+		// TODO: need to persist lnState.Nodes if we want to persist info we find between polls.
 		lnState, err := getLightningdState()
 		if err != nil {
 			log.Printf("Failed to get lightningd state: %v\n", err)
-			allState.Lightningd = lightningdState{}
 		} else {
 			allState.Lightningd = *lnState
 		}
