@@ -132,7 +132,8 @@ type (
 		Channels channelListings
 		Outputs  outputs
 	}
-	state struct {
+	channelState int
+	state        struct {
 		// aliases maps LN node ids to their human-readable aliases
 		aliases    map[string]string
 		Bitcoind   bitcoindState
@@ -140,8 +141,33 @@ type (
 	}
 )
 
+// String returns the name of the state, e.g. "OPENINGD".
+func (s channelState) String() string {
+	if ChanneldNormalState <= s && s <= ClosingdSigexchangeState {
+		return states[s-1]
+	}
+	return fmt.Sprintf("Invalid channelstate %v", s)
+}
+
+const (
+	ChanneldNormalState channelState = 1 + iota
+	ChanneldAwaitingLockinState
+	OpeningdState
+	OnchaindTheirUnilateralState
+	OnchaindOurUnilateralState
+	ClosingdSigexchangeState
+)
+
 // TODO: eliminate global variable
 var (
+	states = [...]string{
+		"OPENINGD",
+		"ONCHAIND_THEIR_UNILATERAL",
+		"ONCHAIND_OUR_UNILATERAL",
+		"CLOSINGD_SIGEXCHANGE",
+		"CHANNELD_NORMAL",
+		"CHANNELD_AWAITING_LOCKIN",
+	}
 	allState        state
 	bitcoindRunning = prometheus.NewGauge(prometheus.GaugeOpts{
 		Namespace: "bitcoind",
@@ -190,13 +216,22 @@ var (
 		},
 		[]string{"state"},
 	)
-	totalChannelCapacity = prometheus.NewGaugeVec(
+	channelCapacity = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "lightningd",
-			Name:      "total_channel_capacity_msatoshi",
-			Help:      "Capacity of channels in millisatoshi.",
+			// TODO: update console to no longer expect old name lightningd_total_channel_capacity_msatoshi
+			Name: "channel_capacity_msatoshi",
+			Help: "Capacity of channels in millisatoshi by direction and state.",
 		},
-		[]string{"criteria"},
+		[]string{"state"},
+	)
+	channelToUsBalance = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "lightningd",
+			Name:      "channel_to_us_balance_msatoshi",
+			Help:      "Balance to us of channels in millisatoshi by state.",
+		},
+		[]string{"state"},
 	)
 )
 
@@ -205,7 +240,8 @@ func init() {
 	prometheus.MustRegister(bitcoindRunning)
 	prometheus.MustRegister(lightningdRunning)
 	prometheus.MustRegister(availableFunds)
-	prometheus.MustRegister(totalChannelCapacity)
+	prometheus.MustRegister(channelCapacity)
+	prometheus.MustRegister(channelToUsBalance)
 	prometheus.MustRegister(numChannels)
 	prometheus.MustRegister(numNodes)
 	prometheus.MustRegister(numPeers)
@@ -344,30 +380,28 @@ func (ps peers) NumChannelsByState() map[string]int {
 	return byState
 }
 
-// TotalChannelCapacity returns the total capacity of all CHANNELD_NORMAL channels.
-func (ps peers) TotalChannelCapacity() int64 {
-	sum := int64(0)
+// TotalChannelCapacity returns the total capacity of channels by state (e.g CHANNELD_NORMAL).
+func (ps peers) TotalChannelCapacity() map[string]int64 {
+	result := map[string]int64{}
+	//sum := int64(0)
 	for _, p := range ps {
 		for _, c := range p.Channels {
-			if c.State == "CHANNELD_NORMAL" {
-				sum += c.MsatoshiTotal
-			}
+			// TODO: Use channelState type instead of string.
+			result[c.State] += c.MsatoshiTotal
 		}
 	}
-	return sum
+	return result
 }
 
-// ToUsChannelBalance returns the balance of all CHANNELD_NORMAL channels towards us.
-func (ps peers) ToUsChannelBalance() int64 {
-	sum := int64(0)
+// ToUsChannelBalance returns the balance of channels by state (e.g CHANNELD_NORMAL).
+func (ps peers) ToUsChannelBalance() map[string]int64 {
+	result := map[string]int64{}
 	for _, p := range ps {
 		for _, c := range p.Channels {
-			if c.State == "CHANNELD_NORMAL" {
-				sum += c.MsatoshiToUs
-			}
+			result[c.State] += c.MsatoshiToUs
 		}
 	}
-	return sum
+	return result
 }
 
 // String returns a human-readable description of the channel listings.
@@ -610,11 +644,14 @@ func getLightningdState(aliases map[string]string) (*lightningdState, error) {
 		// log.Printf("We have %d channels in state %q\n", n, state)
 		ourChannels.With(prometheus.Labels{"state": state}).Set(float64(n))
 	}
-	totalCap := float64(s.Peers.TotalChannelCapacity())
-	toUsBalance := float64(s.Peers.ToUsChannelBalance())
-	totalChannelCapacity.With(prometheus.Labels{"criteria": "total"}).Set(totalCap)
-	totalChannelCapacity.With(prometheus.Labels{"criteria": "to_us"}).Set(toUsBalance)
-	totalChannelCapacity.With(prometheus.Labels{"criteria": "to_them"}).Set(totalCap - toUsBalance)
+	totalCap := s.Peers.TotalChannelCapacity()
+	for state, cap := range totalCap {
+		channelCapacity.With(prometheus.Labels{"state": state}).Set(float64(cap))
+	}
+	toUsBalance := s.Peers.ToUsChannelBalance()
+	for state, balance := range toUsBalance {
+		channelToUsBalance.With(prometheus.Labels{"state": state}).Set(float64(balance))
+	}
 	// log.Printf("lightningd listpeers response: %+v\n", peers)
 
 	nodes, err := c.ListNodes()
@@ -670,8 +707,6 @@ func refresh() {
 			lightningdRunning.Set(0)
 		}
 
-		// lightning-cli getchannels
-		// lightning-cli listfunds
 		// lightning-cli listinvoice
 		// lightning-cli listpayments
 		time.Sleep(time.Minute)
