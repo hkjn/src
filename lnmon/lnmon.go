@@ -82,8 +82,6 @@ type (
 		// isPeer is true if this node is one of our peers.
 		isPeer    bool
 		connected bool
-		// Netaddr is present for listpeer responses. Should unify with addresses from listnodes..`
-		// 	netaddr netaddr
 		// channels holds the channels for peers.
 		channels channels `json:"channels"`
 
@@ -112,10 +110,6 @@ type (
 		Address     address `json:"address"`
 		Version     string  `json:"version"`
 		Blockheight int     `json:"blockheight"`
-	}
-	// listChannelsResponse is the format of the listchannels response from lightning-cli.
-	listChannelsResponse struct {
-		Channels []channelListing `json:"channels"`
 	}
 	// listFundsResponse is the format of the listfunds response from lightning-cli.
 	listFundsResponse struct {
@@ -313,14 +307,24 @@ func (addr address) String() string {
 	if len(addr) < 1 {
 		return fmt.Sprintf("address{}")
 	}
-	if len(addr) != 1 {
-		return fmt.Sprintf("<unsupported address of len %d>", len(addr))
+	parts := make([]string, len(addr), len(addr))
+	for i, a := range addr {
+		parts[i] = fmt.Sprintf("%s:%d", a.Address, a.Port)
 	}
-	return fmt.Sprintf("%s:%d", addr[0].Address, addr[0].Port)
+	return strings.Join(parts, ", ")
 }
 
 // String returns a human-readable description of the nodes.
 func (ns nodes) String() string {
+	desc := make([]string, len(ns), len(ns))
+	for i, n := range ns {
+		desc[i] = fmt.Sprintf("%d: %s", i, n)
+	}
+	return fmt.Sprintf("%d nodes: %s", len(ns), strings.Join(desc, ", "))
+}
+
+// Desc returns a description of the nodes.
+func (ns nodes) Desc() string {
 	return fmt.Sprintf("%d nodes", len(ns))
 }
 
@@ -333,6 +337,14 @@ func (cs channels) Less(i, j int) bool {
 
 func (ns allNodes) String() string {
 	return fmt.Sprintf("%d nodes", len(ns))
+}
+
+func (ns allNodes) getAlias(nodeId string) (alias, error) {
+	n, exists := ns[nodeId]
+	if !exists {
+		return "", fmt.Errorf("no such node %q", nodeId)
+	}
+	return n.Alias, nil
 }
 
 // updateNodes updates the nodes with new node information.
@@ -582,16 +594,19 @@ func (c cli) GetInfo() (*getInfoResponse, error) {
 }
 
 // ListChannels returns the lightning-cli response to listchannels.
-func (c cli) ListChannels() (*listChannelsResponse, error) {
+func (c cli) ListChannels() (*channelListings, error) {
 	respstring, err := c.exec("listchannels")
 	if err != nil {
 		return nil, err
+
 	}
-	resp := listChannelsResponse{}
+	resp := struct {
+		Channels channelListings `json:"channels"`
+	}{}
 	if err := json.Unmarshal([]byte(respstring), &resp); err != nil {
 		return nil, err
 	}
-	return &resp, nil
+	return &resp.Channels, nil
 }
 
 // ListFunds returns the lightning-cli response to listfunds.
@@ -702,7 +717,7 @@ func getLightningdState() (*lightningdState, error) {
 	if err != nil {
 		return nil, err
 	}
-	s.Channels = channels.Channels
+	s.Channels = *channels
 	numChannels.Set(float64(len(s.Channels)))
 	log.Printf("Learned of %d channels.\n", len(s.Channels))
 
@@ -751,6 +766,10 @@ func getLightningdState() (*lightningdState, error) {
 	numNodes.Set(float64(len(s.Nodes)))
 	// log.Printf("lightningd listnodes response: %+v\n", nodes)
 
+	s.Alias, err = s.Nodes.getAlias(s.Info.NodeId)
+	if err != nil {
+		return nil, err
+	}
 	return &s, nil
 }
 
