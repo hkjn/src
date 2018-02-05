@@ -25,14 +25,32 @@ from this tool.</p>
 <p>Our address is is <code>{{ .Lightningd.Info.Address }}</code>.</p>
 <p>Our version is is <code>{{ .Lightningd.Info.Version }}</code>.</p>
 <p>Our blockheight is is <code>{{ .Lightningd.Info.Blockheight }}</code>.</p>
-<p>We know of {{ .Lightningd.Nodes }}.</p>
-<p>We know of {{ .Lightningd.Channels.String }}.</p>
+<p>We know of {{ len .Lightningd.Nodes }} in total.</p>
+<p>We know of {{ len .Lightningd.Channels }} channels in total.</p>
+<p>We know of {{ len .Lightningd.Nodes.Peers }} nodes that are our peers.</p>
 
-<h3>We have {{ .Lightningd.Nodes.Peers.Desc }} as peers:</h3>
+<h3>Peers</h3>
+
+<table>
+	<tr>
+		<th>Name</th>
+		<th>Connected?</th>
+		<th>Channel state</th>
+		<th>Funds to us</th>
+		<th>Funds to them</th>
+	</tr>
+	{{ range .Lightningd.Nodes.Peers -}}
+	<tr>
+		<td>{{ .Name }}</td>
+		<td>{{ .Connected }}</td>
+		<td><code>{{ .Channels.State }}</code></td>
+		<td>{{ if .Channels }} {{ .Channels.MilliSatoshiToUs.AsBTC }} {{ end }}</td>
+		<td>{{ if .Channels }} {{ .Channels.MilliSatoshiToThem.AsBTC }} {{ end }}</td>
+	</tr>
+	{{- end }}
+</table>
+
 <ul>
-{{ range .Lightningd.Nodes.Peers -}}
-  <li><code>{{ .String }}</code></li>
-{{- end }}
 </ul>
 
 {{ else }}

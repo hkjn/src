@@ -49,18 +49,20 @@ type (
 	// channelListings describes several channels from listchannels output.
 	channelListings []channelListing
 
+	// msatoshi is number of millisatoshis, used in the LN protocol.
+	msatoshi int64
 	// channel describes an individual channel.
 	channel struct {
 		State                     channelState `json:"state"`
 		Owner                     string       `json:"owner"`
 		ShortChannelId            string       `json:"short_channel_id"`
 		FundingTxId               string       `json:"funding_txid"`
-		MsatoshiToUs              int64        `json:"msatoshi_to_us"`
-		MsatoshiTotal             int64        `json:"msatoshi_total"`
+		MsatoshiToUs              msatoshi     `json:"msatoshi_to_us"`
+		MsatoshiTotal             msatoshi     `json:"msatoshi_total"`
 		DustLimitSatoshis         int64        `json:"dust_limit_satoshis"`
 		MaxHtlcValueInFlightMsats int64        `json:"max_htlc_value_in_flight_msats"`
 		ChannelReserveSatoshis    int64        `json:"channel_reserve_satoshis"`
-		HtlcMinimumMsat           int64        `json:"htlc_minimum_msat"`
+		HtlcMinimumMsat           msatoshi     `json:"htlc_minimum_msat"`
 		ToSelfDelay               int64        `json:"to_self_delay"`
 		MaxAcceptedHtlcs          int64        `json:"max_accepted_htlcs"`
 	}
@@ -80,10 +82,11 @@ type (
 	// node describes a single node.
 	node struct {
 		// isPeer is true if this node is one of our peers.
-		isPeer    bool
-		connected bool
-		// channels holds the channels for peers.
-		channels channels `json:"channels"`
+		isPeer bool
+		// Connected is set to true for peers that are currently connected.
+		Connected bool
+		// Channels holds any channels that nodes that are our peers has.
+		Channels channels `json:"channels"`
 
 		NodeId        string  `json:"nodeid"`
 		Alias         alias   `json:"alias"`
@@ -110,10 +113,6 @@ type (
 		Address     address `json:"address"`
 		Version     string  `json:"version"`
 		Blockheight int     `json:"blockheight"`
-	}
-	// listFundsResponse is the format of the listfunds response from lightning-cli.
-	listFundsResponse struct {
-		Outputs outputs `json:"outputs"`
 	}
 	// allNodes is a map from node id to that node.
 	allNodes map[string]node
@@ -212,22 +211,21 @@ var (
 		},
 		[]string{"state"},
 	)
-	channelCapacity = prometheus.NewGaugeVec(
+	channelCapacities = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "lightningd",
-			// TODO: update console to no longer expect old name lightningd_total_channel_capacity_msatoshi
-			Name: "channel_capacity_msatoshi",
-			Help: "Capacity of channels in millisatoshi by direction and state.",
+			Name:      "channel_capacities_msatoshi",
+			Help:      "Capacity of channels in millisatoshi by name, connected status, and channel state.",
 		},
-		[]string{"state"},
+		[]string{"name", "connected", "state"},
 	)
-	channelToUsBalance = prometheus.NewGaugeVec(
+	channelBalances = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "lightningd",
-			Name:      "channel_to_us_balance_msatoshi",
-			Help:      "Balance to us of channels in millisatoshi by state.",
+			Name:      "channel_balances_msatoshi",
+			Help:      "Balance to us of channels in millisatoshi by name, connected status, and channel state.",
 		},
-		[]string{"state"},
+		[]string{"name", "connected", "state", "direction"},
 	)
 )
 
@@ -236,11 +234,11 @@ func init() {
 	prometheus.MustRegister(bitcoindRunning)
 	prometheus.MustRegister(lightningdRunning)
 	prometheus.MustRegister(availableFunds)
-	prometheus.MustRegister(channelCapacity)
-	prometheus.MustRegister(channelToUsBalance)
+	prometheus.MustRegister(channelCapacities)
 	prometheus.MustRegister(numChannels)
 	prometheus.MustRegister(numNodes)
 	prometheus.MustRegister(numPeers)
+	prometheus.MustRegister(channelBalances)
 	prometheus.MustRegister(ourChannels)
 }
 
@@ -270,11 +268,19 @@ func (p peer) ToNode() node {
 	}
 	return node{
 		isPeer:    true,
-		connected: p.Connected,
+		Connected: p.Connected,
 		Addresses: addrinfo,
-		channels:  p.Channels,
+		Channels:  p.Channels,
 		NodeId:    p.PeerId,
 	}
+}
+
+// Name returns a unique string describing the node.
+func (n node) Name() string {
+	if n.Alias != "" {
+		return string(n.Alias)
+	}
+	return n.NodeId
 }
 
 // String returns a human-readable description of the node.
@@ -282,7 +288,7 @@ func (n node) String() string {
 	parts := []string{
 		fmt.Sprintf("id: %s", n.NodeId),
 		fmt.Sprintf("isPeer: %v", n.isPeer),
-		fmt.Sprintf("connected: %v", n.connected),
+		fmt.Sprintf("Connected: %v", n.Connected),
 	}
 	if n.Alias != "" {
 		parts = append(parts, fmt.Sprintf("Alias: %s", n.Alias))
@@ -290,11 +296,11 @@ func (n node) String() string {
 	if n.Color != "" {
 		parts = append(parts, fmt.Sprintf("Color: %s", n.Color))
 	}
-	if n.connected {
+	if n.Connected {
 		parts = append(parts, fmt.Sprintf("Addresses: %s", n.Addresses))
 	}
-	if len(n.channels) > 0 {
-		parts = append(parts, fmt.Sprintf("channels: %s", n.channels))
+	if len(n.Channels) > 0 {
+		parts = append(parts, fmt.Sprintf("Channels: %s", n.Channels))
 	}
 	return fmt.Sprintf(
 		"node{%s}",
@@ -335,6 +341,11 @@ func (cs channels) Less(i, j int) bool {
 	return cs[i].State < cs[j].State
 }
 
+// AsBTC returns a string formatting the msatoshi amount as BTC.
+func (msat msatoshi) AsBTC() string {
+	return fmt.Sprintf("%.5f BTC", float64(int64(msat))/1.0e11)
+}
+
 func (ns allNodes) String() string {
 	return fmt.Sprintf("%d nodes", len(ns))
 }
@@ -367,8 +378,8 @@ func (s lightningdState) updateNodes(newNodes nodes) {
 			if on.isPeer {
 				// Note: We avoid marking peers as non-peers when listnodes returns with isPeer=false. This could be less hacky.
 				nn.isPeer = true
-				nn.connected = on.connected
-				nn.channels = on.channels
+				nn.Connected = on.Connected
+				nn.Channels = on.Channels
 			}
 			// TODO: may or may not want to update on.Addresses and on.last_timestamp
 			s.Nodes[nn.NodeId] = nn
@@ -400,26 +411,26 @@ func (ns nodes) Less(i, j int) bool {
 		// Peer nodes are "more" than non-peer nodes.
 		return false
 	}
-	if !ns[i].connected && ns[j].connected {
+	if !ns[i].Connected && ns[j].Connected {
 		// Unconnected peers are "less" than connected ones.
 		return true
 	}
-	if ns[i].connected && !ns[j].connected {
+	if ns[i].Connected && !ns[j].Connected {
 		// Connected peers are never "less" than unconnected ones.
 		return false
 	}
-	if len(ns[i].channels) < len(ns[j].channels) {
+	if len(ns[i].Channels) < len(ns[j].Channels) {
 		// Peers with fewer channels are "less" than ones with more of them.
 		return true
 	}
-	if len(ns[i].channels) > len(ns[j].channels) {
+	if len(ns[i].Channels) > len(ns[j].Channels) {
 		// Peers with more channels are never "less" than ones with fewer of them.
 		return false
 	}
-	if len(ns[i].channels) > 1 && len(ns[j].channels) > 1 {
+	if len(ns[i].Channels) > 1 && len(ns[j].Channels) > 1 {
 		// If we and the other peer has at least one channel, let us be "less" than
 		// our peer if our first channel is "less" than theirs.
-		cs := channels{ns[i].channels[0], ns[j].channels[0]}
+		cs := channels{ns[i].Channels[0], ns[j].Channels[0]}
 		sort.Sort(cs)
 		return cs.Less(0, 1)
 	}
@@ -431,7 +442,7 @@ func (ns nodes) Less(i, j int) bool {
 func (ns nodes) NumConnected() int {
 	num := 0
 	for _, n := range ns {
-		if n.connected {
+		if n.Connected {
 			num += 1
 		}
 	}
@@ -460,7 +471,7 @@ func (ns nodes) NumChannelsByState() map[channelState]int64 {
 			// Nodes that are not our peers can't have cbannels with us.
 			continue
 		}
-		for _, c := range n.channels {
+		for _, c := range n.Channels {
 			byState[c.State] += 1
 		}
 	}
@@ -468,10 +479,10 @@ func (ns nodes) NumChannelsByState() map[channelState]int64 {
 }
 
 // TotalChannelCapacity returns the total capacity of channels by state (e.g CHANNELD_NORMAL).
-func (ns nodes) TotalChannelCapacity() map[channelState]int64 {
-	result := map[channelState]int64{}
+func (ns nodes) TotalChannelCapacity() map[channelState]msatoshi {
+	result := map[channelState]msatoshi{}
 	for _, n := range ns {
-		for _, c := range n.channels {
+		for _, c := range n.Channels {
 			if !n.isPeer {
 				// Nodes that are not our peers can't have cbannels towards us.
 				continue
@@ -483,14 +494,14 @@ func (ns nodes) TotalChannelCapacity() map[channelState]int64 {
 }
 
 // ToUsChannelBalance returns the balance of channels by state (e.g CHANNELD_NORMAL).
-func (ns nodes) ToUsChannelBalance() map[channelState]int64 {
-	result := map[channelState]int64{}
+func (ns nodes) ToUsChannelBalance() map[channelState]msatoshi {
+	result := map[channelState]msatoshi{}
 	for _, n := range ns {
 		if !n.isPeer {
 			// Nodes that are not our peers can't have cbannels towards us.
 			continue
 		}
-		for _, c := range n.channels {
+		for _, c := range n.Channels {
 			result[c.State] += c.MsatoshiToUs
 		}
 	}
@@ -502,21 +513,41 @@ func (cls channelListings) String() string {
 	return fmt.Sprintf("%d channels", len(cls))
 }
 
-// String returns a human-readable description of the channel listing.
-func (cl channelListing) String() string {
-	return "not implemented"
-}
-
 // String returns a human-readable description of the channels.
 func (cs channels) String() string {
 	if len(cs) == 0 {
-		return "channels{}"
+		return ""
 	}
 	if len(cs) > 1 {
 		// TODO: Find how this is supported by protocol.
 		return "<unsupported multiple channels>"
 	}
 	return cs[0].String()
+}
+
+func (cs channels) State() string {
+	if len(cs) != 1 {
+		return ""
+	}
+	return string(cs[0].State)
+}
+
+func (cs channels) MilliSatoshiToUs() msatoshi {
+	if len(cs) != 1 {
+		return msatoshi(-1)
+	}
+	return cs[0].MsatoshiToUs
+}
+
+func (cs channels) MilliSatoshiTotal() msatoshi {
+	if len(cs) != 1 {
+		return msatoshi(-1)
+	}
+	return cs[0].MsatoshiTotal
+}
+
+func (cs channels) MilliSatoshiToThem() msatoshi {
+	return cs.MilliSatoshiTotal() - cs.MilliSatoshiToUs()
 }
 
 // String returns a human-readable description of the channel.
@@ -526,6 +557,12 @@ func (c channel) String() string {
 	}
 	if c.FundingTxId != "" {
 		parts = append(parts, fmt.Sprintf("funding_txid: %s", c.FundingTxId))
+	}
+	if c.MsatoshiToUs != 0 {
+		parts = append(parts, fmt.Sprintf("msatoshi_to_us: %d", c.MsatoshiToUs))
+	}
+	if c.MsatoshiTotal != 0 {
+		parts = append(parts, fmt.Sprintf("msatoshi_total: %d", c.MsatoshiTotal))
 	}
 	return fmt.Sprintf("channel{%s}", strings.Join(parts, ", "))
 }
@@ -581,6 +618,7 @@ func (c cli) exec(cmd string) (string, error) {
 	return execCmd("lightning-cli", cmd)
 }
 
+// TODO: expose counters per cli command.
 func (c cli) GetInfo() (*getInfoResponse, error) {
 	infostring, err := c.exec("getinfo")
 	if err != nil {
@@ -610,16 +648,18 @@ func (c cli) ListChannels() (*channelListings, error) {
 }
 
 // ListFunds returns the lightning-cli response to listfunds.
-func (c cli) ListFunds() (*listFundsResponse, error) {
+func (c cli) ListFunds() (*outputs, error) {
 	respstring, err := c.exec("listfunds")
 	if err != nil {
 		return nil, err
 	}
-	resp := listFundsResponse{}
+	resp := struct {
+		Outputs outputs `json:"outputs"`
+	}{}
 	if err := json.Unmarshal([]byte(respstring), &resp); err != nil {
 		return nil, err
 	}
-	return &resp, nil
+	return &resp.Outputs, nil
 }
 
 // ListNodes returns the lightning-cli response to listnodes.
@@ -721,11 +761,11 @@ func getLightningdState() (*lightningdState, error) {
 	numChannels.Set(float64(len(s.Channels)))
 	log.Printf("Learned of %d channels.\n", len(s.Channels))
 
-	funds, err := c.ListFunds()
+	outputs, err := c.ListFunds()
 	if err != nil {
 		return nil, err
 	}
-	s.Outputs = funds.Outputs
+	s.Outputs = *outputs
 	availableFunds.Set(float64(s.Outputs.Sum()))
 	log.Printf("Learned of %d %v.\n", len(s.Outputs), s.Outputs)
 
@@ -745,16 +785,7 @@ func getLightningdState() (*lightningdState, error) {
 		// log.Printf("We have %d channels in state %q\n", n, state)
 		ourChannels.With(prometheus.Labels{"state": string(state)}).Set(float64(n))
 	}
-	totalCap := peers.TotalChannelCapacity()
-	for state, cap := range totalCap {
-		channelCapacity.With(prometheus.Labels{"state": string(state)}).Set(float64(cap))
-	}
-	toUsBalance := peers.ToUsChannelBalance()
-	for state, balance := range toUsBalance {
-		channelToUsBalance.With(prometheus.Labels{"state": string(state)}).Set(float64(balance))
-	}
 	// log.Printf("lightningd listpeers response: %+v\n", peers)
-
 	log.Printf("Before doing listnodes we know about %d nodes.\n", len(s.Nodes))
 	nodes, err := c.ListNodes()
 	if err != nil {
@@ -765,6 +796,37 @@ func getLightningdState() (*lightningdState, error) {
 	log.Printf("After updating with listnodes results, we now know of %d nodes.\n", len(s.Nodes))
 	numNodes.Set(float64(len(s.Nodes)))
 	// log.Printf("lightningd listnodes response: %+v\n", nodes)
+
+	for _, n := range s.Nodes {
+		if n.isPeer && len(n.Channels) >= 1 {
+			if n.Channels.MilliSatoshiTotal() > 0 {
+				channelCapacities.With(
+					prometheus.Labels{
+						"name":      n.Name(),
+						"connected": fmt.Sprintf("%v", n.Connected),
+						"state":     n.Channels.State(),
+					}).Set(float64(n.Channels.MilliSatoshiTotal()))
+			}
+			if n.Channels.MilliSatoshiToUs() > 0 {
+				channelBalances.With(
+					prometheus.Labels{
+						"name":      n.Name(),
+						"connected": fmt.Sprintf("%v", n.Connected),
+						"state":     n.Channels.State(),
+						"direction": "to_us",
+					}).Set(float64(n.Channels.MilliSatoshiToUs()))
+			}
+			if n.Channels.MilliSatoshiToThem() > 0 {
+				channelBalances.With(
+					prometheus.Labels{
+						"name":      n.Name(),
+						"connected": fmt.Sprintf("%v", n.Connected),
+						"state":     n.Channels.State(),
+						"direction": "to_them",
+					}).Set(float64(n.Channels.MilliSatoshiToThem()))
+			}
+		}
+	}
 
 	s.Alias, err = s.Nodes.getAlias(s.Info.NodeId)
 	if err != nil {
