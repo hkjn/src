@@ -68,18 +68,6 @@ new PromConsole.Graph({
 });
 </script>
 
-<div id="channelToThemConnectedBalanceGraph"></div>
-<script>
-new PromConsole.Graph({
-    node: document.querySelector("#channelToThemConnectedBalanceGraph"),
-    expr: 'lightningd_channel_balances_msatoshi{connected="true",direction="to_them"}/100000000000',
-    renderer: "area",
-    yUnits: "BTC",
-    yTitle: "Balance",
-    min: 0.0
-});
-</script>
-
 <h5>Unconnected peers</h5>
 <div id="channelToUsUnconnectedBalanceGraph"></div>
 <script>
@@ -93,6 +81,22 @@ new PromConsole.Graph({
 });
 </script>
 
+<h4>Balance to them in our channels</h4>
+
+<h5>Connected peers</h5>
+<div id="channelToThemConnectedBalanceGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#channelToThemConnectedBalanceGraph"),
+    expr: 'lightningd_channel_balances_msatoshi{connected="true",direction="to_them"}/100000000000',
+    renderer: "area",
+    yUnits: "BTC",
+    yTitle: "Balance",
+    min: 0.0
+});
+</script>
+
+<h5>Unconnected peers</h5>
 <div id="channelToThemUnconnectedBalanceGraph"></div>
 <script>
 new PromConsole.Graph({
