@@ -346,10 +346,6 @@ func (msat msatoshi) AsBTC() string {
 	return fmt.Sprintf("%.5f BTC", float64(int64(msat))/1.0e11)
 }
 
-func (ns allNodes) String() string {
-	return fmt.Sprintf("%d nodes", len(ns))
-}
-
 func (ns allNodes) getAlias(nodeId string) (alias, error) {
 	n, exists := ns[nodeId]
 	if !exists {
@@ -363,10 +359,11 @@ func (s lightningdState) updateNodes(newNodes nodes) {
 	for _, nn := range newNodes {
 		on, exists := s.Nodes[nn.NodeId]
 		if !exists {
-			// log.Printf("Learned about new node %v", nn)
+			fmt.Printf("Learned about new node %v\n", nn.NodeId)
 			s.Nodes[nn.NodeId] = nn
 		} else {
-			// log.Printf("Updating any stale info we had on old node %v to new %v\n", on, nn)
+			fmt.Printf("Updating any stale info we had on node %v\n", nn.NodeId)
+			// fmt.Printf("Updating any stale info we had on old node %v to new %v\n", on, nn)
 			if on.Alias != "" && nn.Alias == "" {
 				// Preserve alias if we knew it.
 				nn.Alias = on.Alias
@@ -411,20 +408,20 @@ func (ns nodes) Less(i, j int) bool {
 		// Peer nodes are "more" than non-peer nodes.
 		return false
 	}
-	if !ns[i].Connected && ns[j].Connected {
-		// Unconnected peers are "less" than connected ones.
-		return true
-	}
-	if ns[i].Connected && !ns[j].Connected {
-		// Connected peers are never "less" than unconnected ones.
-		return false
-	}
 	if len(ns[i].Channels) < len(ns[j].Channels) {
 		// Peers with fewer channels are "less" than ones with more of them.
 		return true
 	}
 	if len(ns[i].Channels) > len(ns[j].Channels) {
 		// Peers with more channels are never "less" than ones with fewer of them.
+		return false
+	}
+	if !ns[i].Connected && ns[j].Connected {
+		// Unconnected peers are "less" than connected ones.
+		return true
+	}
+	if ns[i].Connected && !ns[j].Connected {
+		// Connected peers are never "less" than unconnected ones.
 		return false
 	}
 	if len(ns[i].Channels) > 1 && len(ns[j].Channels) > 1 {
@@ -774,9 +771,15 @@ func getLightningdState() (*lightningdState, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("Doing listpeers we learned about %d peer nodes: %v.\n", len(*peerNodes), *peerNodes)
+	fmt.Printf("Doing listpeers we learned about %d peer nodes:\n", len(*peerNodes))
+	for _, p := range *peerNodes {
+		fmt.Printf("  %s\n", p.NodeId)
+	}
 	s.updateNodes(*peerNodes)
-	log.Printf("After updating with listpeers results, we now know of %d nodes: %v.\n", len(s.Nodes), s.Nodes)
+	log.Printf("After updating with listpeers results, we now know of %d nodes:\n", len(s.Nodes))
+	for k, _ := range s.Nodes {
+		fmt.Printf("  %s\n", k)
+	}
 
 	peers := s.Nodes.Peers() // TODO: could do the below with entire s.Nodes too; methods filter out non-peers where applicable.
 	numPeers.With(prometheus.Labels{"connected": "connected"}).Set(float64(peers.NumConnected()))
