@@ -35,6 +35,8 @@ import (
 )
 
 var (
+	// BaseURL, if specified, sets a prefix to use for all URLs.
+	BaseURL = ""
 	// Default policy is to deny all users. Use SetGatingFunc.
 	isAllowed   = func(string) bool { return false }
 	sessionName = "gplusclient"                                     // name of Gorilla session cookie
@@ -100,6 +102,7 @@ func IsLoggedIn(r *http.Request) (bool, error) {
 type LoginInfo struct {
 	ClientId   string // id of client
 	StateToken string // state token
+	BaseURL    string // optional base URL for all paths
 }
 
 // LogIn returns the user's login info, starting the auth process.
@@ -124,7 +127,12 @@ func LogIn(w http.ResponseWriter, r *http.Request) (*LoginInfo, error) {
 		return nil, fmt.Errorf("failed to save state in session: %v", err)
 	}
 	glog.V(1).Infof("CheckLogin set state=%v in user's session\n", state)
-	return &LoginInfo{oauthConfig.ClientID, url.QueryEscape(state)}, nil
+	info := LoginInfo{
+		ClientId:   oauthConfig.ClientID,
+		StateToken: url.QueryEscape(state),
+		BaseURL:    BaseURL,
+	}
+	return &info, nil
 }
 
 // Connect finishes the connection process, exchanging the one-time

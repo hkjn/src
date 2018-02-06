@@ -10,9 +10,7 @@ import (
 var (
 	// Name of the top-level login template.
 	TemplateName = "login"
-	// Template to use for the login redirect.
-	LoginTmpl = template.Must(template.New(TemplateName).Parse(tmpl))
-	tmpl      = `{{define "scripts"}}
+	tmpl         = `{{define "scripts"}}
 <script src="https://apis.google.com/js/client:platform.js" async defer></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 
@@ -35,7 +33,7 @@ var (
       },
       logIn: function(code) {
         window.location.replace(
-          window.location.origin + "/connect?state={{.StateToken}}&code=" + code);
+          window.location.origin + "{{.BaseURL}}/connect?state={{.StateToken}}&code=" + code);
       }
     };
   })();
@@ -73,6 +71,8 @@ function signInCallback(authResult) {
 </body>
 </html>
 {{end}}`
+	// Template to use for the login redirect.
+	LoginTmpl = template.Must(template.New(TemplateName).Parse(tmpl))
 )
 
 // RequireLogin returns a wrapped HandlerFunc that enforces Google+ login.
