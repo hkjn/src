@@ -839,6 +839,10 @@ func getLightningdState() (*lightningdState, error) {
 }
 
 func refresh() {
+	// TODO: Maybe don't assume that bitcoind/lightningd always is in "pid" namespace..
+	namespace := "pid"
+	registeredBitcoin := false
+	registeredLn := false
 	for {
 		btcState, err := getBitcoindState()
 		if err != nil {
@@ -846,7 +850,17 @@ func refresh() {
 		} else {
 			allState.Bitcoind = *btcState
 		}
+		// TODO: Find way to avoid below panicking on "duplicate metrics collector registration attemped".. we'd like
+		// to just export process metrics for both bitcoind and lightningd, but doesn't seem to be supported in current
+		// prometheus client lib.. can either patch + upstream, or run one collector process per bitcoind/lightningd..
+		// or put the processes in different namespaces may also make the metrics unique.
 		if allState.Bitcoind.IsRunning() {
+			if false && !registeredBitcoin {
+				lc := prometheus.NewProcessCollector(allState.Bitcoind.pid, namespace)
+				prometheus.MustRegister(lc)
+				registeredBitcoin = true
+				log.Printf("Registered ProcessCollector for bitcoind pid %d in namespace %s\n", allState.Bitcoind.pid, namespace)
+			}
 			bitcoindRunning.Set(1)
 		} else {
 			bitcoindRunning.Set(0)
@@ -860,6 +874,12 @@ func refresh() {
 			allState.Lightningd = *lnState
 		}
 		if allState.Lightningd.IsRunning() {
+			if !registeredLn {
+				lc := prometheus.NewProcessCollector(allState.Lightningd.pid, namespace)
+				prometheus.MustRegister(lc)
+				registeredLn = true
+				log.Printf("Registered ProcessCollector for lightningd pid %d in namespace %s\n", allState.Lightningd.pid, namespace)
+			}
 			lightningdRunning.Set(1)
 		} else {
 			lightningdRunning.Set(0)
