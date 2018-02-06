@@ -7,6 +7,7 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/gorilla/mux"
+
 	"hkjn.me/src/config"
 	"hkjn.me/src/googleauth"
 	"hkjn.me/src/probes"
@@ -95,6 +96,7 @@ func setProbesCfg(conf Config, emailTemplate string) error {
 	if conf.GoogleSecret == "" {
 		return errors.New("no service secret")
 	}
+	googleauth.BaseURL = getHttpPrefix()
 	googleauth.SetCredentials(conf.GoogleServiceId, conf.GoogleSecret)
 	if len(conf.AllowedGoogleIds) == 0 {
 		return errors.New("no allowed IDs")
