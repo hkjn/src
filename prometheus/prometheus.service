@@ -1,0 +1,12 @@
+[Unit]
+Description=Prometheus monitoring service
+After=network-online.target
+
+[Service]
+ExecStart=/etc/prometheus/prometheus --web.external-url=https://mon.hkjn.me/ln
+Restart=always
+
+[Install]
+WantedBy=network-online.target
+
+
