@@ -30,9 +30,10 @@ var (
 //
 // newRouter panics if the config wasn't loaded.
 func newRouter(debug bool) *mux.Router {
+	prefix := os.Environ("DASHBOARD_HTTP_PREFIX")
 	routes := []route{
-		newPage("/", indexTmpls, getIndexData),
-		simpleRoute{"/connect", "GET", googleauth.ConnectHandler},
+		newPage(prefix+"/", indexTmpls, getIndexData),
+		simpleRoute{prefix + "/connect", "GET", googleauth.ConnectHandler},
 	}
 	if debug {
 		authDisabled = true // TODO(hkjn): Avoid global variable.
