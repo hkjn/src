@@ -8,7 +8,8 @@ import (
 	"net/http"
 
 	"github.com/kelseyhightower/envconfig"
-	"hkjn.me/dashboard"
+
+	"hkjn.me/src/dashboard"
 )
 
 func main() {
