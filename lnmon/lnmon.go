@@ -215,18 +215,20 @@ var (
 		prometheus.GaugeOpts{
 			Namespace: "lightningd",
 			Name:      "channel_capacities_msatoshi",
-			Help:      "Capacity of channels in millisatoshi by name, connected status, and channel state.",
+			Help:      "Capacity of channels in millisatoshi by name and channel state.",
 		},
-		[]string{"name", "connected", "state"},
+		[]string{"name", "state"},
 	)
 	channelBalances = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "lightningd",
 			Name:      "channel_balances_msatoshi",
-			Help:      "Balance to us of channels in millisatoshi by name, connected status, and channel state.",
+			Help:      "Balance to us of channels in millisatoshi by name and channel state.",
 		},
-		[]string{"name", "connected", "state", "direction"},
+		[]string{"name", "state", "direction"},
 	)
+	// TODO: Add metrics showing last seen timestamp from listnodes instead of binary connected/unconnected status, which
+	// doesn't form timeseries easily.
 )
 
 func init() {
@@ -805,16 +807,14 @@ func getLightningdState() (*lightningdState, error) {
 			if n.Channels.MilliSatoshiTotal() > 0 {
 				channelCapacities.With(
 					prometheus.Labels{
-						"name":      n.Name(),
-						"connected": fmt.Sprintf("%v", n.Connected),
-						"state":     n.Channels.State(),
+						"name":  n.Name(),
+						"state": n.Channels.State(),
 					}).Set(float64(n.Channels.MilliSatoshiTotal()))
 			}
 			if n.Channels.MilliSatoshiToUs() > 0 {
 				channelBalances.With(
 					prometheus.Labels{
 						"name":      n.Name(),
-						"connected": fmt.Sprintf("%v", n.Connected),
 						"state":     n.Channels.State(),
 						"direction": "to_us",
 					}).Set(float64(n.Channels.MilliSatoshiToUs()))
@@ -823,7 +823,6 @@ func getLightningdState() (*lightningdState, error) {
 				channelBalances.With(
 					prometheus.Labels{
 						"name":      n.Name(),
-						"connected": fmt.Sprintf("%v", n.Connected),
 						"state":     n.Channels.State(),
 						"direction": "to_them",
 					}).Set(float64(n.Channels.MilliSatoshiToThem()))
