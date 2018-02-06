@@ -1,0 +1,13 @@
+[Unit]
+Description=Node exporter service for Prometheus metrics
+After=network-online.target
+
+[Service]
+WorkingDirectory=/etc/node_exporter
+ExecStart=/etc/node_exporter/node_exporter
+Restart=always
+
+[Install]
+WantedBy=network-online.target
+
+
