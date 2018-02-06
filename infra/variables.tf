@@ -108,8 +108,8 @@ variable "vpn_ip" {
   default = "163.172.184.153"
 }
 
-variable "cities_ip" {
-  default = "163.172.184.153"
+variable "cities_enabled" {
+  default = "false"
 }
 
 variable "builder_enabled" {

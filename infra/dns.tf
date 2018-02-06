@@ -107,11 +107,12 @@ resource "google_dns_record_set" "hkjn_admin2" {
 }
 
 resource "google_dns_record_set" "hkjn_cities" {
+  count = "${var.cities_enabled ? 1 : 0}"
   name = "cities.${google_dns_managed_zone.hkjn_zone.dns_name}"
   type = "A"
   ttl  = 300
   managed_zone = "${google_dns_managed_zone.hkjn_zone.name}"
-  rrdatas      = ["${var.cities_ip}"]
+  rrdatas      = ["1.2.3.4"]
 }
 
 resource "google_dns_record_set" "hkjn_builder" {
