@@ -158,6 +158,63 @@ new PromConsole.Graph({
 });
 </script>
 
+<h2>Process info for <code>lightningd</code></h2>
+
+<h3>Virtual memory usage</h3>
+<div id="virtualMemoryGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#virtualMemoryGraph"),
+    expr: 'pid_process_virtual_memory_bytes{instance=~"ln.hkjn.me:.*"}',
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
+<h3>Resident memory</h3>
+<div id="residentMemoryGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#residentMemoryGraph"),
+    expr: 'pid_process_resident_memory_bytes{instance=~"ln.hkjn.me:.*"}',
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
+<h3>Rate of CPU usage</h3>
+<div id="cpuUsageRateGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#cpuUsageRateGraph"),
+    expr: 'rate(pid_process_cpu_seconds_total{instance=~"ln.hkjn.me:.*"}[5m])',
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
+<h3>Number of open file descriptors</h3>
+<div id="openFdsGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#openFdsGraph"),
+    expr: 'pid_process_open_fds{instance=~"ln.hkjn.me:.*"}',
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
+<h3>Start time of process</h3>
+<div id="startTimeGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#startTimeGraph"),
+    expr: 'pid_process_start_time_seconds{instance=~"ln.hkjn.me:.*"}',
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
 <h2>System</h2>
 <h3>Node up?</h3>
 <div id="upGraph"></div>
