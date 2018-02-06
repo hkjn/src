@@ -31,7 +31,7 @@ var (
 //
 // newRouter panics if the config wasn't loaded.
 func newRouter(debug bool) *mux.Router {
-	prefix := os.Getenviron("DASHBOARD_HTTP_PREFIX")
+	prefix := os.Getenv("DASHBOARD_HTTP_PREFIX")
 	routes := []route{
 		newPage(prefix+"/", indexTmpls, getIndexData),
 		simpleRoute{prefix + "/connect", "GET", googleauth.ConnectHandler},
