@@ -890,6 +890,7 @@ func refresh() {
 	}
 }
 
+// indexHandler serves the index page.
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%v] HTTP %s %s\n", r.RemoteAddr, r.Method, r.URL)
 	if r.Method != "GET" {
