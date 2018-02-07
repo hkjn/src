@@ -16,7 +16,8 @@ lightning-cli connect 03ecffae58fab10791a46e89ae00cffb8260875bcdc22549d2dd79d079
 lightning-cli connect 0235447c7485ff2b945bac5fbc366d54a87389bab8cacf1b64b26ec01e96bd165a 34.236.113.58
 # UNITEDBOUNCE
 lightning-cli connect 029113620f929df927a4877ae6727b214418c366bf09ebbd4552eda235f48c00f5 68.129.210.251
-
+# Cinnober
+lightning-cli connect 027f3ee645c11ef3183cb6f929274baed13990e812d157866b4e41c2bf14e352de 34.240.200.0
 # Unresponsive as of 2018-01-26, disabled:
 # CASSANDRA
 # lightning-cli connect 03745b275bed1ab74c6c2f3dc6d1f870c5927397997c99dfaba283f73ccfab0d33 79.136.120.4
