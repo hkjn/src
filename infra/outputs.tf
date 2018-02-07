@@ -30,6 +30,10 @@ output "elentari_world_ip" {
 #
 # *.hkjn.me
 #
+output "hkjn_addr_builder" {
+  value = "${google_dns_record_set.hkjn_builder.name}"
+}
+
 output "hkjn_addr_dropcore" {
   value = "${google_dns_record_set.hkjn_dropcore.name}"
 }
