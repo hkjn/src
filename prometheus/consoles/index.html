@@ -125,7 +125,7 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#virtualMemoryGraph"),
-    expr: 'pid_process_virtual_memory_bytes{instance=~"ln.hkjn.me:.*"}',
+    expr: 'pid_process_virtual_memory_bytes{job="lnmon"}',
     renderer: "area",
     min: 0.0
 });
@@ -136,7 +136,7 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#residentMemoryGraph"),
-    expr: 'pid_process_resident_memory_bytes{instance=~"ln.hkjn.me:.*"}',
+    expr: 'pid_process_resident_memory_bytes{job="lnmon"}',
     renderer: "area",
     min: 0.0
 });
@@ -147,7 +147,7 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#cpuUsageRateGraph"),
-    expr: 'rate(pid_process_cpu_seconds_total{instance=~"ln.hkjn.me:.*"}[5m])',
+    expr: 'rate(pid_process_cpu_seconds_total{job="lnmon"}[5m])',
     renderer: "area",
     min: 0.0
 });
@@ -158,7 +158,7 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#openFdsGraph"),
-    expr: 'pid_process_open_fds{instance=~"ln.hkjn.me:.*"}',
+    expr: 'pid_process_open_fds{job="lnmon"}',
     renderer: "area",
     min: 0.0
 });
@@ -169,7 +169,7 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#startTimeGraph"),
-    expr: 'pid_process_start_time_seconds{instance=~"ln.hkjn.me:.*"}',
+    expr: 'pid_process_start_time_seconds{job="lnmon"}',
     renderer: "area",
     min: 0.0
 });
