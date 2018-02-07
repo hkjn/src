@@ -1,0 +1,20 @@
+<html>
+<body>
+<h1>Hello!</h1>
+<p>This is an experiment with Bitcoin running at <code>ln.hkjn.me</code> by <a href="https://hkjn.me">hkjn</a>.</p>
+
+<p>The purpose is to learn more about the inner workings of Bitcoin by making it easier to operate
+these daemons, and easier to observe what they're doing.</p>
+
+<p>You may also be interested in the <a href="https://mon.hkjn.me/ln/consoles/index.html">Prometheus dashboard</a> scraping data
+from this tool.</p>
+
+<h2><code>bitcoind</code> info</h2>
+{{ if .IsRunning -}}
+<p><code>bitcoind</code> is <strong>running</strong></p>
+{{ else }}
+<p><code>bitcoind</code> is <strong>not running</strong>.</p>
+{{- end }}
+
+</body>
+</html>
