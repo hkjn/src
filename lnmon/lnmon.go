@@ -247,7 +247,7 @@ var (
 			Name:      "channel_capacities_msatoshi",
 			Help:      "Capacity of channels in millisatoshi by name and channel state.",
 		},
-		[]string{"name", "state"},
+		[]string{"node_id", "state"},
 	)
 	channelBalances = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -255,7 +255,7 @@ var (
 			Name:      "channel_balances_msatoshi",
 			Help:      "Balance to us of channels in millisatoshi by name and channel state.",
 		},
-		[]string{"name", "state", "direction"},
+		[]string{"node_id", "state", "direction"},
 	)
 	// TODO: Add metrics showing last seen timestamp from listnodes instead of binary connected/unconnected status, which
 	// doesn't form timeseries easily.
@@ -306,14 +306,6 @@ func (p peer) ToNode() node {
 		Channels:  p.Channels,
 		NodeId:    p.PeerId,
 	}
-}
-
-// Name returns a unique string describing the node.
-func (n node) Name() string {
-	if n.Alias != "" {
-		return string(n.Alias)
-	}
-	return n.NodeId
 }
 
 // String returns a human-readable description of the node.
@@ -853,14 +845,14 @@ func getLightningdState() (*lightningdState, error) {
 			if n.Channels.MilliSatoshiTotal() > 0 {
 				channelCapacities.With(
 					prometheus.Labels{
-						"name":  n.Name(),
-						"state": n.Channels.State(),
+						"node_id": n.NodeId,
+						"state":   n.Channels.State(),
 					}).Set(float64(n.Channels.MilliSatoshiTotal()))
 			}
 			if n.Channels.MilliSatoshiToUs() > 0 {
 				channelBalances.With(
 					prometheus.Labels{
-						"name":      n.Name(),
+						"node_id":   n.NodeId,
 						"state":     n.Channels.State(),
 						"direction": "to_us",
 					}).Set(float64(n.Channels.MilliSatoshiToUs()))
@@ -868,7 +860,7 @@ func getLightningdState() (*lightningdState, error) {
 			if n.Channels.MilliSatoshiToThem() > 0 {
 				channelBalances.With(
 					prometheus.Labels{
-						"name":      n.Name(),
+						"node_id":   n.NodeId,
 						"state":     n.Channels.State(),
 						"direction": "to_them",
 					}).Set(float64(n.Channels.MilliSatoshiToThem()))

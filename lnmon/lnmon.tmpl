@@ -36,7 +36,8 @@ from this tool.</p>
 
 <table>
 	<tr>
-		<th>Name</th>
+		<th>Id</th>
+		<th>Alias</th>
 		<th>Connected?</th>
 		<th>Channel state</th>
 		<th>Funds to us</th>
@@ -44,7 +45,8 @@ from this tool.</p>
 	</tr>
 	{{ range .Lightningd.Nodes.Peers -}}
 	<tr>
-		<td>{{ .Name }}</td>
+		<td>{{ .NodeId }}</td>
+		<td>{{ .Alias }}</td>
 		<td>{{ .Connected }}</td>
 		<td><code>{{ .Channels.State }}</code></td>
 		<td>{{ if .Channels }} {{ .Channels.MilliSatoshiToUs.AsBTC }} {{ end }}</td>
