@@ -5,7 +5,7 @@ VERSION=0.1.0
 
 .DEFAULT_GOAL=deploy
 
-build-docker: gen-tmpl lnmon
+build-docker: gen-tmpl
 	@echo "Building lnmon in container.."
 	docker build -t lnmon-build -f Dockerfile.build .
 	@echo "Running lnmon-build container.."
@@ -14,9 +14,9 @@ build-docker: gen-tmpl lnmon
 	docker cp lnmonbuild:/home/go/bin/linux_arm/lnmon .
 	docker rm lnmonbuild
 
-build-bin: gen-tmpl lnmon
+build-bin: gen-tmpl
 	@echo "Building lnmon on host.."
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm go build -o lnmon .
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm go build -o lnmon lnmon.go bindata.go
 
 gen-tmpl:
 	@echo "Generating bindata.go.."

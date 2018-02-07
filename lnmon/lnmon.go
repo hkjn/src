@@ -1,4 +1,4 @@
-// lnmon.go is a simple wrapper around bitcoin-cli and lightning-cli for monitoring their state.
+// lnmon.go is a tool for pulling out and serving up data from lightning-cli for monitoring.
 package main
 
 import (
@@ -24,40 +24,6 @@ import (
 type (
 	cli struct {
 		callCounters map[string]prometheus.Counter
-	}
-	// peerInfo describes one peer from the bitcoin-cli getpeerinfo response.
-	peerInfo struct {
-		PeerId          string           `json:"id"`
-		Addr            string           `json:"addr"`
-		AddrLocal       string           `json:"addrlocal"`
-		AddrBind        string           `json:"addrbind"`
-		Services        string           `json:"services"`
-		RelayTxes       bool             `json:"relaytxes"`
-		LastSend        int64            `json:"lastsend"`
-		LastRecv        int64            `json:"lastrecv"`
-		BytesSent       int64            `json:"bytessent"`
-		BytesRecv       int64            `json:"bytesrecv"`
-		ConnTime        int64            `json:"conntime"`
-		TimeOffset      int64            `json:"timeoffset"`
-		PingTimeMs      int64            `json:"pingtime"`
-		MinPingMs       int64            `json:"minping"`
-		Version         int64            `json:"version"`
-		Subver          string           `json:"subver"`
-		Inbound         bool             `json:"inbound"`
-		AddNode         bool             `json:"addnode"`
-		StartingHeight  int64            `json:"startingheight"`
-		BanScore        int64            `json:"banscore"`
-		SyncedHeaders   int64            `json:"synced_headers"`
-		SyncedBlocks    int64            `json:"synced_blocks"`
-		Inflight        []string         `json:"inflight"`
-		Whitelisted     bool             `json:"whitelisted"`
-		BytesSentPerMsg map[string]int64 `json:"bytessent_per_msg"`
-		BytesRecvPerMsg map[string]int64 `json:"bytesrecv_per_msg"`
-	}
-	bitcoindState struct {
-		pid      int
-		args     []string
-		peerInfo []peerInfo
 	}
 	addressInfo struct {
 		AddressType string `json:"type"`
@@ -175,10 +141,6 @@ type (
 	}
 	channelStateNum int
 	channelState    string
-	state           struct {
-		Bitcoind   bitcoindState
-		Lightningd lightningdState
-	}
 )
 
 const (
@@ -201,12 +163,7 @@ var (
 		ClosingdSigexchangeState:     "CLOSINGD_SIGEXCHANGE",
 	}
 	// TODO: eliminate global variable
-	allState        state
-	bitcoindRunning = prometheus.NewGauge(prometheus.GaugeOpts{
-		Namespace: "bitcoind",
-		Name:      "running",
-		Help:      "Whether bitcoind process is running (1) or not (0).",
-	})
+	allState          lightningdState
 	lightningdRunning = prometheus.NewGauge(prometheus.GaugeOpts{
 		Namespace: "lightningd",
 		Name:      "running",
@@ -269,19 +226,6 @@ var (
 	// doesn't form timeseries easily.
 	debugging = os.Getenv("LNMON_DEBUGGING") == "1"
 )
-
-func init() {
-	// Metrics have to be registered to be exposed:
-	prometheus.MustRegister(bitcoindRunning)
-	prometheus.MustRegister(lightningdRunning)
-	prometheus.MustRegister(availableFunds)
-	prometheus.MustRegister(channelCapacities)
-	prometheus.MustRegister(numChannels)
-	prometheus.MustRegister(numNodes)
-	prometheus.MustRegister(numPeers)
-	prometheus.MustRegister(channelBalances)
-	prometheus.MustRegister(ourChannels)
-}
 
 // getFile returns the contents of the specified file.
 func getFile(f string) ([]byte, error) {
@@ -643,19 +587,6 @@ func (c channel) String() string {
 	return fmt.Sprintf("channel{%s}", strings.Join(parts, ", "))
 }
 
-// String returns a human-readable description of the bitcoind state.
-func (s bitcoindState) String() string {
-	if s.pid == 0 {
-		return "bitcoindState{not running}"
-	} else {
-		return fmt.Sprintf("bitcoindState{pid: %d, args: %q}", s.pid, strings.Join(s.args, " "))
-	}
-}
-
-func (s bitcoindState) IsRunning() bool {
-	return s.pid != 0
-}
-
 func (s lightningdState) String() string {
 	if s.pid == 0 {
 		return "lightningdState{not running}"
@@ -814,31 +745,6 @@ func (c cli) ListPeers() (*nodes, error) {
 	return &result, nil
 }
 
-// getBitcoindState returns the current bitcoind state.
-func getBitcoindState() (*bitcoindState, error) {
-	ps, err := execCmd("pgrep", "-a", "bitcoind")
-	if err != nil {
-		return nil, err
-	}
-	parts := strings.Split(ps, " ")
-	// Note: seems to get >= 1 parts even if pgrep returns non-success, seems like there's still >= 1 parts..
-	if len(parts) < 1 || len(parts[0]) == 0 {
-		return nil, fmt.Errorf("failed to parse bitcoind status: %v", ps)
-	}
-	pid, err := strconv.Atoi(parts[0])
-	if err != nil {
-		return nil, err
-	}
-	s := bitcoindState{
-		pid:  pid,
-		args: []string{},
-	}
-	for _, arg := range parts[1:] {
-		s.args = append(s.args, arg)
-	}
-	return &s, nil
-}
-
 // getLightningState returns the current lightningd state.
 func getLightningdState() (*lightningdState, error) {
 	ps, err := execCmd("pgrep", "-a", "lightningd")
@@ -968,46 +874,23 @@ func getLightningdState() (*lightningdState, error) {
 }
 
 func refresh() {
-	// TODO: Maybe don't assume that bitcoind/lightningd always is in "pid" namespace..
+	// TODO: Maybe don't assume that lightningd always is in "pid" namespace..
 	namespace := "pid"
-	registeredBitcoin := false
 	registeredLn := false
 	for {
-		btcState, err := getBitcoindState()
-		if err != nil {
-			log.Printf("Failed to get bitcoind state: %v\n", err)
-		} else {
-			allState.Bitcoind = *btcState
-		}
-		// TODO: Find way to avoid below panicking on "duplicate metrics collector registration attemped".. we'd like
-		// to just export process metrics for both bitcoind and lightningd, but doesn't seem to be supported in current
-		// prometheus client lib.. can either patch + upstream, or run one collector process per bitcoind/lightningd..
-		// or put the processes in different namespaces may also make the metrics unique.
-		if allState.Bitcoind.IsRunning() {
-			if false && !registeredBitcoin {
-				lc := prometheus.NewProcessCollector(allState.Bitcoind.pid, namespace)
-				prometheus.MustRegister(lc)
-				registeredBitcoin = true
-				log.Printf("Registered ProcessCollector for bitcoind pid %d in namespace %q\n", allState.Bitcoind.pid, namespace)
-			}
-			bitcoindRunning.Set(1)
-		} else {
-			bitcoindRunning.Set(0)
-		}
-
 		// TODO: need to persist lnState.Nodes if we want to persist info we find between polls.
 		lnState, err := getLightningdState()
 		if err != nil {
 			log.Printf("Failed to get lightningd state: %v\n", err)
 		} else {
-			allState.Lightningd = *lnState
+			allState = *lnState
 		}
-		if allState.Lightningd.IsRunning() {
+		if allState.IsRunning() {
 			if !registeredLn {
-				lc := prometheus.NewProcessCollector(allState.Lightningd.pid, namespace)
+				lc := prometheus.NewProcessCollector(allState.pid, namespace)
 				prometheus.MustRegister(lc)
 				registeredLn = true
-				log.Printf("Registered ProcessCollector for lightningd pid %d in namespace %s\n", allState.Lightningd.pid, namespace)
+				log.Printf("Registered ProcessCollector for lightningd pid %d in namespace %s\n", allState.pid, namespace)
 			}
 			lightningdRunning.Set(1)
 		} else {
@@ -1057,6 +940,16 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	// Metrics have to be registered to be exposed:
+	prometheus.MustRegister(lightningdRunning)
+	prometheus.MustRegister(availableFunds)
+	prometheus.MustRegister(channelCapacities)
+	prometheus.MustRegister(numChannels)
+	prometheus.MustRegister(numNodes)
+	prometheus.MustRegister(numPeers)
+	prometheus.MustRegister(channelBalances)
+	prometheus.MustRegister(ourChannels)
+
 	// The Handler function provides a default handler to expose metrics
 	// via an HTTP server. "/metrics" is the usual endpoint for that.
 	http.Handle("/metrics", promhttp.Handler())
