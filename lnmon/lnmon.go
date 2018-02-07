@@ -152,7 +152,7 @@ const (
 	OnchaindOurUnilateralState
 	ClosingdSigexchangeState
 
-	counterPrefix
+	counterPrefix = "lightningd"
 )
 
 var (
@@ -227,6 +227,8 @@ var (
 	// TODO: Add metrics showing last seen timestamp from listnodes instead of binary connected/unconnected status, which
 	// doesn't form timeseries easily.
 	debugging = os.Getenv("LNMON_DEBUGGING") == "1"
+	addr      = os.Getenv("LNMON_ADDR")
+	hostname  = os.Getenv("LNMON_HOSTNAME")
 )
 
 // getFile returns the contents of the specified file.
@@ -960,17 +962,15 @@ func main() {
 
 	http.HandleFunc("/", indexHandler)
 
-	addr := ":80"
-	if os.Getenv("LNMON_ADDR") != "" {
-		addr = os.Getenv("LNMON_ADDR")
+	if addr == "" {
+		addr = ":80"
 	}
-	hostname := "ln.hkjn.me"
 
-	fmt.Printf("Serving TLS at %q as %q..\n", addr, hostname)
 	s := &http.Server{
 		Addr: addr,
 	}
 	if addr == ":443" {
+		fmt.Printf("Serving TLS at %q as %q..\n", addr, hostname)
 		m := autocert.Manager{
 			Prompt:     autocert.AcceptTOS,
 			Cache:      autocert.DirCache("/etc/secrets/acme/"),

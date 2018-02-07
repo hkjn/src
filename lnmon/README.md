@@ -1,3 +1,3 @@
 # lnmon
 
-The `lnmon` tool is a simple Go program for monitoring the state of `bitcoin-cli` and `lightning-cli`.
+The `lnmon` tool pulls out and serves up data from `lightning-cli` for monitoring.
