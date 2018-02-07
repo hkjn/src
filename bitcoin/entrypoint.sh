@@ -11,7 +11,7 @@ if [ ! "${IP_ADDR}" ]; then
 fi
 
 echo "Starting bitcoind.."
-bitcoind -dbcache=800 -onlynet=ipv4 &
+bitcoind -dbcache=800 -onlynet=ipv4 -printtoconsole &
 
 echo "Starting lightningd.."
 lightningd --network=bitcoin --ipaddr=${IP_ADDR} --log-level=${LOG_LEVEL} --alias=${ALIAS} --rgb=003366
