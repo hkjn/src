@@ -3,9 +3,9 @@ include ../make/Makefile
 NAME=lnmon
 VERSION=0.1.0
 
-.DEFAULT_GOAL=build-bin
+.DEFAULT_GOAL=deploy
 
-build-bin: gen-tmpl lnmon
+build-docker: gen-tmpl lnmon
 	@echo "Building lnmon in container.."
 	docker build -t lnmon-build -f Dockerfile.build .
 	@echo "Running lnmon-build container.."
@@ -13,6 +13,10 @@ build-bin: gen-tmpl lnmon
 	@echo "Copying out lnmonbuild artifacts.."
 	docker cp lnmonbuild:/home/go/bin/linux_arm/lnmon .
 	docker rm lnmonbuild
+
+build-bin: gen-tmpl lnmon
+	@echo "Building lnmon on host.."
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm go build -o lnmon .
 
 gen-tmpl:
 	@echo "Generating bindata.go.."
