@@ -38,16 +38,16 @@ from this tool.</p>
 	<tr>
 		<th>Id</th>
 		<th>Alias</th>
-		<th>Connected?</th>
+		<th>Last seen</th>
 		<th>Channel state</th>
 		<th>Funds to us</th>
 		<th>Funds to them</th>
 	</tr>
 	{{ range .Lightningd.Nodes.Peers -}}
 	<tr>
-		<td>{{ .NodeId }}</td>
+		<td><code>{{ .NodeId.Short }}</code></td>
 		<td>{{ .Alias }}</td>
-		<td>{{ .Connected }}</td>
+		<td>{{ .LastTimestamp.Since }}</td>
 		<td><code>{{ .Channels.State }}</code></td>
 		<td>{{ if .Channels }} {{ .Channels.MilliSatoshiToUs.AsBTC }} {{ end }}</td>
 		<td>{{ if .Channels }} {{ .Channels.MilliSatoshiToThem.AsBTC }} {{ end }}</td>

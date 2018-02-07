@@ -22,7 +22,9 @@ import (
 )
 
 type (
-	cli struct{}
+	cli struct {
+		callCounters map[string]prometheus.Counter
+	}
 	// peerInfo describes one peer from the bitcoin-cli getpeerinfo response.
 	peerInfo struct {
 		PeerId          string           `json:"id"`
@@ -104,11 +106,15 @@ type (
 	netaddr []string
 	// peer describes a single peer.
 	peer struct {
-		PeerId    string   `json:"id"`
+		PeerId    nodeId   `json:"id"`
 		Connected bool     `json:"connected"`
 		Netaddr   netaddr  `json:"netaddr"`
 		Channels  channels `json:"channels"`
 	}
+	// int64 represents a UNIX timestamp as int.
+	unixTs int64
+	// nodeId represents a unique id for a LN node.
+	nodeId string
 	// node describes a single node.
 	node struct {
 		// isPeer is true if this node is one of our peers.
@@ -118,10 +124,10 @@ type (
 		// Channels holds any channels that nodes that are our peers has.
 		Channels channels `json:"channels"`
 
-		NodeId        string  `json:"nodeid"`
+		NodeId        nodeId  `json:"nodeid"`
 		Alias         alias   `json:"alias"`
 		Color         string  `json:"color"`
-		LastTimestamp int64   `json:"last_timestamp"`
+		LastTimestamp unixTs  `json:"last_timestamp"`
 		Addresses     address `json:"addresses"`
 	}
 	// nodes describes several nodes.
@@ -136,16 +142,26 @@ type (
 	// outputs describes several outputs.
 	outputs []output
 
+	payment struct {
+		PaymentId       string `json:"id"`
+		PaymentHash     string `json:"payment_hash"`
+		Destination     string `json:"destination"`
+		Msatoshi        int64  `json:"msatoshi"`
+		Status          string `json:"status"`
+		PaymentPreimage string `json:"payment_preimage"`
+	}
+	payments []payment
+
 	// getInfoResponse is the format of the getinfo response from lightning-cli.
 	getInfoResponse struct {
-		NodeId      string  `json:"id"`
+		NodeId      nodeId  `json:"id"`
 		Port        int     `json:"port"`
 		Address     address `json:"address"`
 		Version     string  `json:"version"`
 		Blockheight int     `json:"blockheight"`
 	}
 	// allNodes is a map from node id to that node.
-	allNodes map[string]node
+	allNodes map[nodeId]node
 	// lightningState describes the last known state of the lightningd daemon.
 	lightningdState struct {
 		pid      int
@@ -154,6 +170,7 @@ type (
 		Info     getInfoResponse
 		Nodes    allNodes
 		Channels channelListings
+		Payments payments
 		Outputs  outputs
 	}
 	channelStateNum int
@@ -163,15 +180,6 @@ type (
 		Lightningd lightningdState
 	}
 )
-
-// String returns the name of the state, e.g. "OPENINGD".
-func (s channelStateNum) String() string {
-	if ChanneldNormalState <= s && s <= ClosingdSigexchangeState {
-		return string(states[s])
-
-	}
-	return "Invalid channelstate " + string(s)
-}
 
 const (
 	// Channel states are enumerated here. Note that states with lower numbers sort before higher.
@@ -281,6 +289,48 @@ func getFile(f string) ([]byte, error) {
 	return Asset(f)
 }
 
+// Short returns the first few characters of the node id.
+func (nid nodeId) Short() string {
+	return string(nid[:6]) + "[..]"
+}
+
+// Time returns the unixTs converted to regular time.Time format.
+func (ts unixTs) Time() time.Time {
+	return time.Unix(int64(ts), 0)
+}
+
+// Since returns a description of the duration passed since the timestamp.
+func (ts unixTs) Since() string {
+	d := time.Since(ts.Time())
+	hrs := d.Hours()
+	if hrs > 24*365 {
+		// More than one year? Probably start of epoch.
+		return "never seen"
+	}
+	if hrs > 24.0 {
+		return fmt.Sprintf("%.2f days", hrs/24)
+	}
+	if d > time.Hour {
+		return fmt.Sprintf("%.2f hrs", hrs)
+	}
+	if d > time.Minute {
+		return fmt.Sprintf("%.2f min", d.Minutes())
+	}
+	if d > time.Second {
+		return fmt.Sprintf("%.2f sec", d.Seconds())
+	}
+	return fmt.Sprintf("%.2f ms", d.Nanoseconds()/1e6)
+}
+
+// String returns the name of the state, e.g. "OPENINGD".
+func (s channelStateNum) String() string {
+	if ChanneldNormalState <= s && s <= ClosingdSigexchangeState {
+		return string(states[s])
+
+	}
+	return "Invalid channelstate " + string(s)
+}
+
 // String returns a human-readable description of the netaddr.
 func (n netaddr) String() string {
 	if len(n) < 1 {
@@ -371,7 +421,7 @@ func (msat msatoshi) AsBTC() string {
 	return fmt.Sprintf("%.5f BTC", float64(int64(msat))/1.0e11)
 }
 
-func (ns allNodes) getAlias(nodeId string) (alias, error) {
+func (ns allNodes) getAlias(nodeId nodeId) (alias, error) {
 	n, exists := ns[nodeId]
 	if !exists {
 		return "", fmt.Errorf("no such node %q", nodeId)
@@ -640,12 +690,37 @@ func execCmd(cmd string, arg ...string) (string, error) {
 	return out.String(), nil
 }
 
+// newCli returns a new cli.
+func newCli() *cli {
+	cliCalls := []string{
+		"getinfo",
+	}
+	counters := map[string]prometheus.Counter{}
+	for _, call := range cliCalls {
+		c := prometheus.NewCounter(
+			prometheus.CounterOpts{
+				Namespace: "lightningd",
+				Name:      call + "calls_total",
+				Help:      fmt.Sprintf("Number of calls to %q CLI.", call),
+			},
+		)
+		counters[call] = c
+		// prometheus.MustRegister(c)
+	}
+	return &cli{callCounters: counters}
+}
+
 func (c cli) exec(cmd string) (string, error) {
 	return execCmd("lightning-cli", cmd)
 }
 
-// TODO: expose counters per cli command.
+func (c cli) incCounter(call string) {
+}
+
+// GetInfo returns the getinfo response.
 func (c cli) GetInfo() (*getInfoResponse, error) {
+	c.incCounter("getinfo")
+
 	infostring, err := c.exec("getinfo")
 	if err != nil {
 		return nil, err
@@ -701,6 +776,23 @@ func (c cli) ListNodes() (*nodes, error) {
 		return nil, err
 	}
 	return &resp.Nodes, nil
+}
+
+// ListPayments returns the listpayments response.
+func (c cli) ListPayments() (*payments, error) {
+	c.incCounter("listpayments")
+
+	respstring, err := c.exec("listpayments")
+	if err != nil {
+		return nil, err
+	}
+	resp := struct {
+		Payments payments `json:"payments"`
+	}{}
+	if err := json.Unmarshal([]byte(respstring), &resp); err != nil {
+		return nil, err
+	}
+	return &resp.Payments, nil
 }
 
 // ListPeers returns the nodes returned by lightning-cli listpeers.
@@ -771,7 +863,7 @@ func getLightningdState() (*lightningdState, error) {
 	for _, arg := range parts[1:] {
 		s.args = append(s.args, arg)
 	}
-	c := cli{}
+	c := newCli()
 	info, err := c.GetInfo()
 	if err != nil {
 		return nil, err
@@ -845,14 +937,14 @@ func getLightningdState() (*lightningdState, error) {
 			if n.Channels.MilliSatoshiTotal() > 0 {
 				channelCapacities.With(
 					prometheus.Labels{
-						"node_id": n.NodeId,
+						"node_id": string(n.NodeId),
 						"state":   n.Channels.State(),
 					}).Set(float64(n.Channels.MilliSatoshiTotal()))
 			}
 			if n.Channels.MilliSatoshiToUs() > 0 {
 				channelBalances.With(
 					prometheus.Labels{
-						"node_id":   n.NodeId,
+						"node_id":   string(n.NodeId),
 						"state":     n.Channels.State(),
 						"direction": "to_us",
 					}).Set(float64(n.Channels.MilliSatoshiToUs()))
@@ -860,7 +952,7 @@ func getLightningdState() (*lightningdState, error) {
 			if n.Channels.MilliSatoshiToThem() > 0 {
 				channelBalances.With(
 					prometheus.Labels{
-						"node_id":   n.NodeId,
+						"node_id":   string(n.NodeId),
 						"state":     n.Channels.State(),
 						"direction": "to_them",
 					}).Set(float64(n.Channels.MilliSatoshiToThem()))
