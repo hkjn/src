@@ -7,7 +7,7 @@ DOCKER_ARCH=$(shell bash $(MAKE_DIR)/../scripts/get_docker_arch)
 SHELL=/bin/bash
 PUSH_ENABLED=1
 .DEFAULT_GOAL=all
-.PHONY: pre-build docker-build post-build build	push do-push post-push
+.PHONY: pre-build docker-build post-build build push do-push post-push
 
 all: build push
 
