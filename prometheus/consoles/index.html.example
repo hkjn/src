@@ -1,0 +1,21 @@
+{{ template "head" . }}
+
+{{ template "prom_right_table_head" }}
+{{ template "prom_right_table_tail" }}
+
+{{ template "prom_content_head" . }}
+
+<h1>Overview</h1>
+
+<p>Welcome to <code>mon.hkjn.me</code>.</p>
+
+<p>Available dashboards:</p>
+<ul>
+	<li><a href="system.html">System</a></li>
+	<li><a href="lnmon.html">lnmon</a></li>
+	<li><a href="bcmon.html">bcmon</a></li>
+</ul>
+
+{{ template "prom_content_tail" . }}
+
+{{ template "tail" }}
