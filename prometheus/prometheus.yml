@@ -23,9 +23,14 @@ scrape_configs:
     static_configs:
       - targets: ['mon.hkjn.me:9100', 'ln.hkjn.me:9100']
 
+  - job_name: 'prometheus_mon'
+    metrics_path: '/ln/metrics'
+    static_configs:
+      - targets: ['mon.hkjn.me:9090']
+
   - job_name: 'prometheus'
     static_configs:
-      - targets: ['mon.hkjn.me:9090', 'ln.hkjn.me:9090']
+      - targets: ['ln.hkjn.me:9090']
 
   - job_name: 'lnmon'
     static_configs:
