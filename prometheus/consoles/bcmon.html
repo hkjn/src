@@ -1,0 +1,27 @@
+{{ template "head" . }}
+
+{{ template "prom_right_table_head" }}
+{{ template "prom_right_table_tail" }}
+
+{{ template "prom_content_head" . }}
+
+<h1>bcmon</h1>
+
+<p>This is a work-in-progress console for bitcoind.</p>
+
+<h2>Bitcoin</h2>
+
+<h3>Running?</h3>
+<div id="runningGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#runningGraph"),
+    expr: "bitcoind_running",
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
+{{ template "prom_content_tail" . }}
+
+{{ template "tail" }}
