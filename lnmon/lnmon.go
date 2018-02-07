@@ -22,10 +22,40 @@ import (
 )
 
 type (
-	cli           struct{}
+	cli struct{}
+	// peerInfo describes one peer from the bitcoin-cli getpeerinfo response.
+	peerInfo struct {
+		PeerId          string           `json:"id"`
+		Addr            string           `json:"addr"`
+		AddrLocal       string           `json:"addrlocal"`
+		AddrBind        string           `json:"addrbind"`
+		Services        string           `json:"services"`
+		RelayTxes       bool             `json:"relaytxes"`
+		LastSend        int64            `json:"lastsend"`
+		LastRecv        int64            `json:"lastrecv"`
+		BytesSent       int64            `json:"bytessent"`
+		BytesRecv       int64            `json:"bytesrecv"`
+		ConnTime        int64            `json:"conntime"`
+		TimeOffset      int64            `json:"timeoffset"`
+		PingTimeMs      int64            `json:"pingtime"`
+		MinPingMs       int64            `json:"minping"`
+		Version         int64            `json:"version"`
+		Subver          string           `json:"subver"`
+		Inbound         bool             `json:"inbound"`
+		AddNode         bool             `json:"addnode"`
+		StartingHeight  int64            `json:"startingheight"`
+		BanScore        int64            `json:"banscore"`
+		SyncedHeaders   int64            `json:"synced_headers"`
+		SyncedBlocks    int64            `json:"synced_blocks"`
+		Inflight        []string         `json:"inflight"`
+		Whitelisted     bool             `json:"whitelisted"`
+		BytesSentPerMsg map[string]int64 `json:"bytessent_per_msg"`
+		BytesRecvPerMsg map[string]int64 `json:"bytesrecv_per_msg"`
+	}
 	bitcoindState struct {
-		pid  int
-		args []string
+		pid      int
+		args     []string
+		peerInfo []peerInfo
 	}
 	addressInfo struct {
 		AddressType string `json:"type"`
@@ -153,7 +183,6 @@ const (
 	ClosingdSigexchangeState
 )
 
-// TODO: eliminate global variable
 var (
 	states = map[channelStateNum]channelState{
 		ChanneldNormalState:          "CHANNELD_NORMAL",
@@ -163,6 +192,7 @@ var (
 		OnchaindOurUnilateralState:   "ONCHAIND_OUR_UNILATERAL",
 		ClosingdSigexchangeState:     "CLOSINGD_SIGEXCHANGE",
 	}
+	// TODO: eliminate global variable
 	allState        state
 	bitcoindRunning = prometheus.NewGauge(prometheus.GaugeOpts{
 		Namespace: "bitcoind",
@@ -229,6 +259,7 @@ var (
 	)
 	// TODO: Add metrics showing last seen timestamp from listnodes instead of binary connected/unconnected status, which
 	// doesn't form timeseries easily.
+	debugging = os.Getenv("LNMON_DEBUGGING") == "1"
 )
 
 func init() {
@@ -361,11 +392,15 @@ func (s lightningdState) updateNodes(newNodes nodes) {
 	for _, nn := range newNodes {
 		on, exists := s.Nodes[nn.NodeId]
 		if !exists {
-			fmt.Printf("Learned about new node %v\n", nn.NodeId)
+			if debugging {
+				fmt.Printf("Learned about new node %v\n", nn.NodeId)
+			}
 			s.Nodes[nn.NodeId] = nn
 		} else {
-			fmt.Printf("Updating any stale info we had on node %v\n", nn.NodeId)
-			// fmt.Printf("Updating any stale info we had on old node %v to new %v\n", on, nn)
+			if debugging {
+				fmt.Printf("Updating any stale info we had on node %v\n", nn.NodeId)
+				fmt.Printf("Updating any stale info we had on old node %v to new %v\n", on, nn)
+			}
 			if on.Alias != "" && nn.Alias == "" {
 				// Preserve alias if we knew it.
 				nn.Alias = on.Alias
@@ -767,20 +802,25 @@ func getLightningdState() (*lightningdState, error) {
 	s.Outputs = *outputs
 	availableFunds.Set(float64(s.Outputs.Sum()))
 	log.Printf("Learned of %d %v.\n", len(s.Outputs), s.Outputs)
-
-	log.Printf("Before doing listpeers we know about %d nodes.\n", len(s.Nodes))
+	if debugging {
+		log.Printf("Before doing listpeers we know about %d nodes.\n", len(s.Nodes))
+	}
 	peerNodes, err := c.ListPeers()
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("Doing listpeers we learned about %d peer nodes:\n", len(*peerNodes))
-	for _, p := range *peerNodes {
-		fmt.Printf("  %s\n", p.NodeId)
+	if debugging {
+		fmt.Printf("Doing listpeers we learned about %d peer nodes:\n", len(*peerNodes))
+		for _, p := range *peerNodes {
+			fmt.Printf("  %s\n", p.NodeId)
+		}
 	}
 	s.updateNodes(*peerNodes)
-	log.Printf("After updating with listpeers results, we now know of %d nodes:\n", len(s.Nodes))
-	for k, _ := range s.Nodes {
-		fmt.Printf("  %s\n", k)
+	if debugging {
+		log.Printf("After updating with listpeers results, we now know of %d nodes:\n", len(s.Nodes))
+		for k, _ := range s.Nodes {
+			fmt.Printf("  %s\n", k)
+		}
 	}
 
 	peers := s.Nodes.Peers() // TODO: could do the below with entire s.Nodes too; methods filter out non-peers where applicable.
@@ -791,14 +831,20 @@ func getLightningdState() (*lightningdState, error) {
 		ourChannels.With(prometheus.Labels{"state": string(state)}).Set(float64(n))
 	}
 	// log.Printf("lightningd listpeers response: %+v\n", peers)
-	log.Printf("Before doing listnodes we know about %d nodes.\n", len(s.Nodes))
+	if debugging {
+		log.Printf("Before doing listnodes we know about %d nodes.\n", len(s.Nodes))
+	}
 	nodes, err := c.ListNodes()
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("Doing listnodes we learned about %d nodes.\n", len(*nodes))
+	if debugging {
+		log.Printf("Doing listnodes we learned about %d nodes.\n", len(*nodes))
+	}
 	s.updateNodes(*nodes)
-	log.Printf("After updating with listnodes results, we now know of %d nodes.\n", len(s.Nodes))
+	if debugging {
+		log.Printf("After updating with listnodes results, we now know of %d nodes.\n", len(s.Nodes))
+	}
 	numNodes.Set(float64(len(s.Nodes)))
 	// log.Printf("lightningd listnodes response: %+v\n", nodes)
 
@@ -858,7 +904,7 @@ func refresh() {
 				lc := prometheus.NewProcessCollector(allState.Bitcoind.pid, namespace)
 				prometheus.MustRegister(lc)
 				registeredBitcoin = true
-				log.Printf("Registered ProcessCollector for bitcoind pid %d in namespace %s\n", allState.Bitcoind.pid, namespace)
+				log.Printf("Registered ProcessCollector for bitcoind pid %d in namespace %q\n", allState.Bitcoind.pid, namespace)
 			}
 			bitcoindRunning.Set(1)
 		} else {
