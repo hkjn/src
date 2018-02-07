@@ -16,7 +16,7 @@ build-docker: gen-tmpl
 
 build-bin: gen-tmpl
 	@echo "Building lnmon on host.."
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm go build -o lnmon lnmon.go bindata.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm go build -o lnmon .
 
 gen-tmpl:
 	@echo "Generating bindata.go.."

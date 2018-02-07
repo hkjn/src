@@ -151,6 +151,8 @@ const (
 	OnchaindTheirUnilateralState
 	OnchaindOurUnilateralState
 	ClosingdSigexchangeState
+
+	counterPrefix
 )
 
 var (
@@ -165,27 +167,27 @@ var (
 	// TODO: eliminate global variable
 	allState          lightningdState
 	lightningdRunning = prometheus.NewGauge(prometheus.GaugeOpts{
-		Namespace: "lightningd",
+		Namespace: counterPrefix,
 		Name:      "running",
 		Help:      "Whether lightningd process is running (1) or not (0).",
 	})
 	availableFunds = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Namespace: "lightningd",
+			Namespace: counterPrefix,
 			Name:      "total_funds",
 			Help:      "Sum of all funds available for opening channels.",
 		},
 	)
 	numChannels = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Namespace: "lightningd",
+			Namespace: counterPrefix,
 			Name:      "num_channels",
 			Help:      "Number of Lightning channels this node knows about.",
 		},
 	)
 	numPeers = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Namespace: "lightningd",
+			Namespace: counterPrefix,
 			Name:      "num_peers",
 			Help:      "Number of Lightning peers of this node.",
 		},
@@ -193,14 +195,14 @@ var (
 	)
 	numNodes = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Namespace: "lightningd",
+			Namespace: counterPrefix,
 			Name:      "num_nodes",
 			Help:      "Number of Lightning nodes known by this node.",
 		},
 	)
 	ourChannels = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Namespace: "lightningd",
+			Namespace: counterPrefix,
 			Name:      "our_channels",
 			Help:      "Number of channels per state to and from our node.",
 		},
@@ -208,7 +210,7 @@ var (
 	)
 	channelCapacities = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Namespace: "lightningd",
+			Namespace: counterPrefix,
 			Name:      "channel_capacities_msatoshi",
 			Help:      "Capacity of channels in millisatoshi by name and channel state.",
 		},
@@ -216,7 +218,7 @@ var (
 	)
 	channelBalances = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Namespace: "lightningd",
+			Namespace: counterPrefix,
 			Name:      "channel_balances_msatoshi",
 			Help:      "Balance to us of channels in millisatoshi by name and channel state.",
 		},
