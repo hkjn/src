@@ -29,7 +29,10 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 
-  - job_name: 'ln.hkjn.me'
-    scheme: 'https'
+  - job_name: 'lnmon'
     static_configs:
-      - targets: ['ln.hkjn.me']
+      - targets: ['ln.hkjn.me:8380']
+
+  - job_name: 'bcmon'
+    static_configs:
+      - targets: ['ln.hkjn.me:9740']
