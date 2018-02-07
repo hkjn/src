@@ -170,7 +170,7 @@ func (s channelStateNum) String() string {
 		return string(states[s])
 
 	}
-	return fmt.Sprintf("Invalid channelstate %v", s)
+	return "Invalid channelstate " + string(s)
 }
 
 const (
