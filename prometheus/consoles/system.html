@@ -2,11 +2,17 @@
 
 {{ template "prom_right_table_head" }}
 {{ template "prom_right_table_tail" }}
-
 {{ template "prom_content_head" . }}
+
 <h1>System</h1>
 
 <p>This console shows some system metrics.</p>
+
+<ul>
+{{ range query "up" }}
+	<li>{{ .Labels.instance }} {{ .Value }}</li>
+{{ end }}
+</ul>
 
 <h2>System</h2>
 <h3>Node up?</h3>
