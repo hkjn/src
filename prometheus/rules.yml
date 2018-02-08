@@ -9,9 +9,10 @@ groups:
       expr: sum(rate(node_network_transmit_bytes[5m])) by (group, kind, job, instance)
     - record: instance_system:node_network_receive_bytes:sum_rate5m
       expr: sum(rate(node_network_receive_bytes[5m])) by (group, kind, job, instance)
+
   - name: lightningd
     rules:
     - record: job_lightningd:channel_balances_msatoshi:max
-      expr: max(lightningd_channel_balances_msatoshi) by (direction, node_id)
+      expr: max(lightningd_channel_balances_msatoshi) by (direction, node_id, state)
     - record: job_lightningd:channel_capacities_msatoshi:max
-      expr: max(lightningd_channel_capacities_msatoshi) by (node_id)
+      expr: max(lightningd_channel_capacities_msatoshi) by (node_id, state)
