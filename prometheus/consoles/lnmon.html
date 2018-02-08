@@ -106,7 +106,11 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#channelToUsBalanceGraph"),
+    {{ with .Params.node_id }}
+    expr: 'job_lightningd:channel_balances_normal_btc:sum{direction="to_us",node_id="{{ . }}"}',
+    {{ else}}
     expr: 'job_lightningd:channel_balances_normal_btc:sum{direction="to_us"}',
+    {{ end }}
     renderer: "area",
     yUnits: "BTC",
     yTitle: "Balance",
@@ -120,7 +124,11 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#channelToThemBalanceGraph"),
+    {{ with .Params.node_id }}
+    expr: 'job_lightningd:channel_balances_normal_btc:sum{direction="to_them",node_id="{{ . }}"}',
+    {{ else}}
     expr: 'job_lightningd:channel_balances_normal_btc:sum{direction="to_them"}',
+    {{ end }}
     renderer: "area",
     yUnits: "BTC",
     yTitle: "Balance",
