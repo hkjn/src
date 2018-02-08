@@ -1,4 +1,8 @@
 groups:
+  - name: system
+    rules:
+    - record: instance_system:node_disk_bytes_read:sum_rate5m
+      expr: sum(rate(node_disk_bytes_read[5m])) by (group, kind, job, instance)
   - name: lightningd
     rules:
     - record: job_lightningd:channel_balances_msatoshi:max
