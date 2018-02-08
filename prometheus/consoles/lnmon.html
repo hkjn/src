@@ -28,24 +28,41 @@
 {{ end }}
 </table>
 
-<p>Balance of inbound channels:</p>
+<p>Balance of our outbound channels in state <code>CHANNELD_NORMAL</code>:</p>
 <table>
 	<tr>
-		<th>Node id</th>
 		<th>Balance</th>
+		<th>Node id</th>
 	</tr>
 	{{ range query "job_lightningd:channel_balances_normal_btc:max{direction='to_us'}" }}
 	<tr>
 		<td>
-			<code>{{ .Labels.node_id }}</code>
+			{{ .Value }} BTC
 		</td>
 		<td>
-			{{ .Value }}
+			<code>{{ .Labels.node_id }}</code>
 		</td>
 	</tr>
 {{ end }}
 
+<p>Balance of our inbound channels in state <code>CHANNELD_NORMAL</code>:</p>
+<table>
+	<tr>
+		<th>Balance</th>
+		<th>Node id</th>
+	</tr>
+	{{ range query "job_lightningd:channel_balances_normal_btc:max{direction='to_them'}" }}
+	<tr>
+		<td>
+			{{ .Value }} BTC
+		</td>
+		<td>
+			<code>{{ .Labels.node_id }}</code>
+		</td>
+	</tr>
+{{ end }}
 </table>
+
 <h4>Number of channels to and from our node</h4>
 <div id="ourChannelsGraph"></div>
 <script>
