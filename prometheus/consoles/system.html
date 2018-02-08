@@ -58,7 +58,7 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#networkTransmittedGraph"),
-    expr: 'rate(node_network_transmit_bytes{instance="ln.hkjn.me:9100"}[5m])',
+    expr: 'instance_system:node_network_transmit_bytes:sum_rate5m',
     renderer: "area",
     min: 0.0
 });
@@ -69,7 +69,7 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#networkReceivedGraph"),
-    expr: 'rate(node_network_receive_bytes{instance="ln.hkjn.me:9100"}[5m])',
+    expr: 'instance_system:node_network_receive_bytes:sum_rate5m',
     renderer: "area",
     min: 0.0
 });
