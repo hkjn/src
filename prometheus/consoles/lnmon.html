@@ -34,7 +34,7 @@
 		<th>Node id</th>
 		<th>Balance</th>
 	</tr>
-	{{ range query "job_lightningd:channel_balances_normal_btc:sum{direction='to_us'}" }}
+	{{ range query "job_lightningd:channel_balances_normal_btc:max{direction='to_us'}" }}
 	<tr>
 		<td>
 			<code>{{ .Labels.node_id }}</code>
