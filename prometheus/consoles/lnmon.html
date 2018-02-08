@@ -80,7 +80,7 @@
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#ourChannelsGraph"),
-    expr: "lightningd_our_channels",
+    expr: "lightningd_our_channels{{ with .Params.node_id }}{node_id={{ . }}} {{ end }}",
     renderer: "area",
     min: 0.0
 });
