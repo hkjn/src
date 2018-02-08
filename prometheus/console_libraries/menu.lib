@@ -16,7 +16,7 @@
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav">
         <li><a href="{{ pathPrefix }}/alerts">Alerts</a></li>
-        <li><a href="https://mon.hkjn.me/dash">https://mon.hkjn.me/dash</a></li>
+        <li><a href="https://mon.hkjn.me/dash">/dash</a></li>
       </div>
     </ul>
   </div>
