@@ -369,14 +369,6 @@ func (msat msatoshi) AsBTC() string {
 	return fmt.Sprintf("%.5f BTC", float64(int64(msat))/1.0e11)
 }
 
-func (ns allNodes) getAlias(nodeId nodeId) (alias, error) {
-	n, exists := ns[nodeId]
-	if !exists {
-		return "", fmt.Errorf("no alias for node %q", nodeId)
-	}
-	return n.Alias, nil
-}
-
 // updateNodes updates the nodes with new node information.
 func (s lightningdState) updateNodes(newNodes nodes) {
 	for _, nn := range newNodes {
