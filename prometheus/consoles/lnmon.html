@@ -64,9 +64,11 @@
 {{ end }}
 </table>
 
-<p>Alias for node %s:
+<p>Alias for node <code>.Params.node_id</code>:
 {{ with printf "job_lightningd:aliases:sum{node_id='%s'}" .Params.node_id | query }}
-  {{ . | first | .Labels.alias}}
+  {{ range . }}
+	  <p>{{ . }}</p>
+  {{ end }}  
   {{ end }}
 </p>
 
