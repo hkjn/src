@@ -17,7 +17,7 @@
 	{{ range query "up" }}
 	<tr>
 		<td>
-			<code><a href="{{ .Labels.instance }}">{{ .Labels.instance }}</a></code>
+			<code><a href="http://{{ .Labels.instance }}/metrics">{{ .Labels.instance }}</a></code>
 		</td>
 		<td>{{ .Value }}</td>
 	</tr>
