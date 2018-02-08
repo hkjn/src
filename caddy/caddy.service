@@ -1,0 +1,13 @@
+[Unit]
+Description=Caddy frontend
+After=network-online.target
+
+[Service]
+WorkingDirectory=/etc/caddy
+ExecStart=/etc/caddy/caddy
+Restart=always
+
+[Install]
+WantedBy=network-online.target
+
+
