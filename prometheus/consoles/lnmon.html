@@ -2,12 +2,18 @@
 
 {{ template "prom_right_table_head" }}
 {{ template "prom_right_table_tail" }}
-
 {{ template "prom_content_head" . }}
 
 <h1>lnmon</h1>
 
 <h2>Lightning</h2>
+
+<p>Number of channels:</p>
+<ul>
+{{ with query "some_metric{instance='someinstance'}" }}
+  {{ . | first | value | humanize }}
+{{ end }}
+</ul>
 
 <h3>Channels</h3>
 

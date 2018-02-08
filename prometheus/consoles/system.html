@@ -8,11 +8,19 @@
 
 <p>This console shows some system metrics.</p>
 
-<ul>
-{{ range query "up" }}
-	<li>{{ .Labels.instance }} {{ .Value }}</li>
-{{ end }}
-</ul>
+<p>Monitored targets:</p>
+<table>
+	<tr>
+		<th>Instance</th>
+		<th>Up?</th>
+	</tr>
+	{{ range query "up" }}
+	<tr>
+		<td><code>{{ .Labels.instance }}</code></td>
+		<td>{{ .Value }}</td>
+	</tr>
+	{{ end }}
+</table>
 
 <h2>System</h2>
 <h3>Node up?</h3>
