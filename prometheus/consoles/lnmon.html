@@ -80,7 +80,7 @@
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#ourChannelsGraph"),
-    expr: 'lightningd_our_channels{{ with .Params.node_id }}{node_id="{{ . }}}" {{ end }}',
+    expr: 'lightningd_our_channels',
     renderer: "area",
     min: 0.0
 });
@@ -92,7 +92,7 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#channelCapacityGraph"),
-    expr: 'job_lightningd:channel_capacities_normal_btc:sum',
+    expr: 'job_lightningd:channel_capacities_normal_btc:sum{{ with .Params.node_id }}{node_id="{{ . }}"} {{ end }}',
     renderer: "area",
     yUnits: "BTC",
     yTitle: "Capacity",
