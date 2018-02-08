@@ -64,6 +64,12 @@
 {{ end }}
 </table>
 
+<p>Alias for node:
+{{ with printf "job_lightningd:aliases:sum{node_id='%s'}" .Params.node_id | query }}
+  {{ . | first | value}}
+  {{ end }}
+</p>
+
 <h4>Number of channels to and from our node</h4>
 <div id="ourChannelsGraph"></div>
 <script>
