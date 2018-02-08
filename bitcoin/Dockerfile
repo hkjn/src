@@ -16,7 +16,7 @@ RUN pacman -Syyu --noconfirm && \
 
 WORKDIR /usr/local/src/bitcoin/
 RUN useradd -m bitcoin && \
-    chown -R bitcoin:bitcoin /usr/local/src && \
+    chown -R bitcoin:bitcoin /usr/local/src /usr/local/lib && \
     mkdir /usr/local/src/lightning
 
 USER bitcoin
