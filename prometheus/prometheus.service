@@ -4,7 +4,7 @@ After=network-online.target
 
 [Service]
 WorkingDirectory=/etc/prometheus
-EnvFile=/etc/prometheus/prometheus.env
+EnvironmentFile=/etc/prometheus/prometheus.env
 ExecStart=/bin/bash /etc/prometheus/prometheus ${PROMETHEUS_ARGS}
 # --web.external-url=https://mon.hkjn.me/ln
 Restart=always
