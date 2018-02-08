@@ -24,6 +24,4 @@ gen-tmpl:
 
 deploy: build-bin
 	@echo "Deploying bcmon.next binary.."
-	scp -P 6200 bcmon prod.hkjn.me:/crypt/lightning/bcmon.next
-	@echo "Setting cap_net_bind_service on remote binary.."
-	ssh -p 6200 prod.hkjn.me 'sudo setcap "cap_net_bind_service=+ep" /crypt/lightning/bcmon.next'
+	scp -P 6200 bcmon prod.hkjn.me:/etc/bins/bcmon.next
