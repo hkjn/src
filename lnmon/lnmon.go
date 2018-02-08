@@ -372,7 +372,7 @@ func (msat msatoshi) AsBTC() string {
 func (ns allNodes) getAlias(nodeId nodeId) (alias, error) {
 	n, exists := ns[nodeId]
 	if !exists {
-		return "", fmt.Errorf("no such node %q", nodeId)
+		return "", fmt.Errorf("no alias for node %q", nodeId)
 	}
 	return n.Alias, nil
 }
@@ -870,9 +870,10 @@ func getLightningdState() (*lightningdState, error) {
 		}
 	}
 
-	s.Alias, err = s.Nodes.getAlias(s.Info.NodeId)
-	if err != nil {
-		return nil, err
+	n, exists := s.Nodes[s.Info.NodeId]
+	if exists {
+		s.Alias = n.Alias
+		log.Printf("Found that our own alias is %q.\n", s.Alias)
 	}
 	return &s, nil
 }
