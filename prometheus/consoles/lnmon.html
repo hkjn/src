@@ -8,14 +8,25 @@
 
 <h2>Lightning</h2>
 
-<p>Number of channels:</p>
-<ul>
-{{ with query "some_metric{instance='someinstance'}" }}
-  {{ . | first | value | humanize }}
-{{ end }}
-</ul>
-
 <h3>Channels</h3>
+
+<p>Number of channels in each state:</p>
+<table>
+	<tr>
+		<th>State</th>
+		<th>Number</th>
+	</tr>
+	{{ range query "lightningd_our_channels" }}
+	<tr>
+		<td>
+			<code>{{ .Labels.state }}</code>
+		</td>
+		<td>
+			{{ .Value }}
+		</td>
+	</tr>
+{{ end }}
+</table>
 
 <h4>Number of channels to and from our node</h4>
 <div id="ourChannelsGraph"></div>
