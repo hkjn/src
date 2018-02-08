@@ -891,6 +891,8 @@ func refresh() {
 		}
 		if allState.IsRunning() {
 			if !registeredLn {
+				// TODO: Need to handle case where we registered collector to pid #1, then
+				// lightningd crashed and restarted with pid #2.
 				lc := prometheus.NewProcessCollector(allState.pid, namespace)
 				prometheus.MustRegister(lc)
 				registeredLn = true
