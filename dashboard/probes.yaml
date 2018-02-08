@@ -60,15 +60,6 @@ webprobes:
     name: WhereAPI
     want: me@hkjn.me was last seen
     wantstatus: 200
-varsprobes:
-  - target: http://ln.hkjn.me/debug/vars
-    name: LightningdRunning
-    key: lightningd.running
-    wantvalue: 1
-  - target: http://ln.hkjn.me/debug/vars
-    name: BitcoindRunning
-    key: bitcoind.running
-    wantvalue: 1
 # DNS probe settings.
 dnsprobes:
   - target: hkjn.me
