@@ -6,9 +6,20 @@
 
 <h1>lnmon</h1>
 
-<h2>Lightning</h2>
+{{ with .Params.node_id }}
+<p>Viewing node
+{{ with printf "job_lightningd:aliases:sum{node_id='%s'}" . | query }}
+	{{ range . }}
+	<code>{{ .Labels.alias }}</code>
+	{{ end }}
+{{ end }}
+: <code>{{ . }}</code>.
+</p>
 
-<h3>Channels</h3>
+<p>Clear view <a href="?">here</a>.</p>
+{{ end }}
+
+<h2>Channels</h2>
 
 <p>Number of channels in each state:</p>
 <table>
@@ -64,15 +75,7 @@
 {{ end }}
 </table>
 
-<p>Alias for node <code>.Params.node_id</code>:
-{{ with printf "job_lightningd:aliases:sum{node_id='%s'}" .Params.node_id | query }}
-  {{ range . }}
-	  <p>{{ . }}</p>
-  {{ end }}  
-  {{ end }}
-</p>
-
-<h4>Number of channels to and from our node</h4>
+<h3>Number of channels to and from our node</h3>
 <div id="ourChannelsGraph"></div>
 <script>
 new PromConsole.Graph({
@@ -83,7 +86,7 @@ new PromConsole.Graph({
 });
 </script>
 
-<h4>Capacity of our channels</h4>
+<h3>Capacity of our channels</h3>
 
 <div id="channelCapacityGraph"></div>
 <script>
@@ -97,7 +100,7 @@ new PromConsole.Graph({
 });
 </script>
 
-<h4>Balance to us in our channels</h4>
+<h3>Balance to us in our channels</h3>
 
 <div id="channelToUsBalanceGraph"></div>
 <script>
@@ -111,7 +114,7 @@ new PromConsole.Graph({
 });
 </script>
 
-<h4>Balance to them in our channels</h4>
+<h3>Balance to them in our channels</h3>
 
 <div id="channelToThemBalanceGraph"></div>
 <script>
@@ -125,7 +128,7 @@ new PromConsole.Graph({
 });
 </script>
 
-<h4>Funds available to open channels</h4>
+<h3>Funds available to open channels</h3>
 <div id="fundsGraph"></div>
 <script>
 new PromConsole.Graph({
@@ -138,7 +141,7 @@ new PromConsole.Graph({
 });
 </script>
 
-<h4>Number of channels on the network</h4>
+<h3>Number of channels on the network</h3>
 <div id="numChannelsGraph"></div>
 <script>
 new PromConsole.Graph({
@@ -150,9 +153,9 @@ new PromConsole.Graph({
 });
 </script>
 
-<h3>Nodes</h3>
+<h2>Nodes</h2>
 
-<h4>Number of peers</h4>
+<h3>Number of peers</h3>
 <div id="numPeersGraph"></div>
 <script>
 new PromConsole.Graph({
@@ -163,7 +166,7 @@ new PromConsole.Graph({
 });
 </script>
 
-<h4>Number of total known nodes on the network</h4>
+<h3>Number of total known nodes on the network</h3>
 <div id="numNodesGraph"></div>
 <script>
 new PromConsole.Graph({
@@ -174,9 +177,9 @@ new PromConsole.Graph({
 });
 </script>
 
-<h2>Process info for <code>lightningd</code></h2>
+<h1>Process info for <code>lightningd</code></h1>
 
-<h3>Virtual memory usage</h3>
+<h2>Virtual memory usage</h2>
 <div id="virtualMemoryGraph"></div>
 <script>
 new PromConsole.Graph({
@@ -187,7 +190,7 @@ new PromConsole.Graph({
 });
 </script>
 
-<h3>Resident memory</h3>
+<h2>Resident memory</h2>
 <div id="residentMemoryGraph"></div>
 <script>
 new PromConsole.Graph({
@@ -198,7 +201,7 @@ new PromConsole.Graph({
 });
 </script>
 
-<h3>Rate of CPU usage</h3>
+<h2>Rate of CPU usage</h2>
 <div id="cpuUsageRateGraph"></div>
 <script>
 new PromConsole.Graph({
@@ -209,23 +212,12 @@ new PromConsole.Graph({
 });
 </script>
 
-<h3>Number of open file descriptors</h3>
+<h2>Number of open file descriptors</h2>
 <div id="openFdsGraph"></div>
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#openFdsGraph"),
     expr: 'pid_process_open_fds{job="lnmon"}',
-    renderer: "area",
-    min: 0.0
-});
-</script>
-
-<h3>Start time of process</h3>
-<div id="startTimeGraph"></div>
-<script>
-new PromConsole.Graph({
-    node: document.querySelector("#startTimeGraph"),
-    expr: 'pid_process_start_time_seconds{job="lnmon"}',
     renderer: "area",
     min: 0.0
 });
