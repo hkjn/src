@@ -5,7 +5,7 @@ After=network-online.target
 [Service]
 WorkingDirectory=/etc/prometheus
 EnvironmentFile=/etc/prometheus/prometheus.env
-ExecStart=/bin/bash -c /etc/prometheus/prometheus ${PROMETHEUS_ARGS}
+ExecStart=/bin/bash -c "/etc/prometheus/prometheus ${PROMETHEUS_ARGS}"
 Restart=always
 
 [Install]
