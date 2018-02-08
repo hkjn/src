@@ -9,6 +9,7 @@ curl -vLo prometheus.tar.gz https://github.com/prometheus/prometheus/releases/do
 tar xzfv prometheus.tar.gz
 sudo mkdir -p /etc/prometheus
 sudo install prometheus-${PROMETHEUS_VERSION}.linux-${PLATFORM}/prometheus /etc/prometheus/
+[ -e /etc/prometheus/prometheus.env ] || sudo touch /etc/prometheus/prometheus.env
 
 echo "Fetching and installing node_exporter.."
 curl -vLo node_exporter.tar.gz https://github.com/prometheus/node_exporter/releases/download/v${NODE_EXPORTER_VERSION}/node_exporter-${NODE_EXPORTER_VERSION}.linux-${PLATFORM}.tar.gz
