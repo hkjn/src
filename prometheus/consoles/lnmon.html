@@ -92,7 +92,7 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#channelCapacityGraph"),
-    expr: 'job_lightningd:channel_capacities_msatoshi:sum/100000000000',
+    expr: 'job_lightningd:channel_capacities_normal_btc:sum',
     renderer: "area",
     yUnits: "BTC",
     yTitle: "Capacity",
@@ -106,7 +106,7 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#channelToUsBalanceGraph"),
-    expr: 'job_lightningd:channel_balances_msatoshi:sum{direction="to_us"}/100000000000',
+    expr: 'job_lightningd:channel_balances_normal_btc:sum{direction="to_us"}',
     renderer: "area",
     yUnits: "BTC",
     yTitle: "Balance",
@@ -120,7 +120,7 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#channelToThemBalanceGraph"),
-    expr: 'job_lightningd:channel_balances_msatoshi:sum{direction="to_them"}/100000000000',
+    expr: 'job_lightningd:channel_balances_normal_btc:sum{direction="to_them"}',
     renderer: "area",
     yUnits: "BTC",
     yTitle: "Balance",
