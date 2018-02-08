@@ -3,3 +3,5 @@ groups:
     rules:
     - record: job_lightningd:channel_balances_msatoshi:max
       expr: max(lightningd_channel_balances_msatoshi) by (direction, node_id)
+    - record: job_lightningd:channel_capacities_msatoshi:max
+      expr: max(lightningd_channel_capacities_msatoshi) by (node_id)
