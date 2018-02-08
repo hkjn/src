@@ -46,4 +46,5 @@ RUN g++ -o sqlversiontest sqlversiontest.cpp -lsqlite3 && \
     ./sqlversiontest
 
 COPY entrypoint.sh /usr/local/bin
+WORKDIR /home/bitcoin
 ENTRYPOINT ["entrypoint.sh"]
