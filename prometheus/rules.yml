@@ -1,0 +1,5 @@
+groups:
+  - name: lightningd
+    rules:
+    - record: job_lightningd:channel_balances_msatoshi:max
+      expr: max(lightningd_channel_balances_msatoshi) by (direction, node_id)
