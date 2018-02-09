@@ -165,7 +165,7 @@ new PromConsole.Graph({
 new PromConsole.Graph({
     node: document.querySelector("#channelToUsBalanceGraph"),
     {{ with .Params.node_id }}
-    expr: 'sum(lightningd_channel_balances_msatoshi{direction="to_us",node_id={{ . }}}) by (direction, node_id)/100000000000',
+    expr: 'sum(lightningd_channel_balances_msatoshi{direction="to_us",node_id="{{ . }}"}) by (direction, node_id)/100000000000',
     {{ else}}
     expr: 'sum(lightningd_channel_balances_msatoshi{direction="to_us"}) by (direction, node_id)/100000000000',
     {{ end }}
@@ -202,7 +202,7 @@ new PromConsole.Graph({
 new PromConsole.Graph({
     node: document.querySelector("#channelToThemBalanceGraph"),
     {{ with .Params.node_id }}
-    expr: 'sum(lightningd_channel_balances_msatoshi{direction="to_them",node_id={{ . }}}) by (direction, node_id)/100000000000',
+    expr: 'sum(lightningd_channel_balances_msatoshi{direction="to_them",node_id="{{ . }}"}) by (direction, node_id)/100000000000',
     {{ else}}
     expr: 'sum(lightningd_channel_balances_msatoshi{direction="to_them"}) by (direction, node_id)/100000000000',
     {{ end }}
