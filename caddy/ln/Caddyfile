@@ -2,7 +2,7 @@ ln.hkjn.me
 push
 redir 302 {
   if {path} is /
-  / /consoles/index.html
+  / /consoles/lnmon.html
 }
 log    /var/log/access.log
 proxy  /   127.0.0.1:9090
