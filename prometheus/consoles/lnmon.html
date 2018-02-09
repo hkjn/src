@@ -89,6 +89,8 @@ new PromConsole.Graph({
 
 <h3>Capacity of our channels</h3>
 
+job_lightningd:channel_capacities_normal_btc:sum
+
 <div id="channelCapacityGraph"></div>
 <script>
 new PromConsole.Graph({
@@ -100,6 +102,23 @@ new PromConsole.Graph({
     min: 0.0
 });
 </script>
+<table>
+
+	<tr>
+		<th>Node id</th>
+		<th>Capacity (BTC)</th>
+	</tr>
+	{{ range query 'job_lightningd:channel_capacities_normal_btc:sum{{ with .Params.node_id }}{node_id="{{ . }}"} {{ end }}' }}
+	<tr>
+		<td>
+			<code>{{ .Labels.node_id }}</code>
+		</td>
+		<td>
+			{{ .Value }}
+		</td>
+	</tr>
+{{ end }}
+</table>
 
 <h3>Balance to us in our channels</h3>
 
