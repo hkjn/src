@@ -56,43 +56,6 @@ table th {
 {{ end }}
 </table>
 
-<h3>Balance of our outbound normal channels</h3>
-
-<table>
-	<tr>
-		<th>Balance</th>
-		<th>Node id</th>
-	</tr>
-	{{ range query "job_lightningd:channel_balances_normal_btc:sum{direction='to_us'}" }}
-	<tr>
-		<td>
-			{{ .Value }} BTC
-		</td>
-		<td>
-			<code><a href="?node_id={{ .Labels.node_id }}">{{ .Labels.node_id }}</a></code>
-		</td>
-	</tr>
-	{{ end }}
-</table>
-
-<h3>Balance of our inbound normal channels</h3>
-<table>
-	<tr>
-		<th>Balance</th>
-		<th>Node id</th>
-	</tr>
-	{{ range query "job_lightningd:channel_balances_normal_btc:sum{direction='to_them'}" }}
-	<tr>
-		<td>
-			{{ .Value }} BTC
-		</td>
-		<td>
-			<code><a href="?node_id={{ .Labels.node_id }}">{{ .Labels.node_id }}</a></code>
-		</td>
-	</tr>
-{{ end }}
-</table>
-
 <h3>Total number of channels by state</h3>
 <div id="ourChannelsGraph"></div>
 <script>
@@ -134,7 +97,7 @@ new PromConsole.Graph({
 {{ end }}
 </table>
 
-<h3>Balance to us in our channels</h3>
+<h3>Balance of our inbound normal channels</h3>
 
 <div id="channelToUsBalanceGraph"></div>
 <script>
@@ -154,22 +117,22 @@ new PromConsole.Graph({
 
 <table>
 	<tr>
+		<th>Balance</th>
 		<th>Node id</th>
-		<th>Inbound balance (BTC)</th>
 	</tr>
-	{{ range query "job_lightningd:channel_balances_normal_to_us_btc:sum" }}
+	{{ range query "job_lightningd:channel_balances_normal_btc:sum{direction='to_us'}" }}
 	<tr>
 		<td>
-			<code><a href="?node_id={{ .Labels.node_id }}">{{ .Labels.node_id }}</a></code>
+			{{ .Value }} BTC
 		</td>
 		<td>
-			{{ .Value }}
+			<code><a href="?node_id={{ .Labels.node_id }}">{{ .Labels.node_id }}</a></code>
 		</td>
 	</tr>
 {{ end }}
 </table>
 
-<h3>Balance to them in our channels</h3>
+<h3>Balance of our outbound normal channels</h3>
 
 <div id="channelToThemBalanceGraph"></div>
 <script>
@@ -189,19 +152,19 @@ new PromConsole.Graph({
 
 <table>
 	<tr>
+		<th>Balance</th>
 		<th>Node id</th>
-		<th>Outbound balance (BTC)</th>
 	</tr>
-	{{ range query "job_lightningd:channel_balances_normal_to_them_btc:sum" }}
+	{{ range query "job_lightningd:channel_balances_normal_btc:sum{direction='to_them'}" }}
 	<tr>
+		<td>
+			{{ .Value }} BTC
+		</td>
 		<td>
 			<code><a href="?node_id={{ .Labels.node_id }}">{{ .Labels.node_id }}</a></code>
 		</td>
-		<td>
-			{{ .Value }}
-		</td>
 	</tr>
-{{ end }}
+	{{ end }}
 </table>
 
 <h3>Funds available to open channels</h3>
