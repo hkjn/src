@@ -82,6 +82,7 @@ new PromConsole.Graph({
 
 <h3>Capacity of our channels</h3>
 
+<h4>Normal channels</h4>
 <div id="channelCapacityGraph"></div>
 <script>
 new PromConsole.Graph({
@@ -113,6 +114,38 @@ new PromConsole.Graph({
 {{ end }}
 </table>
 
+<h4>Other channels</h4>
+
+<div id="channelCapacityAbnormalGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#channelCapacityAbnormalGraph"),
+    expr: 'job_lightningd:channel_capacities_abnormal_btc:sum{{ with .Params.node_id }}{node_id="{{ . }}"} {{ end }}',
+    colorScheme: "spectrum14",
+    name: "[[ node_id ]]",
+    renderer: "area",
+    yUnits: "BTC",
+    yTitle: "Capacity",
+    min: 0.0
+});
+</script>
+
+<table class="breakdown">
+	<tr>
+		<th>Node id</th>
+		<th>Capacity (BTC)</th>
+	</tr>
+	{{ range query "sort_desc(job_lightningd:channel_capacities_abnormal_btc:sum)" }}
+	<tr>
+		<td>
+			<code><a href="?node_id={{ .Labels.node_id }}">{{ .Labels.node_id }}</a></code>
+		</td>
+		<td>
+			{{ .Value }}
+		</td>
+	</tr>
+{{ end }}
+</table>
 <h3>Balance of our inbound normal channels</h3>
 
 <div id="channelToUsBalanceGraph"></div>
