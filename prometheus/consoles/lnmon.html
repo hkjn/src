@@ -1,16 +1,16 @@
 {{ template "head" . }}
 
 <style>
-table td, table th {
+table.breakdown td, table.breakdown th {
 	border: 1px solid #ddd;
 	padding: 8px;
 }
 
-table tr:nth-child(even) {
+table.breakdown tr:nth-child(even) {
 	background-color: #eee;
 }
 
-table th {
+table.breakdown th {
 	padding-top: 12px;
 	padding-bottom: 12px;
 	text-align: left;
@@ -39,7 +39,7 @@ table th {
 <h2>Channels</h2>
 
 <p>Number of channels in each state:</p>
-<table>
+<table class="breakdown">
 	<tr>
 		<th>State</th>
 		<th>Number</th>
@@ -80,7 +80,8 @@ new PromConsole.Graph({
     min: 0.0
 });
 </script>
-<table>
+
+<table class="breakdown">
 	<tr>
 		<th>Node id</th>
 		<th>Capacity (BTC)</th>
@@ -115,7 +116,7 @@ new PromConsole.Graph({
 });
 </script>
 
-<table>
+<table class="breakdown">
 	<tr>
 		<th>Balance</th>
 		<th>Node id</th>
@@ -150,7 +151,7 @@ new PromConsole.Graph({
 });
 </script>
 
-<table>
+<table class="breakdown">
 	<tr>
 		<th>Balance</th>
 		<th>Node id</th>
