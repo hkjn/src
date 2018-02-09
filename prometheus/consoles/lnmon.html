@@ -88,9 +88,9 @@ new PromConsole.Graph({
 new PromConsole.Graph({
     node: document.querySelector("#channelCapacityGraph"),
     {{ with .Params.node_id }}
-    expr: 'sum(lightningd_channel_capacities_msatoshi){node_id="{{ . }}",status="CHANNELD_NORMAL"}',
+    expr: 'sum(lightningd_channel_capacities_msatoshi{node_id="{{ . }}",status="CHANNELD_NORMAL"})',
     {{ else }}
-    expr: 'sum(lightningd_channel_capacities_msatoshi){status="CHANNELD_NORMAL"}',
+    expr: 'sum(lightningd_channel_capacities_msatoshi{status="CHANNELD_NORMAL"})',
     {{ end }}
     colorScheme: "spectrum14",
     name: "[[ node_id ]]",
@@ -125,9 +125,9 @@ new PromConsole.Graph({
 new PromConsole.Graph({
     node: document.querySelector("#channelCapacityAbnormalGraph"),
     {{ with .Params.node_id }}
-    expr: 'sum(lightningd_channel_capacities_msatoshi){node_id="{{ . }}",status!="CHANNELD_NORMAL"}',
+    expr: 'sum(lightningd_channel_capacities_msatoshi{node_id="{{ . }}",status!="CHANNELD_NORMAL"})',
     {{ else }}
-    expr: 'sum(lightningd_channel_capacities_msatoshi){status!="CHANNELD_NORMAL"}',
+    expr: 'sum(lightningd_channel_capacities_msatoshi{status!="CHANNELD_NORMAL"})',
     {{ end }}
     colorScheme: "spectrum14",
     name: "[[ node_id ]]",
