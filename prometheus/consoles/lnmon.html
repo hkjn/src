@@ -142,7 +142,7 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#fundsGraph"),
-    expr: 'job_lightningd_total_funds_btc',
+    expr: 'lightningd_total_funds/100000000',
     renderer: "area",
     yUnits: "BTC",
     yTitle: "Funds",
