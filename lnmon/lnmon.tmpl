@@ -52,5 +52,25 @@
 	{{ else }}
 	<p><code>lightningd</code> is <strong>not running</strong>.</p>
 	{{- end }}
+
+	<h3>Payments</h3>
+	<table>
+		<tr>
+			<th>Id</th>
+			<th>Amount</th>
+			<th>Destination</th>
+			<th>Timestamp</th>
+			<th>Status</th>
+		</tr>
+	{{ range .Payments -}}
+		<tr>
+			<td>{{ .PaymentId }}</td>
+			<td>{{ .Msatoshi.AsSat }}</td>
+			<td>{{ .Destination }}</td>
+			<td>{{ .Timestamp.Time }}</td>
+			<td>{{ .Status }}</td>
+		</tr>
+	{{- end }}
+	</table>
 </body>
 </html>
