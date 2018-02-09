@@ -236,6 +236,7 @@ new PromConsole.Graph({
 new PromConsole.Graph({
     node: document.querySelector("#virtualMemoryGraph"),
     expr: 'pid_process_virtual_memory_bytes{job="lnmon"}',
+    name: "Virtual memory (bytes)"
     renderer: "area",
     min: 0.0
 });
@@ -247,6 +248,7 @@ new PromConsole.Graph({
 new PromConsole.Graph({
     node: document.querySelector("#residentMemoryGraph"),
     expr: 'pid_process_resident_memory_bytes{job="lnmon"}',
+    name: "Resident memory (bytes)",
     renderer: "area",
     min: 0.0
 });
@@ -258,6 +260,7 @@ new PromConsole.Graph({
 new PromConsole.Graph({
     node: document.querySelector("#cpuUsageRateGraph"),
     expr: 'rate(pid_process_cpu_seconds_total{job="lnmon"}[5m])',
+    name: "CPU usage rate",
     renderer: "area",
     min: 0.0
 });
@@ -269,6 +272,7 @@ new PromConsole.Graph({
 new PromConsole.Graph({
     node: document.querySelector("#openFdsGraph"),
     expr: 'pid_process_open_fds{job="lnmon"}',
+    name: "Number of file descriptors",
     renderer: "area",
     min: 0.0
 });
