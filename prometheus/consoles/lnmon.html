@@ -79,6 +79,7 @@ new PromConsole.Graph({
 new PromConsole.Graph({
     node: document.querySelector("#channelCapacityGraph"),
     expr: 'job_lightningd:channel_capacities_normal_btc:sum{{ with .Params.node_id }}{node_id="{{ . }}"} {{ end }}',
+    name: "[[ node_id ]]",
     renderer: "area",
     yUnits: "BTC",
     yTitle: "Capacity",
