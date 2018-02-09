@@ -11,7 +11,7 @@ ENV BITCOIN_VERSION=${bitcoin_version} \
 
 # Install dependencies.
 RUN pacman -Syyu --noconfirm && \
-    pacman -S --noconfirm git base-devel boost libevent python
+    pacman -S --noconfirm git base-devel boost libevent jq python
 
 
 WORKDIR /usr/local/src/bitcoin/
