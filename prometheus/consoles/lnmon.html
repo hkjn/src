@@ -108,7 +108,7 @@ new PromConsole.Graph({
 		<th>Node id</th>
 		<th>Capacity (BTC)</th>
 	</tr>
-	{{ range query 'job_lightningd:channel_capacities_normal_btc:sum{{ with .Params.node_id }}{node_id="{{ . }}"} {{ end }}' }}
+	{{ range query 'job_lightningd:channel_capacities_normal_btc:sum' }}
 	<tr>
 		<td>
 			<code>{{ .Labels.node_id }}</code>
