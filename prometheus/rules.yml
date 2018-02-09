@@ -22,3 +22,5 @@ groups:
       expr: sum(lightningd_channel_capacities_msatoshi{state="CHANNELD_NORMAL"}) by (node_id)/100000000000
     - record: job_lightningd:aliases:sum
       expr: sum(lightningd_aliases) by (node_id, alias)
+    - record: job_lightningd:total_funds_btc
+      expr: sum(lightningd_total_funds)/100000000
