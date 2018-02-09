@@ -141,12 +141,16 @@ new PromConsole.Graph({
 <table class="breakdown">
 	<tr>
 		<th>Node id</th>
+		<th>State</th>
 		<th>Capacity (BTC)</th>
 	</tr>
 	{{ range query "sort_desc(lightningd_channel_capacities_msatoshi{state!='CHANNELD_NORMAL'})/100000000000" }}
 	<tr>
 		<td>
 			<code><a href="?node_id={{ .Labels.node_id }}">{{ .Labels.node_id }}</a></code>
+		</td>
+		<td>
+			{{ .Labels.state }}
 		</td>
 		<td>
 			{{ .Value }}
