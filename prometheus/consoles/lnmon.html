@@ -5,6 +5,16 @@ table td, table th {
 	border: 1px solid #ddd;
 	padding: 8px;
 }
+
+table tr:nth-child(even) {
+	background-color: #ddd;
+}
+
+table th {
+	padding-top: 12px;
+	padding-bottom: 12px;
+	text-align: left;
+}
 </style>
 
 {{ template "prom_right_table_head" }}
