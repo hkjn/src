@@ -157,7 +157,7 @@ new PromConsole.Graph({
 		<th>Node id</th>
 		<th>Inbound balance (BTC)</th>
 	</tr>
-	{{ range query 'job_lightningd:channel_balances_normal_btc:sum{direction="to_us"}' }}
+	{{ range query "job_lightningd:channel_balances_normal_to_us_btc:sum" }}
 	<tr>
 		<td>
 			<code><a href="?node_id={{ .Labels.node_id }}">{{ .Labels.node_id }}</a></code>
@@ -192,7 +192,7 @@ new PromConsole.Graph({
 		<th>Node id</th>
 		<th>Outbound balance (BTC)</th>
 	</tr>
-	{{ range query 'job_lightningd:channel_balances_normal_btc:sum{direction="to_them"}' }}
+	{{ range query "job_lightningd:channel_balances_normal_to_them_btc:sum" }}
 	<tr>
 		<td>
 			<code><a href="?node_id={{ .Labels.node_id }}">{{ .Labels.node_id }}</a></code>
