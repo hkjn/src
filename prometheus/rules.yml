@@ -24,3 +24,7 @@ groups:
       expr: sum(lightningd_aliases) by (node_id, alias)
     - record: job_lightningd:total_funds_btc
       expr: sum(lightningd_total_funds)/100000000
+    - record: job_lightningd:num_channels:sum
+      expr: sum(lightningd_num_channels)
+    - record: job_lightningd:num_nodes:sum
+      expr: sum(lightningd_num_nodes)
