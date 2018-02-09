@@ -1,5 +1,12 @@
 {{ template "head" . }}
 
+<style>
+table td, table th {
+	border: 1px solid #ddd;
+	padding: 8px;
+}
+</style>
+
 {{ template "prom_right_table_head" }}
 {{ template "prom_right_table_tail" }}
 {{ template "prom_content_head" . }}
@@ -88,8 +95,6 @@ new PromConsole.Graph({
 </script>
 
 <h3>Capacity of our channels</h3>
-
-job_lightningd:channel_capacities_normal_btc:sum
 
 <div id="channelCapacityGraph"></div>
 <script>
