@@ -2,13 +2,19 @@
 <body>
 	<h1>Hello!</h1>
 
-	<p>This is an experiment with Lightning Network running at <code>ln.hkjn.me</code> by <a href="https://hkjn.me">hkjn</a>.</p>
+	<p>This is an experiment with Lightning Network running
+	at <code>ln.hkjn.me</code> by
+	<a href="https://hkjn.me">hkjn</a>.</p>
 
-	<p>This web server exists mainly to serve the <a href="/metrics">/metrics</a> endpoint for Prometheus to collect data
-	for queries and graphs for Lightning Network metrics.</p>
+	<p>This web server is version
+	<code>{{ .MonVersion}}</code> and exists mainly to serve
+	the<a href="/metrics">/metrics</a> endpoint for Prometheus
+	to collect data for queries and graphs for Lightning
+	Network metrics.</p>
 
-	<p>You may also be interested in the <a href="https://ln.hkjn.me/">Prometheus dashboard</a> scraping data
-	from this tool.</p>
+	<p>You may also be interested in the
+	<a href="https://ln.hkjn.me/">Prometheus dashboard</a>
+	scraping data from this tool.</p>
 
 	<h2><code>lightningd</code> info</h2>
 	{{ if .IsRunning -}}
@@ -43,8 +49,8 @@
 			<td>{{ .Alias }}</td>
 			<td>{{ .LastTimestamp.Since }}</td>
 			<td><code>{{ .Channels.State }}</code></td>
-			<td>{{ if .Channels }} {{ .Channels.MilliSatoshiToUs.AsBTC }} {{ end }}</td>
-			<td>{{ if .Channels }} {{ .Channels.MilliSatoshiToThem.AsBTC }} {{ end }}</td>
+			<td>{{ if .Channels }} {{ .Channels.MilliSatoshiToUs.String }} {{ end }}</td>
+			<td>{{ if .Channels }} {{ .Channels.MilliSatoshiToThem.String }} {{ end }}</td>
 		</tr>
 		{{- end }}
 	</table>
@@ -65,7 +71,7 @@
 	{{ range .Payments -}}
 		<tr>
 			<td>{{ .PaymentId }}</td>
-			<td>{{ .Msatoshi.AsSat }}</td>
+			<td>{{ .Msatoshi.String }}</td>
 			<td>{{ .Destination }}</td>
 			<td>{{ .Timestamp.Time }}</td>
 			<td>{{ .Status }}</td>

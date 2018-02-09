@@ -130,16 +130,18 @@ type (
 	}
 	// allNodes is a map from node id to that node.
 	allNodes map[nodeId]node
-	// lightningState describes the last known state of the lightningd daemon.
-	lightningdState struct {
-		pid      int
-		args     []string
-		Alias    alias
-		Info     getInfoResponse
-		Nodes    allNodes
-		Channels channelListings
-		Payments payments
-		Outputs  outputs
+	// state describes the last known state.
+	state struct {
+		// MonVersion is the version of lnmon.
+		MonVersion string
+		pid        int
+		args       []string
+		Alias      alias
+		Info       getInfoResponse
+		Nodes      allNodes
+		Channels   channelListings
+		Payments   payments
+		Outputs    outputs
 	}
 	channelStateNum int
 	channelState    string
@@ -171,7 +173,7 @@ var (
 	}
 	lnmonVersion string
 	// TODO: eliminate global variable
-	allState          lightningdState
+	allState          state
 	lightningdRunning = prometheus.NewGauge(prometheus.GaugeOpts{
 		Namespace: counterPrefix,
 		Name:      "running",
@@ -386,17 +388,26 @@ func (cs channels) Less(i, j int) bool {
 	return cs[i].State < cs[j].State
 }
 
+// AsSat returns a description
 func (msat msatoshi) AsSat() string {
 	return fmt.Sprintf("%d sat", int64(msat)/1e3)
 }
 
-// AsBTC returns a string formatting the msatoshi amount as BTC.
-func (msat msatoshi) AsBTC() string {
-	return fmt.Sprintf("%.5f BTC", float64(int64(msat))/1.0e11)
+// String returns a string formatting the msatoshi amount as BTC, mBTC or sat as appropriate.
+func (msat msatoshi) String() string {
+	sat := float64(int64(msat)) / 1.0e3
+	if sat < 1.0e3 {
+		return fmt.Sprintf("%.0f sat", sat)
+	}
+	btc := sat / 1.0e8
+	if btc < 0.001 {
+		return fmt.Sprintf("%.4f mBTC", btc*1000.0)
+	}
+	return fmt.Sprintf("%.5f BTC", btc)
 }
 
 // updateNodes updates the nodes with new node information.
-func (s lightningdState) updateNodes(newNodes nodes) {
+func (s state) updateNodes(newNodes nodes) {
 	for _, nn := range newNodes {
 		on, exists := s.Nodes[nn.NodeId]
 		if !exists {
@@ -609,15 +620,8 @@ func (c channel) String() string {
 	return fmt.Sprintf("channel{%s}", strings.Join(parts, ", "))
 }
 
-func (s lightningdState) String() string {
-	if s.pid == 0 {
-		return "lightningdState{not running}"
-	} else {
-		return fmt.Sprintf("lightningdState{pid: %d, args: %q}", s.pid, strings.Join(s.args, " "))
-	}
-}
-
-func (s lightningdState) IsRunning() bool {
+// IsRunning returns true if lightningd is running.
+func (s state) IsRunning() bool {
 	return s.pid != 0
 }
 
@@ -767,8 +771,8 @@ func (c cli) ListPeers() (*nodes, error) {
 	return &result, nil
 }
 
-// getLightningState returns the current lightningd state.
-func getLightningdState() (*lightningdState, error) {
+// getState returns the current state.
+func getState() (*state, error) {
 	ps, err := execCmd("pgrep", "-a", "lightningd")
 	if err != nil {
 		return nil, err
@@ -783,10 +787,11 @@ func getLightningdState() (*lightningdState, error) {
 		return nil, err
 	}
 
-	s := lightningdState{
-		pid:   pid,
-		args:  []string{},
-		Nodes: allNodes{},
+	s := state{
+		pid:        pid,
+		args:       []string{},
+		Nodes:      allNodes{},
+		MonVersion: lnmonVersion,
 	}
 	for _, arg := range parts[1:] {
 		s.args = append(s.args, arg)
@@ -800,7 +805,7 @@ func getLightningdState() (*lightningdState, error) {
 	log.Printf("lightningd getinfo response: %+v\n", info)
 	infoCounter.With(
 		prometheus.Labels{
-			"lnmon_version":      lnmonVersion,
+			"lnmon_version":      s.MonVersion,
 			"lightningd_version": s.Info.Version,
 		},
 	).Set(1.0)
@@ -898,11 +903,11 @@ func refresh() {
 	registeredLn := false
 	for {
 		// TODO: need to persist lnState.Nodes if we want to persist info we find between polls.
-		lnState, err := getLightningdState()
+		s, err := getState()
 		if err != nil {
-			log.Printf("Failed to get lightningd state: %v\n", err)
+			log.Printf("Failed to get state: %v\n", err)
 		} else {
-			allState = *lnState
+			allState = *s
 		}
 		if allState.IsRunning() {
 			if !registeredLn {
