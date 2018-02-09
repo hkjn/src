@@ -172,7 +172,7 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#fundsGraph"),
-    expr: 'lightningd_total_funds/100000000',
+    expr: 'job_lightningd:total_funds_btc',
     renderer: "area",
     yUnits: "BTC",
     yTitle: "Funds",
@@ -185,7 +185,7 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#numChannelsGraph"),
-    expr: "lightningd_num_channels",
+    expr: "job_lightningd:num_channels:sum",
     renderer: "area",
     min: 0.0,
     yTitle: "Number of channels"
@@ -210,7 +210,7 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#numNodesGraph"),
-    expr: "lightningd_num_nodes",
+    expr: "job_lightningd:num_nodes:sum",
     renderer: "area",
     min: 0.0
 });
