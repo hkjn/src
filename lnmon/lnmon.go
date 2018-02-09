@@ -171,6 +171,14 @@ var (
 		Name:      "running",
 		Help:      "Whether lightningd process is running (1) or not (0).",
 	})
+	aliases = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: counterPrefix,
+			Name:      "aliases",
+			Help:      "Alias for each node id.",
+		},
+		[]string{"node_id", "alias"},
+	)
 	availableFunds = prometheus.NewGauge(
 		prometheus.GaugeOpts{
 			Namespace: counterPrefix,
@@ -626,7 +634,7 @@ func newCli() *cli {
 	for _, call := range cliCalls {
 		c := prometheus.NewCounter(
 			prometheus.CounterOpts{
-				Namespace: "lightningd",
+				Namespace: counterPrefix,
 				Name:      call + "calls_total",
 				Help:      fmt.Sprintf("Number of calls to %q CLI.", call),
 			},
@@ -835,6 +843,14 @@ func getLightningdState() (*lightningdState, error) {
 	// log.Printf("lightningd listnodes response: %+v\n", nodes)
 
 	for _, n := range s.Nodes {
+		aliases.With(
+			// TODO: This lightningd_aliases gauge setup not only won't scale very far, but also currently
+			// doesn't remove old values if a node changes alias, leading to several results when querying.
+			prometheus.Labels{
+				"node_id": string(n.NodeId),
+				"alias":   string(n.Alias),
+			}).Set(float64(n.LastTimestamp))
+
 		if n.isPeer && len(n.Channels) >= 1 {
 			if n.Channels.MilliSatoshiTotal() > 0 {
 				channelCapacities.With(
@@ -941,6 +957,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	// Metrics have to be registered to be exposed:
 	prometheus.MustRegister(lightningdRunning)
+	prometheus.MustRegister(aliases)
 	prometheus.MustRegister(availableFunds)
 	prometheus.MustRegister(channelCapacities)
 	prometheus.MustRegister(numChannels)
