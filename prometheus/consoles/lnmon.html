@@ -28,17 +28,23 @@ table.breakdown th {
 
 <h1>lnmon</h1>
 
+<p>Welcome to a monitoring tool developed by <a href="https://hkjn.me">hkjn</a>.</p>
+
+<p>This dashboard shows information about the state of a Lightning Network node, which should
+make it easier to monitor its state and learn about the technology.</p>
+
 {{ with .Params.node_id }}
-<p>Viewing node
+<h2>Viewing only node
 {{ with printf "job_lightningd:aliases:sum{node_id='%s'}" . | query }}
 	{{ range . }}
 	<code>{{ .Labels.alias }}</code>
 	{{ end }}
 {{ end }}
 : <code>{{ . }}</code>.
-</p>
+</h2>
 
-<p>Clear view <a href="?">here</a>.</p>
+<p>View all nodes <a href="?">here</a>.</p>
+
 {{ end }}
 
 <h2>Channels</h2>
