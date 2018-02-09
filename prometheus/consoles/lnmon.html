@@ -236,7 +236,7 @@ new PromConsole.Graph({
 new PromConsole.Graph({
     node: document.querySelector("#virtualMemoryGraph"),
     expr: 'pid_process_virtual_memory_bytes{job="lnmon"}',
-    name: "Virtual memory (bytes)"
+    name: "Virtual memory (bytes)",
     renderer: "area",
     min: 0.0
 });
