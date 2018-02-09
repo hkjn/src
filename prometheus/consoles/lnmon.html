@@ -106,7 +106,7 @@ new PromConsole.Graph({
 		<th>Node id</th>
 		<th>Capacity (BTC)</th>
 	</tr>
-	{{ range query "sort_desc(sum(lightningd_channel_capacities_msatoshi){status='CHANNELD_NORMAL'})" }}
+	{{ range query "sort_desc(sum(lightningd_channel_capacities_msatoshi{status='CHANNELD_NORMAL'}))" }}
 	<tr>
 		<td>
 			<code><a href="?node_id={{ .Labels.node_id }}">{{ .Labels.node_id }}</a></code>
@@ -143,7 +143,7 @@ new PromConsole.Graph({
 		<th>Node id</th>
 		<th>Capacity (BTC)</th>
 	</tr>
-	{{ range query "sort_desc(sum(lightningd_channel_capacities_msatoshi){status!='CHANNELD_NORMAL'})" }}
+	{{ range query "sort_desc(sum(lightningd_channel_capacities_msatoshi{status!='CHANNELD_NORMAL'}))" }}
 	<tr>
 		<td>
 			<code><a href="?node_id={{ .Labels.node_id }}">{{ .Labels.node_id }}</a></code>
