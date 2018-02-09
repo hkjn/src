@@ -1,24 +1,5 @@
 {{ template "head" . }}
 
-<style>
-table.breakdown td, table.breakdown th {
-	border: 1px solid #ddd;
-	padding: 8px;
-}
-
-table.breakdown tr:nth-child(even) {
-	background-color: #eee;
-}
-
-table.breakdown th {
-	padding-top: 12px;
-	padding-bottom: 12px;
-	text-align: left;
-}
-</style>
-
-{{ template "prom_right_table_head" }}
-{{ template "prom_right_table_tail" }}
 {{ template "prom_content_head" . }}
 
 <h1>lnmon</h1>
@@ -39,7 +20,8 @@ table.breakdown th {
 <h2>Channels</h2>
 
 <p>Number of channels in each state:</p>
-<table class="breakdown">
+
+{{template "prom_right_table_head"}}
 	<tr>
 		<th>State</th>
 		<th>Number</th>
@@ -54,7 +36,7 @@ table.breakdown th {
 		</td>
 	</tr>
 {{ end }}
-</table>
+{{template "prom_right_table_tail"}}
 
 <h3>Total number of channels by state</h3>
 <div id="ourChannelsGraph"></div>
@@ -81,7 +63,7 @@ new PromConsole.Graph({
 });
 </script>
 
-<table class="breakdown">
+{{template "prom_right_table_head"}}
 	<tr>
 		<th>Node id</th>
 		<th>Capacity (BTC)</th>
@@ -96,7 +78,7 @@ new PromConsole.Graph({
 		</td>
 	</tr>
 {{ end }}
-</table>
+{{template "prom_right_table_tail"}}
 
 <h3>Balance of our inbound normal channels</h3>
 
@@ -116,7 +98,7 @@ new PromConsole.Graph({
 });
 </script>
 
-<table class="breakdown">
+{{template "prom_right_table_head"}}
 	<tr>
 		<th>Balance</th>
 		<th>Node id</th>
@@ -131,7 +113,7 @@ new PromConsole.Graph({
 		</td>
 	</tr>
 {{ end }}
-</table>
+{{template "prom_right_table_tail"}}
 
 <h3>Balance of our outbound normal channels</h3>
 
@@ -151,7 +133,7 @@ new PromConsole.Graph({
 });
 </script>
 
-<table class="breakdown">
+{{template "prom_right_table_head"}}
 	<tr>
 		<th>Balance</th>
 		<th>Node id</th>
@@ -166,7 +148,7 @@ new PromConsole.Graph({
 		</td>
 	</tr>
 	{{ end }}
-</table>
+{{template "prom_right_table_tail"}}
 
 <h3>Funds available to open channels</h3>
 <div id="fundsGraph"></div>
