@@ -6,15 +6,20 @@
 
 <h1>lnmon</h1>
 
+{{ $alias := "unset" }
+
 {{ with .Params.node_id }}
 <p>Viewing node
 {{ with printf "job_lightningd:aliases:sum{node_id='%s'}" . | query }}
 	{{ range . }}
 	<code>{{ .Labels.alias }}</code>
+	{{ $alias = .Labels.alias }}
 	{{ end }}
 {{ end }}
 : <code>{{ . }}</code>.
 </p>
+
+<p>Alias is {{ alias }}</p>
 
 <p>Clear view <a href="?">here</a>.</p>
 {{ end }}
@@ -39,7 +44,8 @@
 {{ end }}
 </table>
 
-<p>Balance of our outbound channels in state <code>CHANNELD_NORMAL</code>:</p>
+<h3>Balance of our outbound normal channels</h3>
+
 <table>
 	<tr>
 		<th>Balance</th>
@@ -57,7 +63,7 @@
 	{{ end }}
 </table>
 
-<p>Balance of our inbound channels in state <code>CHANNELD_NORMAL</code>:</p>
+<h3>Balance of our inbound normal channels</h3>
 <table>
 	<tr>
 		<th>Balance</th>
