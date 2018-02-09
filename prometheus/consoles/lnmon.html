@@ -67,6 +67,7 @@ table.breakdown th {
 new PromConsole.Graph({
     node: document.querySelector("#ourChannelsGraph"),
     expr: 'lightningd_our_channels',
+    colorScheme: "spectrum14",
     renderer: "area",
     min: 0.0
 });
@@ -79,6 +80,7 @@ new PromConsole.Graph({
 new PromConsole.Graph({
     node: document.querySelector("#channelCapacityGraph"),
     expr: 'job_lightningd:channel_capacities_normal_btc:sum{{ with .Params.node_id }}{node_id="{{ . }}"} {{ end }}',
+    colorScheme: "spectrum14",
     name: "[[ node_id ]]",
     renderer: "area",
     yUnits: "BTC",
@@ -115,6 +117,7 @@ new PromConsole.Graph({
     {{ else}}
     expr: 'job_lightningd:channel_balances_normal_btc:sum{direction="to_us"}',
     {{ end }}
+    colorScheme: "spectrum14",
     name: "[[ node_id ]]",
     renderer: "area",
     yUnits: "BTC",
@@ -151,6 +154,7 @@ new PromConsole.Graph({
     {{ else}}
     expr: 'job_lightningd:channel_balances_normal_btc:sum{direction="to_them"}',
     {{ end }}
+    colorScheme: "spectrum14",
     name: "[[ node_id ]]",
     renderer: "area",
     yUnits: "BTC",
@@ -182,6 +186,7 @@ new PromConsole.Graph({
 new PromConsole.Graph({
     node: document.querySelector("#fundsGraph"),
     expr: 'job_lightningd:total_funds_btc',
+    colorScheme: "spectrum14",
     name: "Funds",
     renderer: "area",
     yUnits: "BTC",
@@ -196,6 +201,7 @@ new PromConsole.Graph({
 new PromConsole.Graph({
     node: document.querySelector("#numChannelsGraph"),
     expr: "job_lightningd:num_channels:sum",
+    colorScheme: "spectrum14",
     name: "Number of channels",
     renderer: "area",
     min: 0.0,
@@ -210,6 +216,7 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#numPeersGraph"),
+    colorScheme: "spectrum14",
     expr: "lightningd_num_peers",
     renderer: "area",
     min: 0.0
@@ -221,6 +228,7 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#numNodesGraph"),
+    colorScheme: "spectrum14",
     expr: "job_lightningd:num_nodes:sum",
     name: "Number of total nodes",
     renderer: "area",
@@ -235,6 +243,7 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#virtualMemoryGraph"),
+    colorScheme: "spectrum14",
     expr: 'pid_process_virtual_memory_bytes{job="lnmon"}',
     name: "Virtual memory (bytes)",
     renderer: "area",
@@ -247,6 +256,7 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#residentMemoryGraph"),
+    colorScheme: "spectrum14",
     expr: 'pid_process_resident_memory_bytes{job="lnmon"}',
     name: "Resident memory (bytes)",
     renderer: "area",
@@ -271,6 +281,7 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#openFdsGraph"),
+    colorScheme: "spectrum14",
     expr: 'pid_process_open_fds{job="lnmon"}',
     name: "Number of file descriptors",
     renderer: "area",
