@@ -270,6 +270,7 @@ new PromConsole.Graph({
 new PromConsole.Graph({
     node: document.querySelector("#cpuUsageRateGraph"),
     expr: 'rate(pid_process_cpu_seconds_total{job="lnmon"}[5m])',
+    colorScheme: "spectrum14",
     name: "CPU usage rate",
     renderer: "area",
     min: 0.0
