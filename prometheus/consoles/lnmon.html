@@ -7,7 +7,7 @@ table td, table th {
 }
 
 table tr:nth-child(even) {
-	background-color: #ddd;
+	background-color: #eee;
 }
 
 table th {
@@ -118,7 +118,6 @@ new PromConsole.Graph({
 });
 </script>
 <table>
-
 	<tr>
 		<th>Node id</th>
 		<th>Capacity (BTC)</th>
@@ -126,7 +125,7 @@ new PromConsole.Graph({
 	{{ range query "job_lightningd:channel_capacities_normal_btc:sum" }}
 	<tr>
 		<td>
-			<code>{{ .Labels.node_id }}</code>
+			<code><a href="?node_id={{ .Labels.node_id }}">{{ .Labels.node_id }}</a></code>
 		</td>
 		<td>
 			{{ .Value }}
@@ -153,6 +152,23 @@ new PromConsole.Graph({
 });
 </script>
 
+<table>
+	<tr>
+		<th>Node id</th>
+		<th>Inbound balance (BTC)</th>
+	</tr>
+	{{ range query 'job_lightningd:channel_balances_normal_btc:sum{direction="to_us"}' }}
+	<tr>
+		<td>
+			<code><a href="?node_id={{ .Labels.node_id }}">{{ .Labels.node_id }}</a></code>
+		</td>
+		<td>
+			{{ .Value }}
+		</td>
+	</tr>
+{{ end }}
+</table>
+
 <h3>Balance to them in our channels</h3>
 
 <div id="channelToThemBalanceGraph"></div>
@@ -170,6 +186,23 @@ new PromConsole.Graph({
     min: 0.0
 });
 </script>
+
+<table>
+	<tr>
+		<th>Node id</th>
+		<th>Outbound balance (BTC)</th>
+	</tr>
+	{{ range query 'job_lightningd:channel_balances_normal_btc:sum{direction="to_them"}' }}
+	<tr>
+		<td>
+			<code><a href="?node_id={{ .Labels.node_id }}">{{ .Labels.node_id }}</a></code>
+		</td>
+		<td>
+			{{ .Value }}
+		</td>
+	</tr>
+{{ end }}
+</table>
 
 <h3>Funds available to open channels</h3>
 <div id="fundsGraph"></div>
