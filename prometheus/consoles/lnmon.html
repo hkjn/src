@@ -115,6 +115,7 @@ new PromConsole.Graph({
     {{ else}}
     expr: 'job_lightningd:channel_balances_normal_btc:sum{direction="to_us"}',
     {{ end }}
+    name: "[[ node_id ]]",
     renderer: "area",
     yUnits: "BTC",
     yTitle: "Balance",
@@ -150,6 +151,7 @@ new PromConsole.Graph({
     {{ else}}
     expr: 'job_lightningd:channel_balances_normal_btc:sum{direction="to_them"}',
     {{ end }}
+    name: "[[ node_id ]]",
     renderer: "area",
     yUnits: "BTC",
     yTitle: "Balance",
