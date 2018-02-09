@@ -18,6 +18,10 @@ groups:
       expr: sum(lightningd_channel_capacities_msatoshi) by (node_id, state)
     - record: job_lightningd:channel_balances_normal_btc:sum
       expr: sum(lightningd_channel_balances_msatoshi{state="CHANNELD_NORMAL"}) by (direction, node_id)/100000000000
+    - record: job_lightningd:channel_balances_normal_to_us_btc:sum
+      expr: sum(lightningd_channel_balances_msatoshi{state="CHANNELD_NORMAL",direction="to_us"}) by (node_id)/100000000000
+    - record: job_lightningd:channel_balances_normal_to_them_btc:sum
+      expr: sum(lightningd_channel_balances_msatoshi{state="CHANNELD_NORMAL",direction="to_them"}) by (node_id)/100000000000
     - record: job_lightningd:channel_capacities_normal_btc:sum
       expr: sum(lightningd_channel_capacities_msatoshi{state="CHANNELD_NORMAL"}) by (node_id)/100000000000
     - record: job_lightningd:aliases:sum
