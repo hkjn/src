@@ -1,4 +1,9 @@
 // lnmon.go is a tool for pulling out and serving up data from lightning-cli for monitoring.
+//
+// TODO: We need to clear all gauge metrics after each successful CLI poll, since otherwise (currently)
+// we end up never resetting e.g. channel state gauges from the old state once there's a transition.
+// TODO: If we were to track state between CLI polls, we could detect e.g. channel state transitions,
+// new channels, etc., to create an event stream.
 package main
 
 import (
