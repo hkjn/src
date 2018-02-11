@@ -1,7 +1,5 @@
 // lnmon.go is a tool for pulling out and serving up data from lightning-cli for monitoring.
 //
-// TODO: We need to clear all gauge metrics after each successful CLI poll, since otherwise (currently)
-// we end up never resetting e.g. channel state gauges from the old state once there's a transition.
 // TODO: If we were to track state between CLI polls, we could detect e.g. channel state transitions,
 // new channels, etc., to create an event stream.
 package main
@@ -151,7 +149,8 @@ type (
 	channelStateNum int
 	channelState    string
 	httpHandler     struct {
-		tmpl template.Template
+		tmpl  template.Template
+		state state
 	}
 )
 
@@ -176,9 +175,7 @@ var (
 		OnchaindOurUnilateralState:   "ONCHAIND_OUR_UNILATERAL",
 		ClosingdSigexchangeState:     "CLOSINGD_SIGEXCHANGE",
 	}
-	lnmonVersion string
-	// TODO: eliminate global variable
-	allState          state
+	lnmonVersion      string
 	lightningdRunning = prometheus.NewGauge(prometheus.GaugeOpts{
 		Namespace: counterPrefix,
 		Name:      "running",
@@ -776,28 +773,25 @@ func (c cli) ListPeers() (*nodes, error) {
 	return &result, nil
 }
 
-// getState returns the current state.
-func getState() (*state, error) {
+// update refreshes the state.
+func (s *state) update() error {
+	s.MonVersion = lnmonVersion
+
 	ps, err := execCmd("pgrep", "-a", "lightningd")
 	if err != nil {
-		return nil, err
+		return err
 	}
 	parts := strings.Split(ps, " ")
 	// Note: seems to get >= 1 parts even if pgrep returns non-success.
 	if len(parts) < 1 || len(parts[0]) == 0 {
-		return nil, fmt.Errorf("failed to parse lightningd status: %v", ps)
+		return fmt.Errorf("failed to parse lightningd status: %v", ps)
 	}
 	pid, err := strconv.Atoi(parts[0])
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	s := state{
-		pid:        pid,
-		args:       []string{},
-		Nodes:      allNodes{},
-		MonVersion: lnmonVersion,
-	}
+	s.pid = pid
 	for _, arg := range parts[1:] {
 		s.args = append(s.args, arg)
 	}
@@ -814,7 +808,7 @@ func getState() (*state, error) {
 	c := newCli()
 	info, err := c.GetInfo()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	s.Info = *info
 	log.Printf("lightningd getinfo response: %+v\n", info)
@@ -827,7 +821,7 @@ func getState() (*state, error) {
 
 	channels, err := c.ListChannels()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	s.Channels = *channels
 	numChannels.Set(float64(len(s.Channels)))
@@ -835,7 +829,7 @@ func getState() (*state, error) {
 
 	outputs, err := c.ListFunds()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	s.Outputs = *outputs
 	availableFunds.Set(float64(s.Outputs.Sum()))
@@ -843,7 +837,7 @@ func getState() (*state, error) {
 
 	peerNodes, err := c.ListPeers()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	s.updateNodes(*peerNodes)
 
@@ -857,7 +851,7 @@ func getState() (*state, error) {
 	// log.Printf("lightningd listpeers response: %+v\n", peers)
 	nodes, err := c.ListNodes()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	s.updateNodes(*nodes)
 	numNodes.Set(float64(len(s.Nodes)))
@@ -899,7 +893,7 @@ func getState() (*state, error) {
 
 	payments, err := c.ListPayments()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	s.Payments = *payments
 
@@ -908,31 +902,27 @@ func getState() (*state, error) {
 		s.Alias = n.Alias
 		log.Printf("Found that our own alias is %q.\n", s.Alias)
 	}
-	return &s, nil
+	return nil
 }
 
-func refresh() {
+func refresh(s *state) {
 	// TODO: Maybe don't assume that lightningd always is in "pid" namespace..
 	namespace := "pid"
 	registeredLn := false
 	for {
-		// TODO: need to persist lnState.Nodes if we want to persist info we find between polls.
-		s, err := getState()
-		if err != nil {
+		if err := s.update(); err != nil {
 			// TODO: increment counter here, so we can alert on possible lightningd crashes.
 			log.Printf("Failed to get state: %v\n", err)
-			allState = state{}
-		} else {
-			allState = *s
+			s = &state{}
 		}
-		if allState.IsRunning() {
+		if s.IsRunning() {
 			if !registeredLn {
 				// TODO: Need to handle case where we registered collector to pid #1, then
 				// lightningd crashed and restarted with pid #2.
-				lc := prometheus.NewProcessCollector(allState.pid, namespace)
+				lc := prometheus.NewProcessCollector(s.pid, namespace)
 				prometheus.MustRegister(lc)
 				registeredLn = true
-				log.Printf("Registered ProcessCollector for lightningd pid %d in namespace %s\n", allState.pid, namespace)
+				log.Printf("Registered ProcessCollector for lightningd pid %d in namespace %s\n", s.pid, namespace)
 			}
 			lightningdRunning.Set(1)
 		} else {
@@ -945,8 +935,8 @@ func refresh() {
 	}
 }
 
-// newHttpHandler returns a new http handler.
-func newHttpHandler() (*httpHandler, error) {
+// newHTTPHandler returns a new http handler.
+func newHTTPHandler() (*httpHandler, error) {
 	s, err := getFile("lnmon.tmpl")
 	if err != nil {
 		return nil, err
@@ -955,7 +945,12 @@ func newHttpHandler() (*httpHandler, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &httpHandler{tmpl: *tmpl}, nil
+	return &httpHandler{
+		tmpl: *tmpl,
+		state: state{
+			Nodes: allNodes{},
+		},
+	}, nil
 }
 
 // ServeHTTP the index page.
@@ -974,7 +969,7 @@ func (h httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.tmpl.Execute(w, allState); err != nil {
+	if err := h.tmpl.Execute(w, h.state); err != nil {
 		http.Error(w, "Well, that's embarrassing. Please try again later.", http.StatusInternalServerError)
 		log.Printf("Failed to execute template: %v\n", err)
 		return
@@ -997,12 +992,12 @@ func main() {
 	prometheus.MustRegister(infoCounter)
 	http.Handle("/metrics", promhttp.Handler())
 
-	go refresh()
-
-	h, err := newHttpHandler()
+	h, err := newHTTPHandler()
 	if err != nil {
 		log.Fatalf("Failed to create http handler: %v\n", err)
 	}
+	go refresh(&h.state)
+
 	http.Handle("/", h)
 
 	if addr == "" {
