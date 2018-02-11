@@ -165,12 +165,12 @@ new PromConsole.Graph({
 new PromConsole.Graph({
     node: document.querySelector("#channelToUsBalanceGraph"),
     {{ with .Params.node_id }}
-    expr: 'sum(lightningd_channel_balances_msatoshi{direction="to_us",node_id="{{ . }}"}) by (direction, node_id)/100000000000',
+    expr: 'sum(lightningd_channel_balances_msatoshi{direction="to_us",node_id="{{ . }}"}) by (state, direction, node_id)/100000000000',
     {{ else}}
-    expr: 'sum(lightningd_channel_balances_msatoshi{direction="to_us"}) by (direction, node_id)/100000000000',
+    expr: 'sum(lightningd_channel_balances_msatoshi{direction="to_us"}) by (state, direction, node_id)/100000000000',
     {{ end }}
     colorScheme: "spectrum14",
-    name: "[[ node_id ]]",
+    name: "[[ state ]]: [[ node_id ]]",
     renderer: "area",
     yUnits: "BTC",
     yTitle: "Balance",
@@ -180,16 +180,20 @@ new PromConsole.Graph({
 
 <table class="breakdown">
 	<tr>
-		<th>Balance</th>
 		<th>Node id</th>
+		<th>State</th>
+		<th>Balance (BTC)</th>
 	</tr>
-	{{ range query "sort_desc(sum(lightningd_channel_balances_msatoshi{direction='to_us'}) by (direction, node_id)/100000000000)" }}
+	{{ range query "sort_desc(sum(lightningd_channel_balances_msatoshi{direction='to_us'}) by (state, direction, node_id)/100000000000)" }}
 	<tr>
 		<td>
-			{{ .Value }} BTC
+			<code><a href="?node_id={{ .Labels.node_id }}">{{ .Labels.node_id }}</a></code>
 		</td>
 		<td>
-			<code><a href="?node_id={{ .Labels.node_id }}">{{ .Labels.node_id }}</a></code>
+			{{ .Labels.state }}
+		</td>
+		<td>
+			{{ .Value }}
 		</td>
 	</tr>
 {{ end }}
@@ -202,12 +206,12 @@ new PromConsole.Graph({
 new PromConsole.Graph({
     node: document.querySelector("#channelToThemBalanceGraph"),
     {{ with .Params.node_id }}
-    expr: 'sum(lightningd_channel_balances_msatoshi{direction="to_them",node_id="{{ . }}"}) by (direction, node_id)/100000000000',
+    expr: 'sum(lightningd_channel_balances_msatoshi{direction="to_them",node_id="{{ . }}"}) by (state, direction, node_id)/100000000000',
     {{ else}}
-    expr: 'sum(lightningd_channel_balances_msatoshi{direction="to_them"}) by (direction, node_id)/100000000000',
+    expr: 'sum(lightningd_channel_balances_msatoshi{direction="to_them"}) by (state, direction, node_id)/100000000000',
     {{ end }}
     colorScheme: "spectrum14",
-    name: "[[ node_id ]]",
+    name: "[[ state ]]: [[ node_id ]]",
     renderer: "area",
     yUnits: "BTC",
     yTitle: "Balance",
@@ -217,16 +221,20 @@ new PromConsole.Graph({
 
 <table class="breakdown">
 	<tr>
-		<th>Balance</th>
 		<th>Node id</th>
+		<th>State</th>
+		<th>Balance (BTC)</th>
 	</tr>
-	{{ range query "sort_desc(sum(lightningd_channel_balances_msatoshi{direction='to_them'}) by (direction, node_id)/100000000000)" }}
+	{{ range query "sort_desc(sum(lightningd_channel_balances_msatoshi{direction='to_them'}) by (state, direction, node_id)/100000000000)" }}
 	<tr>
 		<td>
-			{{ .Value }} BTC
+			<code><a href="?node_id={{ .Labels.node_id }}">{{ .Labels.node_id }}</a></code>
 		</td>
 		<td>
-			<code><a href="?node_id={{ .Labels.node_id }}">{{ .Labels.node_id }}</a></code>
+			{{ .Labels.state }}
+		</td>
+		<td>
+			{{ .Value }}
 		</td>
 	</tr>
 	{{ end }}
