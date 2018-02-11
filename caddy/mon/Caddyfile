@@ -1,5 +1,9 @@
 mon.hkjn.me
 push
+redir 302 {
+  if {path} is /
+  / /ln/consoles/index.html
+}
 log    /var/log/access.log
 proxy  /dash 127.0.0.1:8080
 proxy  /ln   127.0.0.1:9090

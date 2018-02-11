@@ -16,7 +16,7 @@ build-docker: gen-tmpl
 
 build-bin: gen-tmpl
 	@echo "Building lnmon on host.."
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm go build -o lnmon .
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm go build -ldflags="-X main.lnmonVersion=$(shell git log -1 --pretty=format:'%h')" -o lnmon .
 
 gen-tmpl:
 	@echo "Generating bindata.go.."
@@ -24,6 +24,4 @@ gen-tmpl:
 
 deploy: build-bin
 	@echo "Deploying lnmon.next binary.."
-	scp -P 6200 lnmon prod.hkjn.me:/crypt/lightning/lnmon.next
-	@echo "Setting cap_net_bind_service on remote binary.."
-	ssh -p 6200 prod.hkjn.me 'sudo setcap "cap_net_bind_service=+ep" /crypt/lightning/lnmon.next'
+	scp -P 6200 lnmon prod.hkjn.me:/etc/bins/lnmon.next

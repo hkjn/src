@@ -1,4 +1,9 @@
 // lnmon.go is a tool for pulling out and serving up data from lightning-cli for monitoring.
+//
+// TODO: We need to clear all gauge metrics after each successful CLI poll, since otherwise (currently)
+// we end up never resetting e.g. channel state gauges from the old state once there's a transition.
+// TODO: If we were to track state between CLI polls, we could detect e.g. channel state transitions,
+// new channels, etc., to create an event stream.
 package main
 
 import (
@@ -109,12 +114,14 @@ type (
 	outputs []output
 
 	payment struct {
-		PaymentId       string `json:"id"`
-		PaymentHash     string `json:"payment_hash"`
-		Destination     string `json:"destination"`
-		Msatoshi        int64  `json:"msatoshi"`
-		Status          string `json:"status"`
-		PaymentPreimage string `json:"payment_preimage"`
+		PaymentId       int64    `json:"id"`
+		PaymentHash     string   `json:"payment_hash"`
+		Destination     string   `json:"destination"`
+		Msatoshi        msatoshi `json:"msatoshi"`
+		Timestamp       unixTs   `json:"timestamp"`
+		CreatedAt       unixTs   `json:"created_at"`
+		Status          string   `json:"status"`
+		PaymentPreimage string   `json:"payment_preimage"`
 	}
 	payments []payment
 
@@ -128,19 +135,24 @@ type (
 	}
 	// allNodes is a map from node id to that node.
 	allNodes map[nodeId]node
-	// lightningState describes the last known state of the lightningd daemon.
-	lightningdState struct {
-		pid      int
-		args     []string
-		Alias    alias
-		Info     getInfoResponse
-		Nodes    allNodes
-		Channels channelListings
-		Payments payments
-		Outputs  outputs
+	// state describes the last known state.
+	state struct {
+		// MonVersion is the version of lnmon.
+		MonVersion string
+		pid        int
+		args       []string
+		Alias      alias
+		Info       getInfoResponse
+		Nodes      allNodes
+		Channels   channelListings
+		Payments   payments
+		Outputs    outputs
 	}
 	channelStateNum int
 	channelState    string
+	httpHandler     struct {
+		tmpl template.Template
+	}
 )
 
 const (
@@ -164,13 +176,22 @@ var (
 		OnchaindOurUnilateralState:   "ONCHAIND_OUR_UNILATERAL",
 		ClosingdSigexchangeState:     "CLOSINGD_SIGEXCHANGE",
 	}
+	lnmonVersion string
 	// TODO: eliminate global variable
-	allState          lightningdState
+	allState          state
 	lightningdRunning = prometheus.NewGauge(prometheus.GaugeOpts{
 		Namespace: counterPrefix,
 		Name:      "running",
 		Help:      "Whether lightningd process is running (1) or not (0).",
 	})
+	aliases = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: counterPrefix,
+			Name:      "aliases",
+			Help:      "Alias for each node id.",
+		},
+		[]string{"node_id", "alias"},
+	)
 	availableFunds = prometheus.NewGauge(
 		prometheus.GaugeOpts{
 			Namespace: counterPrefix,
@@ -223,6 +244,14 @@ var (
 			Help:      "Balance to us of channels in millisatoshi by name and channel state.",
 		},
 		[]string{"node_id", "state", "direction"},
+	)
+	infoCounter = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: counterPrefix,
+			Name:      "info",
+			Help:      "Info of lightningd and lnmon version.",
+		},
+		[]string{"lnmon_version", "lightningd_version"},
 	)
 	// TODO: Add metrics showing last seen timestamp from listnodes instead of binary connected/unconnected status, which
 	// doesn't form timeseries easily.
@@ -364,21 +393,26 @@ func (cs channels) Less(i, j int) bool {
 	return cs[i].State < cs[j].State
 }
 
-// AsBTC returns a string formatting the msatoshi amount as BTC.
-func (msat msatoshi) AsBTC() string {
-	return fmt.Sprintf("%.5f BTC", float64(int64(msat))/1.0e11)
+// AsSat returns a description
+func (msat msatoshi) AsSat() string {
+	return fmt.Sprintf("%d sat", int64(msat)/1e3)
 }
 
-func (ns allNodes) getAlias(nodeId nodeId) (alias, error) {
-	n, exists := ns[nodeId]
-	if !exists {
-		return "", fmt.Errorf("no such node %q", nodeId)
+// String returns a string formatting the msatoshi amount as BTC, mBTC or sat as appropriate.
+func (msat msatoshi) String() string {
+	sat := float64(int64(msat)) / 1.0e3
+	if sat < 1.0e3 {
+		return fmt.Sprintf("%.0f sat", sat)
 	}
-	return n.Alias, nil
+	btc := sat / 1.0e8
+	if btc < 0.001 {
+		return fmt.Sprintf("%.4f mBTC", btc*1000.0)
+	}
+	return fmt.Sprintf("%.5f BTC", btc)
 }
 
 // updateNodes updates the nodes with new node information.
-func (s lightningdState) updateNodes(newNodes nodes) {
+func (s state) updateNodes(newNodes nodes) {
 	for _, nn := range newNodes {
 		on, exists := s.Nodes[nn.NodeId]
 		if !exists {
@@ -591,15 +625,8 @@ func (c channel) String() string {
 	return fmt.Sprintf("channel{%s}", strings.Join(parts, ", "))
 }
 
-func (s lightningdState) String() string {
-	if s.pid == 0 {
-		return "lightningdState{not running}"
-	} else {
-		return fmt.Sprintf("lightningdState{pid: %d, args: %q}", s.pid, strings.Join(s.args, " "))
-	}
-}
-
-func (s lightningdState) IsRunning() bool {
+// IsRunning returns true if lightningd is running.
+func (s state) IsRunning() bool {
 	return s.pid != 0
 }
 
@@ -634,7 +661,7 @@ func newCli() *cli {
 	for _, call := range cliCalls {
 		c := prometheus.NewCounter(
 			prometheus.CounterOpts{
-				Namespace: "lightningd",
+				Namespace: counterPrefix,
 				Name:      call + "calls_total",
 				Help:      fmt.Sprintf("Number of calls to %q CLI.", call),
 			},
@@ -749,8 +776,8 @@ func (c cli) ListPeers() (*nodes, error) {
 	return &result, nil
 }
 
-// getLightningState returns the current lightningd state.
-func getLightningdState() (*lightningdState, error) {
+// getState returns the current state.
+func getState() (*state, error) {
 	ps, err := execCmd("pgrep", "-a", "lightningd")
 	if err != nil {
 		return nil, err
@@ -765,10 +792,11 @@ func getLightningdState() (*lightningdState, error) {
 		return nil, err
 	}
 
-	s := lightningdState{
-		pid:   pid,
-		args:  []string{},
-		Nodes: allNodes{},
+	s := state{
+		pid:        pid,
+		args:       []string{},
+		Nodes:      allNodes{},
+		MonVersion: lnmonVersion,
 	}
 	for _, arg := range parts[1:] {
 		s.args = append(s.args, arg)
@@ -780,6 +808,12 @@ func getLightningdState() (*lightningdState, error) {
 	}
 	s.Info = *info
 	log.Printf("lightningd getinfo response: %+v\n", info)
+	infoCounter.With(
+		prometheus.Labels{
+			"lnmon_version":      s.MonVersion,
+			"lightningd_version": s.Info.Version,
+		},
+	).Set(1.0)
 
 	channels, err := c.ListChannels()
 	if err != nil {
@@ -796,26 +830,11 @@ func getLightningdState() (*lightningdState, error) {
 	s.Outputs = *outputs
 	availableFunds.Set(float64(s.Outputs.Sum()))
 	log.Printf("Learned of %d %v.\n", len(s.Outputs), s.Outputs)
-	if debugging {
-		log.Printf("Before doing listpeers we know about %d nodes.\n", len(s.Nodes))
-	}
 	peerNodes, err := c.ListPeers()
 	if err != nil {
 		return nil, err
 	}
-	if debugging {
-		fmt.Printf("Doing listpeers we learned about %d peer nodes:\n", len(*peerNodes))
-		for _, p := range *peerNodes {
-			fmt.Printf("  %s\n", p.NodeId)
-		}
-	}
 	s.updateNodes(*peerNodes)
-	if debugging {
-		log.Printf("After updating with listpeers results, we now know of %d nodes:\n", len(s.Nodes))
-		for k, _ := range s.Nodes {
-			fmt.Printf("  %s\n", k)
-		}
-	}
 
 	peers := s.Nodes.Peers() // TODO: could do the below with entire s.Nodes too; methods filter out non-peers where applicable.
 	numPeers.With(prometheus.Labels{"connected": "connected"}).Set(float64(peers.NumConnected()))
@@ -825,24 +844,23 @@ func getLightningdState() (*lightningdState, error) {
 		ourChannels.With(prometheus.Labels{"state": string(state)}).Set(float64(n))
 	}
 	// log.Printf("lightningd listpeers response: %+v\n", peers)
-	if debugging {
-		log.Printf("Before doing listnodes we know about %d nodes.\n", len(s.Nodes))
-	}
 	nodes, err := c.ListNodes()
 	if err != nil {
 		return nil, err
 	}
-	if debugging {
-		log.Printf("Doing listnodes we learned about %d nodes.\n", len(*nodes))
-	}
 	s.updateNodes(*nodes)
-	if debugging {
-		log.Printf("After updating with listnodes results, we now know of %d nodes.\n", len(s.Nodes))
-	}
 	numNodes.Set(float64(len(s.Nodes)))
 	// log.Printf("lightningd listnodes response: %+v\n", nodes)
 
 	for _, n := range s.Nodes {
+		aliases.With(
+			// TODO: This lightningd_aliases gauge setup not only won't scale very far, but also currently
+			// doesn't remove old values if a node changes alias, leading to several results when querying.
+			prometheus.Labels{
+				"node_id": string(n.NodeId),
+				"alias":   string(n.Alias),
+			}).Set(float64(n.LastTimestamp))
+
 		if n.isPeer && len(n.Channels) >= 1 {
 			if n.Channels.MilliSatoshiTotal() > 0 {
 				channelCapacities.With(
@@ -870,9 +888,16 @@ func getLightningdState() (*lightningdState, error) {
 		}
 	}
 
-	s.Alias, err = s.Nodes.getAlias(s.Info.NodeId)
+	payments, err := c.ListPayments()
 	if err != nil {
 		return nil, err
+	}
+	s.Payments = *payments
+
+	n, exists := s.Nodes[s.Info.NodeId]
+	if exists {
+		s.Alias = n.Alias
+		log.Printf("Found that our own alias is %q.\n", s.Alias)
 	}
 	return &s, nil
 }
@@ -883,14 +908,16 @@ func refresh() {
 	registeredLn := false
 	for {
 		// TODO: need to persist lnState.Nodes if we want to persist info we find between polls.
-		lnState, err := getLightningdState()
+		s, err := getState()
 		if err != nil {
-			log.Printf("Failed to get lightningd state: %v\n", err)
+			log.Printf("Failed to get state: %v\n", err)
 		} else {
-			allState = *lnState
+			allState = *s
 		}
 		if allState.IsRunning() {
 			if !registeredLn {
+				// TODO: Need to handle case where we registered collector to pid #1, then
+				// lightningd crashed and restarted with pid #2.
 				lc := prometheus.NewProcessCollector(allState.pid, namespace)
 				prometheus.MustRegister(lc)
 				registeredLn = true
@@ -907,8 +934,21 @@ func refresh() {
 	}
 }
 
-// indexHandler serves the index page.
-func indexHandler(w http.ResponseWriter, r *http.Request) {
+// newHttpHandler returns a new http handler.
+func newHttpHandler() (*httpHandler, error) {
+	s, err := getFile("lnmon.tmpl")
+	if err != nil {
+		return nil, err
+	}
+	tmpl, err := template.New("index").Parse(string(s))
+	if err != nil {
+		return nil, err
+	}
+	return &httpHandler{tmpl: *tmpl}, nil
+}
+
+// ServeHTTP the index page.
+func (h httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%v] HTTP %s %s\n", r.RemoteAddr, r.Method, r.URL)
 	if r.Method != "GET" {
 		log.Printf("Serving 400 for HTTP %s %q\n", r.Method, r.URL.Path)
@@ -922,21 +962,8 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "404 Page Not Found")
 		return
 	}
-	// TODO: read and parse .tmpl once on startup
-	s, err := getFile("lnmon.tmpl")
-	if err != nil {
-		http.Error(w, "Well, that's embarrassing. Please try again later.", http.StatusInternalServerError)
-		log.Fatalf("Failed to read lnmon.tmpl: %v\n", err)
-		return
-	}
-	tmpl, err := template.New("index").Parse(string(s))
-	if err != nil {
-		http.Error(w, "Well, that's embarrassing. Please try again later.", http.StatusInternalServerError)
-		log.Fatalf("Failed to parse .tmpl: %v\n", err)
-		return
-	}
 
-	if err := tmpl.Execute(w, allState); err != nil {
+	if err := h.tmpl.Execute(w, allState); err != nil {
 		http.Error(w, "Well, that's embarrassing. Please try again later.", http.StatusInternalServerError)
 		log.Printf("Failed to execute template: %v\n", err)
 		return
@@ -944,8 +971,11 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	// Metrics have to be registered to be exposed:
+	log.Printf("lnmon version %q starting..\n", lnmonVersion)
+
+	// Register prometheus metrics and http handler.
 	prometheus.MustRegister(lightningdRunning)
+	prometheus.MustRegister(aliases)
 	prometheus.MustRegister(availableFunds)
 	prometheus.MustRegister(channelCapacities)
 	prometheus.MustRegister(numChannels)
@@ -953,14 +983,16 @@ func main() {
 	prometheus.MustRegister(numPeers)
 	prometheus.MustRegister(channelBalances)
 	prometheus.MustRegister(ourChannels)
-
-	// The Handler function provides a default handler to expose metrics
-	// via an HTTP server. "/metrics" is the usual endpoint for that.
+	prometheus.MustRegister(infoCounter)
 	http.Handle("/metrics", promhttp.Handler())
 
 	go refresh()
 
-	http.HandleFunc("/", indexHandler)
+	h, err := newHttpHandler()
+	if err != nil {
+		log.Fatalf("Failed to create http handler: %v\n", err)
+	}
+	http.Handle("/", h)
 
 	if addr == "" {
 		addr = ":80"

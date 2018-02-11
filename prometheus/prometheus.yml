@@ -13,8 +13,7 @@ alerting:
 # Load rules once and periodically evaluate them according to the global
 # 'evaluation_interval'.
 rule_files:
-  # - "first_rules.yml"
-  # - "second_rules.yml"
+  - 'rules.yml'
 
 scrape_configs:
   # The job name is added as a label `job=<job_name>` to any timeseries scraped from this
@@ -22,20 +21,35 @@ scrape_configs:
   - job_name: 'node_exporter'
     static_configs:
       - targets: ['mon.hkjn.me:9100', 'ln.hkjn.me:9100']
+        labels:
+          group: 'production'
+          kind: 'monitoring'
 
   - job_name: 'prometheus_mon'
     metrics_path: '/ln/metrics'
     static_configs:
       - targets: ['mon.hkjn.me:9090']
+        labels:
+          group: 'production'
+          kind: 'monitoring'
 
   - job_name: 'prometheus'
     static_configs:
       - targets: ['ln.hkjn.me:9090']
+        labels:
+          group: 'production'
+          kind: 'monitoring'
 
   - job_name: 'lnmon'
     static_configs:
       - targets: ['ln.hkjn.me:8380']
+        labels:
+          group: 'production'
+          kind: 'monitoring'
 
   - job_name: 'bcmon'
     static_configs:
       - targets: ['ln.hkjn.me:9740']
+        labels:
+          group: 'production'
+          kind: 'monitoring'

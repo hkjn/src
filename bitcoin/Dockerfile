@@ -11,7 +11,7 @@ ENV BITCOIN_VERSION=${bitcoin_version} \
 
 # Install dependencies.
 RUN pacman -Syyu --noconfirm && \
-    pacman -S --noconfirm git base-devel boost libevent python
+    pacman -S --noconfirm git base-devel boost libevent jq python
 
 
 WORKDIR /usr/local/src/bitcoin/
@@ -46,4 +46,5 @@ RUN g++ -o sqlversiontest sqlversiontest.cpp -lsqlite3 && \
     ./sqlversiontest
 
 COPY entrypoint.sh /usr/local/bin
+WORKDIR /home/bitcoin
 ENTRYPOINT ["entrypoint.sh"]

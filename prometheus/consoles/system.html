@@ -2,11 +2,27 @@
 
 {{ template "prom_right_table_head" }}
 {{ template "prom_right_table_tail" }}
-
 {{ template "prom_content_head" . }}
+
 <h1>System</h1>
 
 <p>This console shows some system metrics.</p>
+
+<p>Monitored targets:</p>
+<table>
+	<tr>
+		<th>Instance</th>
+		<th>Up?</th>
+	</tr>
+	{{ range query "up" }}
+	<tr>
+		<td>
+			<code><a href="http://{{ .Labels.instance }}/metrics">{{ .Labels.instance }}</a></code>
+		</td>
+		<td>{{ .Value }}</td>
+	</tr>
+	{{ end }}
+</table>
 
 <h2>System</h2>
 <h3>Node up?</h3>
@@ -14,7 +30,7 @@
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#upGraph"),
-    expr: 'up{instance=~"ln.hkjn.me:.*"}',
+    expr: 'max(up) by (job, group)',
     renderer: "area",
     min: 0.0
 });
@@ -25,8 +41,8 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#freeMemoryGraph"),
-    expr: 'node_memory_MemAvailable{instance="ln.hkjn.me:9100"}',
-    renderer: "line",
+    expr: 'sum(node_memory_MemAvailable) by (group, kind, instance)',
+    renderer: "area",
     min: 0.0
 });
 </script>
@@ -36,7 +52,7 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#diskReadsGraph"),
-    expr: 'rate(node_disk_bytes_read{instance="ln.hkjn.me:9100"}[5m])',
+    expr: 'instance_system:node_disk_bytes_read:sum_rate5m',
     renderer: "area",
     min: 0.0
 });
@@ -47,7 +63,7 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#diskWritesGraph"),
-    expr: 'rate(node_disk_bytes_written{instance="ln.hkjn.me:9100"}[5m])',
+    expr: 'instance_system:node_disk_bytes_written:sum_rate5m',
     renderer: "area",
     min: 0.0
 });
@@ -58,7 +74,7 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#networkTransmittedGraph"),
-    expr: 'rate(node_network_transmit_bytes{instance="ln.hkjn.me:9100"}[5m])',
+    expr: 'instance_system:node_network_transmit_bytes:sum_rate5m',
     renderer: "area",
     min: 0.0
 });
@@ -69,7 +85,7 @@ new PromConsole.Graph({
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#networkReceivedGraph"),
-    expr: 'rate(node_network_receive_bytes{instance="ln.hkjn.me:9100"}[5m])',
+    expr: 'instance_system:node_network_receive_bytes:sum_rate5m',
     renderer: "area",
     min: 0.0
 });

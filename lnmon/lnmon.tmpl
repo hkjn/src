@@ -1,59 +1,82 @@
 <html>
 <body>
-<h1>Hello!</h1>
-<p>This is an experiment with Bitcoin and Lightning Network running at <code>ln.hkjn.me</code> by <a href="https://hkjn.me">hkjn</a>.</p>
+	<h1>Hello!</h1>
 
-<p>The purpose is to learn more about the inner workings of Bitcoin and the LN by making it easier to operate
-these daemons, and easier to observe what they're doing.</p>
+	<p>This is an experiment with Lightning Network running
+	at <code>ln.hkjn.me</code> by
+	<a href="https://hkjn.me">hkjn</a>.</p>
 
-<p>You may also be interested in the <a href="https://mon.hkjn.me/ln/consoles/index.html.example">Prometheus dashboard</a> scraping data
-from this tool.</p>
+	<p>This web server is version
+	<code>{{ .MonVersion}}</code> and exists mainly to serve
+	the<a href="/metrics">/metrics</a> endpoint for Prometheus
+	to collect data for queries and graphs for Lightning
+	Network metrics.</p>
 
-<h2><code>lightningd</code> info</h2>
-{{ if .IsRunning -}}
-<p><code>lightningd</code> is <strong>running</strong></p>
-<p>Our id is <code>{{ .Info.NodeId}}</code>.</p>
-{{ with .Alias -}}
-<p>Our alias is <code>{{ . }}</code>.</p>
-{{ else }}
-<p>Unknown alias for our own node.</p>
-{{- end }}
-<p>Our address is is <code>{{ .Info.Address }}</code>.</p>
-<p>Our version is is <code>{{ .Info.Version }}</code>.</p>
-<p>Our blockheight is is <code>{{ .Info.Blockheight }}</code>.</p>
-<p>We know of {{ len .Nodes }} nodes in total.</p>
-<p>We know of {{ len .Channels }} channels in total.</p>
-<p>We know of {{ len .Nodes.Peers }} nodes that are our peers.</p>
+	<p>You may also be interested in the
+	<a href="https://ln.hkjn.me/">Prometheus dashboard</a>
+	scraping data from this tool.</p>
 
-<h3>Peers</h3>
-
-<table>
-	<tr>
-		<th>Id</th>
-		<th>Alias</th>
-		<th>Last seen</th>
-		<th>Channel state</th>
-		<th>Funds to us</th>
-		<th>Funds to them</th>
-	</tr>
-	{{ range .Nodes.Peers -}}
-	<tr>
-		<td><code>{{ .NodeId.Short }}</code></td>
-		<td>{{ .Alias }}</td>
-		<td>{{ .LastTimestamp.Since }}</td>
-		<td><code>{{ .Channels.State }}</code></td>
-		<td>{{ if .Channels }} {{ .Channels.MilliSatoshiToUs.AsBTC }} {{ end }}</td>
-		<td>{{ if .Channels }} {{ .Channels.MilliSatoshiToThem.AsBTC }} {{ end }}</td>
-	</tr>
+	<h2><code>lightningd</code> info</h2>
+	{{ if .IsRunning -}}
+	<p><code>lightningd</code> is <strong>running</strong></p>
+	<p>Our id is <code>{{ .Info.NodeId}}</code>.</p>
+	{{ with .Alias -}}
+	<p>Our alias is <code>{{ . }}</code>.</p>
+	{{ else }}
+	<p>Unknown alias for our own node.</p>
 	{{- end }}
-</table>
+	<p>Our address is is <code>{{ .Info.Address }}</code>.</p>
+	<p>Our version is is <code>{{ .Info.Version }}</code>.</p>
+	<p>Our blockheight is is <code>{{ .Info.Blockheight }}</code>.</p>
+	<p>We know of {{ len .Nodes }} nodes in total.</p>
+	<p>We know of {{ len .Channels }} channels in total.</p>
+	<p>We know of {{ len .Nodes.Peers }} nodes that are our peers.</p>
 
-<ul>
-</ul>
+	<h3>Peers</h3>
 
-{{ else }}
-<p><code>lightningd</code> is <strong>not running</strong>.</p>
-{{- end }}
+	<table>
+		<tr>
+			<th>Id</th>
+			<th>Alias</th>
+			<th>Last seen</th>
+			<th>Channel state</th>
+			<th>Funds to us</th>
+			<th>Funds to them</th>
+		</tr>
+		{{ range .Nodes.Peers -}}
+		<tr>
+			<td><code>{{ .NodeId.Short }}</code></td>
+			<td>{{ .Alias }}</td>
+			<td>{{ .LastTimestamp.Since }}</td>
+			<td><code>{{ .Channels.State }}</code></td>
+			<td>{{ if .Channels }} {{ .Channels.MilliSatoshiToUs.String }} {{ end }}</td>
+			<td>{{ if .Channels }} {{ .Channels.MilliSatoshiToThem.String }} {{ end }}</td>
+		</tr>
+		{{- end }}
+	</table>
 
+	{{ else }}
+	<p><code>lightningd</code> is <strong>not running</strong>.</p>
+	{{- end }}
+
+	<h3>Payments</h3>
+	<table>
+		<tr>
+			<th>Id</th>
+			<th>Amount</th>
+			<th>Destination</th>
+			<th>Timestamp</th>
+			<th>Status</th>
+		</tr>
+	{{ range .Payments -}}
+		<tr>
+			<td>{{ .PaymentId }}</td>
+			<td>{{ .Msatoshi.String }}</td>
+			<td>{{ .Destination }}</td>
+			<td>{{ .Timestamp.Time }}</td>
+			<td>{{ .Status }}</td>
+		</tr>
+	{{- end }}
+	</table>
 </body>
 </html>
