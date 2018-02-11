@@ -130,7 +130,7 @@ new PromConsole.Graph({
     expr: 'lightningd_channel_capacities_msatoshi{state!="CHANNELD_NORMAL"}/100000000000',
     {{ end }}
     colorScheme: "spectrum14",
-    name: "[[ node_id ]]",
+    name: "[[ state ]]: [[ node_id ]]",
     renderer: "area",
     yUnits: "BTC",
     yTitle: "Capacity",
