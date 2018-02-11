@@ -801,6 +801,16 @@ func getState() (*state, error) {
 	for _, arg := range parts[1:] {
 		s.args = append(s.args, arg)
 	}
+
+	// Delete all old metrics in vectors, so we don't accidentally persist e.g gauges measuring earlier
+	// seen channel states. This is unfortunate, but seems necessary unless we want to track and
+	// muttate earlier states.
+	ourChannels.Reset()
+	channelCapacities.Reset()
+	channelBalances.Reset()
+	aliases.Reset()
+	infoCounter.Reset()
+
 	c := newCli()
 	info, err := c.GetInfo()
 	if err != nil {
@@ -830,6 +840,7 @@ func getState() (*state, error) {
 	s.Outputs = *outputs
 	availableFunds.Set(float64(s.Outputs.Sum()))
 	log.Printf("Learned of %d %v.\n", len(s.Outputs), s.Outputs)
+
 	peerNodes, err := c.ListPeers()
 	if err != nil {
 		return nil, err
@@ -854,8 +865,6 @@ func getState() (*state, error) {
 
 	for _, n := range s.Nodes {
 		aliases.With(
-			// TODO: This lightningd_aliases gauge setup not only won't scale very far, but also currently
-			// doesn't remove old values if a node changes alias, leading to several results when querying.
 			prometheus.Labels{
 				"node_id": string(n.NodeId),
 				"alias":   string(n.Alias),
@@ -910,7 +919,9 @@ func refresh() {
 		// TODO: need to persist lnState.Nodes if we want to persist info we find between polls.
 		s, err := getState()
 		if err != nil {
+			// TODO: increment counter here, so we can alert on possible lightningd crashes.
 			log.Printf("Failed to get state: %v\n", err)
+			allState = state{}
 		} else {
 			allState = *s
 		}
