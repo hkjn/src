@@ -144,7 +144,10 @@ new PromConsole.Graph({
 	</tr>
 {{ end }}
 </table>
-<h3>Balance of our inbound channels</h3>
+
+
+<h3>Balance on our side of channels</h3>
+<p>This graph shows the balance committed to us in our channels, i.e. funds we could send to others if we wanted to.</p>
 
 <div id="channelToUsBalanceGraph"></div>
 <script>
@@ -185,7 +188,9 @@ new PromConsole.Graph({
 {{ end }}
 </table>
 
-<h3>Balance of our outbound channels</h3>
+<h3>Balance on their side of channels</h3>
+<p>This graph shows the balance committed to them in our channels, i.e. funds that could be sent to us
+if the other node wanted to.</p>
 
 <div id="channelToThemBalanceGraph"></div>
 <script>
