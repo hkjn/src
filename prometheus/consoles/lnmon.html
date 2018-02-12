@@ -293,7 +293,7 @@ new PromConsole.Graph({
 new PromConsole.Graph({
     node: document.querySelector("#nodesLastSeenGraph"),
     colorScheme: "spectrum14",
-    expr: 'bottomk(50, sort(time() - lightningd_aliases{{ with .Params.node_id }}"node_id="{{ . }}"}{{end }}))',
+    expr: 'bottomk(50, sort(time() - lightningd_aliases{{ with .Params.node_id }}{node_id="{{ . }}"}{{end }}))',
     name: "[[ alias ]]",
     renderer: "area",
     min: 0.0
