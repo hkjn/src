@@ -287,6 +287,19 @@ new PromConsole.Graph({
 });
 </script>
 
+<h3>Time since nodes were last seen</h3>
+<div id="nodesLastSeenGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#nodesLastSeenGraph"),
+    colorScheme: "spectrum14",
+    expr: 'bottomk(50, sort(time() - lightningd_aliases{{ with .Params.node_id }}"node_id="{{ . }}"}{{end }}))',
+    name: "[[ alias ]]",
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
 <h1>Process info for <code>lightningd</code></h1>
 
 <h2>Virtual memory usage</h2>
