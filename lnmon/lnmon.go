@@ -18,6 +18,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -261,6 +262,26 @@ var (
 func getFile(f string) ([]byte, error) {
 	// Asset is defined in bindata.go.
 	return Asset(f)
+}
+
+// WithEscapedEntities returns the escaped HTML entities for the alias.
+//
+// TODO: We added this to attempt to correctly render utf8 characters instead of '?'
+// in HTML, but using alias field of node id
+// 03939ff69d65a13c4bb2585042e7eb7e75a7c77289ab5794d1b973721d86c6839c
+// as an example, it seems that either lightning-cli or us is mangling the bytes:
+// Via sites rendering the node's alias correctly,, byte stream should be 43 6F 63 6F 50 69 E2 9A A1
+// We are for some reason getting actual '?' / 3F characters:             43 6F 63 6F 50 69 3F 3F 3F
+// Also, we probably shouldn't (need to) render actual HTML entities, since that could lead to XSS vulns.
+func (a alias) WithEscapedEntities() string {
+	result := []string{}
+	s := string(a)
+	for len(s) > 0 {
+		r, size := utf8.DecodeRuneInString(s)
+		s = s[size:]
+		result = append(result, fmt.Sprintf(`&#x%X;`, r))
+	}
+	return strings.Join(result, " ")
 }
 
 // Short returns the first few characters of the node id.

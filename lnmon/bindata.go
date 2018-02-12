@@ -83,7 +83,7 @@ func lnmonTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "lnmon.tmpl", size: 2207, mode: os.FileMode(436), modTime: time.Unix(1518368535, 0)}
+	info := bindataFileInfo{name: "lnmon.tmpl", size: 2207, mode: os.FileMode(436), modTime: time.Unix(1518452944, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
