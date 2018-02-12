@@ -251,8 +251,6 @@ var (
 		},
 		[]string{"lnmon_version", "lightningd_version"},
 	)
-	// TODO: Add metrics showing last seen timestamp from listnodes instead of binary connected/unconnected status, which
-	// doesn't form timeseries easily.
 	debugging = os.Getenv("LNMON_DEBUGGING") == "1"
 	addr      = os.Getenv("LNMON_ADDR")
 	hostname  = os.Getenv("LNMON_HOSTNAME")
