@@ -137,15 +137,18 @@ type (
 	// state describes the last known state.
 	state struct {
 		// MonVersion is the version of lnmon.
-		MonVersion string
-		pid        int
-		args       []string
-		Alias      alias
-		Info       getInfoResponse
-		Nodes      allNodes
-		Channels   channelListings
-		Payments   payments
-		Outputs    outputs
+		MonVersion  string
+		pid         int
+		args        []string
+		Alias       alias
+		Info        getInfoResponse
+		Nodes       allNodes
+		Channels    channelListings
+		Payments    payments
+		Outputs     outputs
+		gauges      map[string]prometheus.Gauge
+		counterVecs map[string]*prometheus.CounterVec
+		gaugeVecs   map[string]*prometheus.GaugeVec
 	}
 	channelStateNum int
 	channelState    string
@@ -176,84 +179,10 @@ var (
 		OnchaindOurUnilateralState:   "ONCHAIND_OUR_UNILATERAL",
 		ClosingdSigexchangeState:     "CLOSINGD_SIGEXCHANGE",
 	}
-	lnmonVersion      string
-	lightningdRunning = prometheus.NewGauge(prometheus.GaugeOpts{
-		Namespace: counterPrefix,
-		Name:      "running",
-		Help:      "Whether lightningd process is running (1) or not (0).",
-	})
-	aliases = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: counterPrefix,
-			Name:      "aliases",
-			Help:      "Alias for each node id.",
-		},
-		[]string{"node_id", "alias"},
-	)
-	availableFunds = prometheus.NewGauge(
-		prometheus.GaugeOpts{
-			Namespace: counterPrefix,
-			Name:      "total_funds",
-			Help:      "Sum of all funds available for opening channels.",
-		},
-	)
-	numChannels = prometheus.NewGauge(
-		prometheus.GaugeOpts{
-			Namespace: counterPrefix,
-			Name:      "num_channels",
-			Help:      "Number of Lightning channels this node knows about.",
-		},
-	)
-	numPeers = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: counterPrefix,
-			Name:      "num_peers",
-			Help:      "Number of Lightning peers of this node.",
-		},
-		[]string{"connected"},
-	)
-	numNodes = prometheus.NewGauge(
-		prometheus.GaugeOpts{
-			Namespace: counterPrefix,
-			Name:      "num_nodes",
-			Help:      "Number of Lightning nodes known by this node.",
-		},
-	)
-	ourChannels = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: counterPrefix,
-			Name:      "our_channels",
-			Help:      "Number of channels per state to and from our node.",
-		},
-		[]string{"state"},
-	)
-	channelCapacities = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: counterPrefix,
-			Name:      "channel_capacities_msatoshi",
-			Help:      "Capacity of channels in millisatoshi by name and channel state.",
-		},
-		[]string{"node_id", "state"},
-	)
-	channelBalances = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: counterPrefix,
-			Name:      "channel_balances_msatoshi",
-			Help:      "Balance to us of channels in millisatoshi by name and channel state.",
-		},
-		[]string{"node_id", "state", "direction"},
-	)
-	infoCounter = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: counterPrefix,
-			Name:      "info",
-			Help:      "Info of lightningd and lnmon version.",
-		},
-		[]string{"lnmon_version", "lightningd_version"},
-	)
-	debugging = os.Getenv("LNMON_DEBUGGING") == "1"
-	addr      = os.Getenv("LNMON_ADDR")
-	hostname  = os.Getenv("LNMON_HOSTNAME")
+	lnmonVersion string
+	debugging    = os.Getenv("LNMON_DEBUGGING") == "1"
+	addr         = os.Getenv("LNMON_ADDR")
+	hostname     = os.Getenv("LNMON_HOSTNAME")
 )
 
 // getFile returns the contents of the specified file.
@@ -428,6 +357,9 @@ func (msat msatoshi) String() string {
 }
 
 // updateNodes updates the nodes with new node information.
+//
+// TODO: Add test case; when we saw node that was peer with one cnannel in OPENINGD, subsequent listpeers results with CHANNELD_AWAITING_LOCKIN
+// did not affect the presented state.
 func (s state) updateNodes(newNodes nodes) {
 	for _, nn := range newNodes {
 		on, exists := s.Nodes[nn.NodeId]
@@ -453,9 +385,14 @@ func (s state) updateNodes(newNodes nodes) {
 				// Note: We avoid marking peers as non-peers when listnodes returns with isPeer=false. This could be less hacky.
 				nn.isPeer = true
 				nn.Connected = on.Connected
-				nn.Channels = on.Channels
+				if len(nn.Channels) == 0 && len(on.Channels) > 0 {
+					nn.Channels = on.Channels
+				}
 			}
-			// TODO: may or may not want to update on.Addresses and on.last_timestamp
+			// TODO: may or may not want to update on.Addresses.
+			if on.LastTimestamp.Time().After(nn.LastTimestamp.Time()) {
+				nn.LastTimestamp = on.LastTimestamp
+			}
 			s.Nodes[nn.NodeId] = nn
 		}
 	}
@@ -794,7 +731,10 @@ func (c cli) ListPeers() (*nodes, error) {
 
 // update refreshes the state.
 func (s *state) update() error {
+	// Note that we reset all state between lightning-cli calls, to make sure we're not presenting stale data from earlier.
+	// This means that any failure to fetch new state from cli will result in empty state.
 	s.MonVersion = lnmonVersion
+	s.Nodes = allNodes{}
 
 	ps, err := execCmd("pgrep", "-a", "lightningd")
 	if err != nil {
@@ -822,8 +762,8 @@ func (s *state) update() error {
 	}
 	s.Info = *info
 	log.Printf("lightningd getinfo response: %+v\n", info)
-	infoCounter.Reset()
-	infoCounter.With(
+	s.counterVecs["info"].Reset()
+	s.counterVecs["info"].With(
 		prometheus.Labels{
 			"lnmon_version":      s.MonVersion,
 			"lightningd_version": s.Info.Version,
@@ -835,7 +775,7 @@ func (s *state) update() error {
 		return err
 	}
 	s.Channels = *channels
-	numChannels.Set(float64(len(s.Channels)))
+	s.gauges["num_channels"].Set(float64(len(s.Channels)))
 	log.Printf("Learned of %d channels.\n", len(s.Channels))
 
 	outputs, err := c.ListFunds()
@@ -843,7 +783,7 @@ func (s *state) update() error {
 		return err
 	}
 	s.Outputs = *outputs
-	availableFunds.Set(float64(s.Outputs.Sum()))
+	s.gauges["total_funds"].Set(float64(s.Outputs.Sum()))
 	log.Printf("Learned of %d %v.\n", len(s.Outputs), s.Outputs)
 
 	peerNodes, err := c.ListPeers()
@@ -853,31 +793,33 @@ func (s *state) update() error {
 	s.updateNodes(*peerNodes)
 
 	peers := s.Nodes.Peers() // TODO: could do the below with entire s.Nodes too; methods filter out non-peers where applicable.
-	numPeers.With(prometheus.Labels{"connected": "connected"}).Set(float64(peers.NumConnected()))
-	numPeers.With(prometheus.Labels{"connected": "unconnected"}).Set(float64(len(peers) - peers.NumConnected()))
+	s.gaugeVecs["num_peers"].With(prometheus.Labels{"connected": "connected"}).Set(float64(peers.NumConnected()))
+	s.gaugeVecs["num_peers"].With(prometheus.Labels{"connected": "unconnected"}).Set(float64(len(peers) - peers.NumConnected()))
 
 	// Delete all old metrics in vectors, so we don't accidentally persist e.g gauges measuring earlier
 	// seen channel states. This is unfortunate, but seems necessary unless we want to track and
-	// muttate earlier states.
-	ourChannels.Reset()
+	// mutate earlier states.
+	s.gaugeVecs["our_channels"].Reset()
 	for state, n := range s.Nodes.Peers().NumChannelsByState() {
 		// log.Printf("We have %d channels in state %q\n", n, state)
-		ourChannels.With(prometheus.Labels{"state": string(state)}).Set(float64(n))
+		s.gaugeVecs["our_channels"].With(prometheus.Labels{"state": string(state)}).Set(float64(n))
 	}
+
+	// We merge in the output from listpeers with the one from listnodes above.
 	// log.Printf("lightningd listpeers response: %+v\n", peers)
 	nodes, err := c.ListNodes()
 	if err != nil {
 		return err
 	}
 	s.updateNodes(*nodes)
-	numNodes.Set(float64(len(s.Nodes)))
+	s.gauges["num_nodes"].Set(float64(len(s.Nodes)))
 	// log.Printf("lightningd listnodes response: %+v\n", nodes)
 
-	aliases.Reset()
-	channelCapacities.Reset()
-	channelBalances.Reset()
+	s.counterVecs["aliases"].Reset()
+	s.gaugeVecs["channel_capacities_msatoshi"].Reset()
+	s.gaugeVecs["channel_balances_msatoshi"].Reset()
 	for _, n := range s.Nodes {
-		aliases.With(
+		s.counterVecs["aliases"].With(
 			prometheus.Labels{
 				"node_id": string(n.NodeId),
 				"alias":   string(n.Alias),
@@ -885,14 +827,14 @@ func (s *state) update() error {
 
 		if n.isPeer && len(n.Channels) >= 1 {
 			if n.Channels.MilliSatoshiTotal() > 0 {
-				channelCapacities.With(
+				s.gaugeVecs["channel_capacities_msatoshi"].With(
 					prometheus.Labels{
 						"node_id": string(n.NodeId),
 						"state":   n.Channels.State(),
 					}).Set(float64(n.Channels.MilliSatoshiTotal()))
 			}
 			if n.Channels.MilliSatoshiToUs() > 0 {
-				channelBalances.With(
+				s.gaugeVecs["channel_balances_msatoshi"].With(
 					prometheus.Labels{
 						"node_id":   string(n.NodeId),
 						"state":     n.Channels.State(),
@@ -900,7 +842,7 @@ func (s *state) update() error {
 					}).Set(float64(n.Channels.MilliSatoshiToUs()))
 			}
 			if n.Channels.MilliSatoshiToThem() > 0 {
-				channelBalances.With(
+				s.gaugeVecs["channel_balances_msatoshi"].With(
 					prometheus.Labels{
 						"node_id":   string(n.NodeId),
 						"state":     n.Channels.State(),
@@ -943,9 +885,9 @@ func refresh(s *state) {
 				registeredLn = true
 				log.Printf("Registered ProcessCollector for lightningd pid %d in namespace %s\n", s.pid, namespace)
 			}
-			lightningdRunning.Set(1)
+			s.gauges["running"].Set(1)
 		} else {
-			lightningdRunning.Set(0)
+			s.gauges["running"].Set(0)
 		}
 
 		// lightning-cli listinvoice
@@ -968,8 +910,101 @@ func newHTTPHandler() (*httpHandler, error) {
 		tmpl: *tmpl,
 		state: state{
 			Nodes: allNodes{},
+			gauges: map[string]prometheus.Gauge{
+				"running": prometheus.NewGauge(prometheus.GaugeOpts{
+					Namespace: counterPrefix,
+					Name:      "running",
+					Help:      "Whether lightningd process is running (1) or not (0).",
+				}),
+				"num_channels": prometheus.NewGauge(
+					prometheus.GaugeOpts{
+						Namespace: counterPrefix,
+						Name:      "num_channels",
+						Help:      "Number of Lightning channels this node knows about.",
+					},
+				),
+				"num_nodes": prometheus.NewGauge(
+					prometheus.GaugeOpts{
+						Namespace: counterPrefix,
+						Name:      "num_nodes",
+						Help:      "Number of Lightning nodes known by this node.",
+					},
+				),
+				"total_funds": prometheus.NewGauge(
+					prometheus.GaugeOpts{
+						Namespace: counterPrefix,
+						Name:      "total_funds",
+						Help:      "Sum of all funds available for opening channels.",
+					},
+				),
+			},
+			counterVecs: map[string]*prometheus.CounterVec{
+				"aliases": prometheus.NewCounterVec(
+					prometheus.CounterOpts{
+						Namespace: counterPrefix,
+						Name:      "aliases",
+						Help:      "Alias for each node id.",
+					},
+					[]string{"node_id", "alias"},
+				),
+				"info": prometheus.NewCounterVec(
+					prometheus.CounterOpts{
+						Namespace: counterPrefix,
+						Name:      "info",
+						Help:      "Info of lightningd and lnmon version.",
+					},
+					[]string{"lnmon_version", "lightningd_version"},
+				),
+			},
+			gaugeVecs: map[string]*prometheus.GaugeVec{
+				"num_peers": prometheus.NewGaugeVec(
+					prometheus.GaugeOpts{
+						Namespace: counterPrefix,
+						Name:      "num_peers",
+						Help:      "Number of Lightning peers of this node.",
+					},
+					[]string{"connected"},
+				),
+				"our_channels": prometheus.NewGaugeVec(
+					prometheus.GaugeOpts{
+						Namespace: counterPrefix,
+						Name:      "our_channels",
+						Help:      "Number of channels per state to and from our node.",
+					},
+					[]string{"state"},
+				),
+				"channel_capacities_msatoshi": prometheus.NewGaugeVec(
+					prometheus.GaugeOpts{
+						Namespace: counterPrefix,
+						Name:      "channel_capacities_msatoshi",
+						Help:      "Capacity of channels in millisatoshi by name and channel state.",
+					},
+					[]string{"node_id", "state"},
+				),
+				"channel_balances_msatoshi": prometheus.NewGaugeVec(
+					prometheus.GaugeOpts{
+						Namespace: counterPrefix,
+						Name:      "channel_balances_msatoshi",
+						Help:      "Balance to us of channels in millisatoshi by name and channel state.",
+					},
+					[]string{"node_id", "state", "direction"},
+				),
+			},
 		},
 	}, nil
+}
+
+// registerMetrics registers the Prometheus monitoring metrics.
+func (h httpHandler) registerMetrics() {
+	for _, m := range h.state.gauges {
+		prometheus.MustRegister(m)
+	}
+	for _, m := range h.state.counterVecs {
+		prometheus.MustRegister(m)
+	}
+	for _, m := range h.state.gaugeVecs {
+		prometheus.MustRegister(m)
+	}
 }
 
 // ServeHTTP the index page.
@@ -999,22 +1034,13 @@ func main() {
 	log.Printf("lnmon version %q starting..\n", lnmonVersion)
 
 	// Register prometheus metrics and http handler.
-	prometheus.MustRegister(lightningdRunning)
-	prometheus.MustRegister(aliases)
-	prometheus.MustRegister(availableFunds)
-	prometheus.MustRegister(channelCapacities)
-	prometheus.MustRegister(numChannels)
-	prometheus.MustRegister(numNodes)
-	prometheus.MustRegister(numPeers)
-	prometheus.MustRegister(channelBalances)
-	prometheus.MustRegister(ourChannels)
-	prometheus.MustRegister(infoCounter)
 	http.Handle("/metrics", promhttp.Handler())
 
 	h, err := newHTTPHandler()
 	if err != nil {
 		log.Fatalf("Failed to create http handler: %v\n", err)
 	}
+	h.registerMetrics()
 	go refresh(&h.state)
 
 	http.Handle("/", h)
