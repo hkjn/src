@@ -37,16 +37,16 @@ type (
 	address []addressInfo
 	// channelListing describes one channel from listchannels output.
 	channelListing struct {
-		Source               string `json:"source"`
-		Destination          string `json:"destination"`
-		ShortChannelId       string `json:"short_channel_id"`
-		Flags                int64  `json:"flags"`
-		Active               bool   `json:"active"`
-		Public               bool   `json:"public"`
-		LastUpdate           int64  `json:"last_update"`
-		BaseFeeMillisatoshis int64  `json:"base_fee_millisatoshi"`
-		FeePerMillionth      int64  `json:"fee_per_millionth"`
-		Delay                int64  `json:"delay"`
+		Source          nodeId `json:"source"`
+		Destination     nodeId `json:"destination"`
+		ShortChannelId  string `json:"short_channel_id"`
+		Flags           int64  `json:"flags"`
+		Active          bool   `json:"active"`
+		Public          bool   `json:"public"`
+		LastUpdate      unixTs `json:"last_update"`
+		BaseFeeMsats    int64  `json:"base_fee_millisatoshi"`
+		FeePerMillionth int64  `json:"fee_per_millionth"`
+		Delay           int64  `json:"delay"`
 	}
 	// channelListings describes several channels from listchannels output.
 	channelListings []channelListing
@@ -54,19 +54,26 @@ type (
 	// msatoshi is number of millisatoshis, used in the LN protocol.
 	msatoshi int64
 	// channel describes an individual channel.
+	//
+	// For channels to our own node, we know the state and msatoshi details, but
+	// for other nodes we only know if they are active and/or public and their short_channel_id.
 	channel struct {
 		State                     channelState `json:"state"`
-		Owner                     string       `json:"owner"`
+		Owner                     nodeId       `json:"owner"`
 		ShortChannelId            string       `json:"short_channel_id"`
 		FundingTxId               string       `json:"funding_txid"`
-		MsatoshiToUs              msatoshi     `json:"msatoshi_to_us"`
-		MsatoshiTotal             msatoshi     `json:"msatoshi_total"`
+		MsatsToUs                 msatoshi     `json:"msatoshi_to_us"`
+		MsatsTotal                msatoshi     `json:"msatoshi_total"`
 		DustLimitSatoshis         int64        `json:"dust_limit_satoshis"`
 		MaxHtlcValueInFlightMsats int64        `json:"max_htlc_value_in_flight_msats"`
 		ChannelReserveSatoshis    int64        `json:"channel_reserve_satoshis"`
 		HtlcMinimumMsat           msatoshi     `json:"htlc_minimum_msat"`
 		ToSelfDelay               int64        `json:"to_self_delay"`
 		MaxAcceptedHtlcs          int64        `json:"max_accepted_htlcs"`
+		// Active is true if the channel's last known state is active.
+		Active bool `json:"active"`
+		// Public is true if the channel is public.
+		Public bool `json:"public"`
 	}
 	// alias is an optional human-readable alias for a node.
 	alias string
@@ -89,9 +96,9 @@ type (
 	node struct {
 		// isPeer is true if this node is one of our peers.
 		isPeer bool
-		// Connected is set to true for peers that are currently connected.
-		Connected bool
-		// Channels holds any channels that nodes that are our peers has.
+		// Connected is set to true for nodes that are our peers and also are currently connected.
+		connected bool
+		// Channels holds any channels that the node has.
 		Channels channels `json:"channels"`
 
 		NodeId        nodeId  `json:"nodeid"`
@@ -160,7 +167,8 @@ type (
 
 const (
 	// Channel states are enumerated here. Note that states with lower numbers sort before higher.
-	ChanneldNormalState channelStateNum = 1 + iota
+	ChannelUnknownState channelStateNum = iota
+	ChanneldNormalState
 	ChanneldAwaitingLockinState
 	OpeningdState
 	OnchaindTheirUnilateralState
@@ -172,6 +180,7 @@ const (
 
 var (
 	states = map[channelStateNum]channelState{
+		ChannelUnknownState:          "<unknown channel state>",
 		ChanneldNormalState:          "CHANNELD_NORMAL",
 		ChanneldAwaitingLockinState:  "CHANNELD_AWAITING_LOCKIN",
 		OpeningdState:                "OPENINGD",
@@ -273,7 +282,7 @@ func (p peer) ToNode() node {
 	}
 	return node{
 		isPeer:    true,
-		Connected: p.Connected,
+		connected: p.Connected,
 		Addresses: addrinfo,
 		Channels:  p.Channels,
 		NodeId:    p.PeerId,
@@ -285,7 +294,7 @@ func (n node) String() string {
 	parts := []string{
 		fmt.Sprintf("id: %s", n.NodeId),
 		fmt.Sprintf("isPeer: %v", n.isPeer),
-		fmt.Sprintf("Connected: %v", n.Connected),
+		fmt.Sprintf("connected: %v", n.connected),
 	}
 	if n.Alias != "" {
 		parts = append(parts, fmt.Sprintf("Alias: %s", n.Alias))
@@ -293,7 +302,7 @@ func (n node) String() string {
 	if n.Color != "" {
 		parts = append(parts, fmt.Sprintf("Color: %s", n.Color))
 	}
-	if n.Connected {
+	if n.connected {
 		parts = append(parts, fmt.Sprintf("Addresses: %s", n.Addresses))
 	}
 	if len(n.Channels) > 0 {
@@ -303,6 +312,31 @@ func (n node) String() string {
 		"node{%s}",
 		strings.Join(parts, ", "),
 	)
+}
+
+// updateChannel updates the node's channels to take into account the new channelListing.
+func (n *node) updateChannel(cl channelListing) {
+	// TODO: store channels for one node as map?
+	found := false
+	for _, c := range n.Channels {
+		if c.ShortChannelId == cl.ShortChannelId {
+			// TODO: might need to update state on known channel?
+			found = true
+			break
+		}
+	}
+	if !found {
+		n.Channels = append(n.Channels, channel{
+			// State: ""
+			ShortChannelId: cl.ShortChannelId,
+			Active:         cl.Active,
+			Public:         cl.Public,
+		})
+	}
+}
+
+func (cs channels) Num() int {
+	return len(cs)
 }
 
 // String returns a human-readable description of the address.
@@ -384,7 +418,7 @@ func (s state) updateNodes(newNodes nodes) {
 			if on.isPeer {
 				// Note: We avoid marking peers as non-peers when listnodes returns with isPeer=false. This could be less hacky.
 				nn.isPeer = true
-				nn.Connected = on.Connected
+				nn.connected = on.connected
 				if len(nn.Channels) == 0 && len(on.Channels) > 0 {
 					nn.Channels = on.Channels
 				}
@@ -398,6 +432,42 @@ func (s state) updateNodes(newNodes nodes) {
 	}
 }
 
+// updateChannels updates the state based on the channelListings from listchannels.
+func (s state) updateChannels(cls channelListings) {
+	for _, cl := range cls {
+		sn, exists := s.Nodes[cl.Source]
+		if !exists {
+			fmt.Printf("no such source node %s\n", cl.Source)
+			continue
+		}
+		dn, exists := s.Nodes[cl.Destination]
+		if !exists {
+			fmt.Printf("no such dest node %s\n", cl.Destination)
+			continue
+		}
+
+		if debugging {
+			fmt.Printf("Before updating source node, we know about %d channels for it\n", len(sn.Channels))
+		}
+		sn.updateChannel(cl)
+		if debugging {
+			fmt.Printf("Ater updating source node, we know about %d channels for it\n", len(sn.Channels))
+		}
+		dn.updateChannel(cl)
+
+		s.Nodes[sn.NodeId] = sn
+		s.Nodes[dn.NodeId] = dn
+		// fmt.Printf("%s last seen %v\n", cl.ShortChannelId, time.Since(cl.LastUpdate.Time()))
+		// cl.ShortChannelId
+		// cl.LastUpdate.Time().Since()
+		// cl.BaseFeeMillisatoshis
+		// cl.FeePerMillionth
+		//}
+		//return fmt.Sprintf("number of online and active channels: %d", online)
+
+	}
+}
+
 // Peers returns all nodes that are our peers.
 func (ns allNodes) Peers() nodes {
 	result := nodes{}
@@ -405,6 +475,18 @@ func (ns allNodes) Peers() nodes {
 		if n.isPeer {
 			result = append(result, n)
 		}
+	}
+	sort.Sort(sort.Reverse(result))
+	return result
+}
+
+// Nodes returns the sorted nodes.
+func (ns allNodes) Nodes() nodes {
+	result := make(nodes, len(ns), len(ns))
+	i := 0
+	for _, n := range ns {
+		result[i] = n
+		i += 1
 	}
 	sort.Sort(sort.Reverse(result))
 	return result
@@ -422,6 +504,7 @@ func (ns nodes) Less(i, j int) bool {
 		// Peer nodes are "more" than non-peer nodes.
 		return false
 	}
+	// TODO: Take into account if channel IsOurs().
 	if len(ns[i].Channels) < len(ns[j].Channels) {
 		// Peers with fewer channels are "less" than ones with more of them.
 		return true
@@ -430,11 +513,11 @@ func (ns nodes) Less(i, j int) bool {
 		// Peers with more channels are never "less" than ones with fewer of them.
 		return false
 	}
-	if !ns[i].Connected && ns[j].Connected {
+	if !ns[i].connected && ns[j].connected {
 		// Unconnected peers are "less" than connected ones.
 		return true
 	}
-	if ns[i].Connected && !ns[j].Connected {
+	if ns[i].connected && !ns[j].connected {
 		// Connected peers are never "less" than unconnected ones.
 		return false
 	}
@@ -453,7 +536,7 @@ func (ns nodes) Less(i, j int) bool {
 func (ns nodes) NumConnected() int {
 	num := 0
 	for _, n := range ns {
-		if n.Connected {
+		if n.connected {
 			num += 1
 		}
 	}
@@ -489,34 +572,14 @@ func (ns nodes) NumChannelsByState() map[channelState]int64 {
 	return byState
 }
 
-// TotalChannelCapacity returns the total capacity of channels by state (e.g CHANNELD_NORMAL).
-func (ns nodes) TotalChannelCapacity() map[channelState]msatoshi {
-	result := map[channelState]msatoshi{}
-	for _, n := range ns {
-		for _, c := range n.Channels {
-			if !n.isPeer {
-				// Nodes that are not our peers can't have cbannels towards us.
-				continue
-			}
-			result[c.State] += c.MsatoshiTotal
-		}
+// String returns a human-readable description of the channel listing.
+func (cl channelListing) String() string {
+	parts := []string{
+		fmt.Sprintf("source: %s", cl.Source),
+		fmt.Sprintf("destination: %s", cl.Destination),
+		fmt.Sprintf("short_channel_id: %s", cl.ShortChannelId),
 	}
-	return result
-}
-
-// ToUsChannelBalance returns the balance of channels by state (e.g CHANNELD_NORMAL).
-func (ns nodes) ToUsChannelBalance() map[channelState]msatoshi {
-	result := map[channelState]msatoshi{}
-	for _, n := range ns {
-		if !n.isPeer {
-			// Nodes that are not our peers can't have cbannels towards us.
-			continue
-		}
-		for _, c := range n.Channels {
-			result[c.State] += c.MsatoshiToUs
-		}
-	}
-	return result
+	return fmt.Sprintf("channelListing{%s}", strings.Join(parts, ", "))
 }
 
 // String returns a human-readable description of the channel listings.
@@ -524,41 +587,46 @@ func (cls channelListings) String() string {
 	return fmt.Sprintf("%d channels", len(cls))
 }
 
-// String returns a human-readable description of the channels.
-func (cs channels) String() string {
-	if len(cs) == 0 {
+// WithUs returns true if the channel is to our node.
+func (c channel) WithUs() bool {
+	// TODO: could use a cleaner check than deducing that if we know the capacity or balance it must be our channel..
+	return c.MsatsTotal > msatoshi(0) || c.MsatsToUs > msatoshi(0)
+}
+
+// OurChannels returns the channels that are with our node.
+func (cs channels) OurChannels() channels {
+	result := channels{}
+	for _, c := range cs {
+		if !c.WithUs() {
+			continue
+		}
+		result = append(result, c)
+	}
+	return result
+}
+
+// DescState describes the state of the channels.
+func (cs channels) DescState() string {
+	if len(cs) < 1 {
 		return ""
 	}
-	if len(cs) > 1 {
-		// TODO: Find how this is supported by protocol.
-		return "<unsupported multiple channels>"
+	desc := []string{}
+	withUs := 0
+	notWithUs := 0
+	for i, c := range cs {
+		if c.WithUs() {
+			fmt.Printf("FIXMEH: DescState found that channel at index %d with state %s is ours\n", i, c.State)
+			desc = append(desc, string(c.State))
+			withUs += 1
+		} else {
+			notWithUs += 1
+		}
 	}
-	return cs[0].String()
-}
-
-func (cs channels) State() string {
-	if len(cs) != 1 {
-		return ""
+	if withUs > 0 {
+		return fmt.Sprintf("%d channels, %d to us: %s", len(cs), withUs, strings.Join(desc, ", "))
+	} else {
+		return fmt.Sprintf("%d channels, none of them with us", notWithUs)
 	}
-	return string(cs[0].State)
-}
-
-func (cs channels) MilliSatoshiToUs() msatoshi {
-	if len(cs) != 1 {
-		return msatoshi(-1)
-	}
-	return cs[0].MsatoshiToUs
-}
-
-func (cs channels) MilliSatoshiTotal() msatoshi {
-	if len(cs) != 1 {
-		return msatoshi(-1)
-	}
-	return cs[0].MsatoshiTotal
-}
-
-func (cs channels) MilliSatoshiToThem() msatoshi {
-	return cs.MilliSatoshiTotal() - cs.MilliSatoshiToUs()
 }
 
 // String returns a human-readable description of the channel.
@@ -569,11 +637,11 @@ func (c channel) String() string {
 	if c.FundingTxId != "" {
 		parts = append(parts, fmt.Sprintf("funding_txid: %s", c.FundingTxId))
 	}
-	if c.MsatoshiToUs != 0 {
-		parts = append(parts, fmt.Sprintf("msatoshi_to_us: %d", c.MsatoshiToUs))
+	if c.MsatsToUs != 0 {
+		parts = append(parts, fmt.Sprintf("msatoshi_to_us: %d", c.MsatsToUs))
 	}
-	if c.MsatoshiTotal != 0 {
-		parts = append(parts, fmt.Sprintf("msatoshi_total: %d", c.MsatoshiTotal))
+	if c.MsatsTotal != 0 {
+		parts = append(parts, fmt.Sprintf("msatoshi_total: %d", c.MsatsTotal))
 	}
 	return fmt.Sprintf("channel{%s}", strings.Join(parts, ", "))
 }
@@ -815,6 +883,9 @@ func (s *state) update() error {
 	s.gauges["num_nodes"].Set(float64(len(s.Nodes)))
 	// log.Printf("lightningd listnodes response: %+v\n", nodes)
 
+	// TODO: remove s.Channels
+	s.updateChannels(s.Channels)
+
 	s.counterVecs["aliases"].Reset()
 	s.gaugeVecs["channel_capacities_msatoshi"].Reset()
 	s.gaugeVecs["channel_balances_msatoshi"].Reset()
@@ -825,29 +896,29 @@ func (s *state) update() error {
 				"alias":   string(n.Alias),
 			}).Set(float64(n.LastTimestamp))
 
-		if n.isPeer && len(n.Channels) >= 1 {
-			if n.Channels.MilliSatoshiTotal() > 0 {
+		for _, c := range n.Channels.OurChannels() {
+			if c.MsatsTotal > msatoshi(0) {
 				s.gaugeVecs["channel_capacities_msatoshi"].With(
 					prometheus.Labels{
 						"node_id": string(n.NodeId),
-						"state":   n.Channels.State(),
-					}).Set(float64(n.Channels.MilliSatoshiTotal()))
+						"state":   string(c.State),
+					}).Set(float64(c.MsatsTotal))
 			}
-			if n.Channels.MilliSatoshiToUs() > 0 {
+			if c.MsatsToUs > msatoshi(0) {
 				s.gaugeVecs["channel_balances_msatoshi"].With(
 					prometheus.Labels{
 						"node_id":   string(n.NodeId),
-						"state":     n.Channels.State(),
+						"state":     string(c.State),
 						"direction": "to_us",
-					}).Set(float64(n.Channels.MilliSatoshiToUs()))
+					}).Set(float64(c.MsatsToUs))
 			}
-			if n.Channels.MilliSatoshiToThem() > 0 {
+			if c.MsatsTotal-c.MsatsToUs > msatoshi(0) {
 				s.gaugeVecs["channel_balances_msatoshi"].With(
 					prometheus.Labels{
 						"node_id":   string(n.NodeId),
-						"state":     n.Channels.State(),
+						"state":     string(c.State),
 						"direction": "to_them",
-					}).Set(float64(n.Channels.MilliSatoshiToThem()))
+					}).Set(float64(c.MsatsTotal - c.MsatsToUs))
 			}
 		}
 	}

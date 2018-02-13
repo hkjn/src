@@ -39,18 +39,16 @@
 			<th>Id</th>
 			<th>Alias</th>
 			<th>Last seen</th>
-			<th>Channel state</th>
-			<th>Funds to us</th>
-			<th>Funds to them</th>
+			<th># channels</th>
+			<th>Channel states</th>
 		</tr>
 		{{ range .Nodes.Peers -}}
 		<tr>
 			<td><code>{{ .NodeId.Short }}</code></td>
 			<td>{{ .Alias }}</td>
 			<td>{{ .LastTimestamp.Since }}</td>
-			<td><code>{{ .Channels.State }}</code></td>
-			<td>{{ if .Channels }} {{ .Channels.MilliSatoshiToUs.String }} {{ end }}</td>
-			<td>{{ if .Channels }} {{ .Channels.MilliSatoshiToThem.String }} {{ end }}</td>
+			<td>{{ .Channels.Num }}</td>
+			<td>{{ .Channels.DescState }}</td>
 		</tr>
 		{{- end }}
 	</table>
