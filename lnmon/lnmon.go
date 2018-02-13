@@ -815,15 +815,6 @@ func (s *state) update() error {
 		s.args = append(s.args, arg)
 	}
 
-	// Delete all old metrics in vectors, so we don't accidentally persist e.g gauges measuring earlier
-	// seen channel states. This is unfortunate, but seems necessary unless we want to track and
-	// muttate earlier states.
-	ourChannels.Reset()
-	channelCapacities.Reset()
-	channelBalances.Reset()
-	aliases.Reset()
-	infoCounter.Reset()
-
 	c := newCli()
 	info, err := c.GetInfo()
 	if err != nil {
@@ -831,6 +822,7 @@ func (s *state) update() error {
 	}
 	s.Info = *info
 	log.Printf("lightningd getinfo response: %+v\n", info)
+	infoCounter.Reset()
 	infoCounter.With(
 		prometheus.Labels{
 			"lnmon_version":      s.MonVersion,
@@ -863,6 +855,11 @@ func (s *state) update() error {
 	peers := s.Nodes.Peers() // TODO: could do the below with entire s.Nodes too; methods filter out non-peers where applicable.
 	numPeers.With(prometheus.Labels{"connected": "connected"}).Set(float64(peers.NumConnected()))
 	numPeers.With(prometheus.Labels{"connected": "unconnected"}).Set(float64(len(peers) - peers.NumConnected()))
+
+	// Delete all old metrics in vectors, so we don't accidentally persist e.g gauges measuring earlier
+	// seen channel states. This is unfortunate, but seems necessary unless we want to track and
+	// muttate earlier states.
+	ourChannels.Reset()
 	for state, n := range s.Nodes.Peers().NumChannelsByState() {
 		// log.Printf("We have %d channels in state %q\n", n, state)
 		ourChannels.With(prometheus.Labels{"state": string(state)}).Set(float64(n))
@@ -876,6 +873,9 @@ func (s *state) update() error {
 	numNodes.Set(float64(len(s.Nodes)))
 	// log.Printf("lightningd listnodes response: %+v\n", nodes)
 
+	aliases.Reset()
+	channelCapacities.Reset()
+	channelBalances.Reset()
 	for _, n := range s.Nodes {
 		aliases.With(
 			prometheus.Labels{
