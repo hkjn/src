@@ -296,6 +296,7 @@ new PromConsole.Graph({
     expr: 'bottomk(50, sort(time() - lightningd_aliases{{ with .Params.node_id }}{node_id="{{ . }}"}{{end }}))',
     name: "[[ alias ]]",
     renderer: "area",
+    yUnits: "sec",
     min: 0.0
 });
 </script>
