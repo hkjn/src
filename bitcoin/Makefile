@@ -1,8 +1,8 @@
 include ../make/Makefile
 NAME=bitcoin
-VERSION=lightning-2018-02-09
-BITCOIN_VERSION=89005
-LIGHTNING_VERSION=d5effc
+VERSION=lightning-2018-02-14
+BITCOIN_VERSION=252ae7
+LIGHTNING_VERSION=e97ee3
 
 docker-build:
 	@echo "Building image $(IMAGE):$(VERSION)-$(DOCKER_ARCH).."
