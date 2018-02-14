@@ -10,8 +10,11 @@ ENV BITCOIN_VERSION=${bitcoin_version} \
     LIGHTNING_VERSION=${lightning_version}
 
 # Install dependencies.
-RUN pacman -Syyu --noconfirm && \
-    pacman -S --noconfirm git base-devel boost libevent jq python
+RUN pacman-key --init
+RUN pacman-key --populate archlinux
+RUN pacman-key --refresh-keys
+RUN pacman -Syyu --noconfirm
+RUN pacman -S --noconfirm git base-devel boost libevent jq python
 
 
 WORKDIR /usr/local/src/bitcoin/
@@ -29,19 +32,27 @@ RUN ./autogen.sh && \
 
 RUN echo "Building bitcoin at: $(git show)" && \
     make
+USER root
 RUN make install
+USER bitcoin
 
 WORKDIR /usr/local/src/lightning
+USER root
+RUN chown -R bitcoin:bitcoin /usr/local/src/lightning
+USER bitcoin
 RUN git clone https://github.com/elementsproject/lightning . && \
     git checkout ${LIGHTNING_VERSION} && \
     echo "Building lightning at $(git show)"
 
 RUN make
+
+USER root
 RUN make install
+USER bitcoin
 
-WORKDIR /usr/lib/
+WORKDIR /usr/local/src/bitcoin
 
-COPY sqlversiontest.cpp /usr/lib
+COPY sqlversiontest.cpp /usr/local/src/bitcoin
 RUN g++ -o sqlversiontest sqlversiontest.cpp -lsqlite3 && \
     ./sqlversiontest
 
