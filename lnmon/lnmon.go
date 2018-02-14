@@ -612,20 +612,20 @@ func (cs channels) DescState() string {
 	}
 	desc := []string{}
 	withUs := 0
-	notWithUs := 0
-	for i, c := range cs {
+	for _, c := range cs {
 		if c.WithUs() {
-			fmt.Printf("FIXMEH: DescState found that channel at index %d with state %s is ours\n", i, c.State)
 			desc = append(desc, string(c.State))
 			withUs += 1
-		} else {
-			notWithUs += 1
 		}
 	}
 	if withUs > 0 {
-		return fmt.Sprintf("%d channels, %d to us: %s", len(cs), withUs, strings.Join(desc, ", "))
+		plural := ""
+		if withUs > 1 {
+			plural = "s"
+		}
+		return fmt.Sprintf("%d channel%s with us, in state %s", withUs, plural, strings.Join(desc, ", "))
 	} else {
-		return fmt.Sprintf("%d channels, none of them with us", notWithUs)
+		return "No channels with us"
 	}
 }
 
@@ -937,6 +937,18 @@ func (s *state) update() error {
 	return nil
 }
 
+// reset forgets all lightningd state.
+func (s *state) reset() {
+	s.pid = 0
+	s.args = []string{}
+	s.Alias = alias("")
+	s.Info = getInfoResponse{}
+	s.Nodes = allNodes{}
+	s.Channels = channelListings{}
+	s.Payments = payments{}
+	s.Outputs = outputs{}
+}
+
 func refresh(s *state) {
 	// TODO: Maybe don't assume that lightningd always is in "pid" namespace..
 	namespace := "pid"
@@ -945,7 +957,7 @@ func refresh(s *state) {
 		if err := s.update(); err != nil {
 			// TODO: increment counter here, so we can alert on possible lightningd crashes.
 			log.Printf("Failed to get state: %v\n", err)
-			s = &state{}
+			s.reset()
 		}
 		if s.IsRunning() {
 			if !registeredLn {
