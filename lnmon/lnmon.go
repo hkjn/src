@@ -1,5 +1,12 @@
 // lnmon.go is a tool for pulling out and serving up data from lightning-cli for monitoring.
 //
+// TODO:Add view showing candidate nodes to open channels with, ranked in decreasing order with factors like:
+// 1. High availability should rank higher
+// 2. High connectivity (many other nodes having channels to it, with large balances and high volume of HTLCs going between them)
+// 3. Improving network graph structure
+// 4. Fast response time
+// 5. Long lifetime
+//
 // TODO: If we were to track state between CLI polls, we could detect e.g. channel state transitions,
 // new channels, etc., to create an event stream.
 package main
@@ -175,6 +182,7 @@ const (
 	OnchaindOurUnilateralState
 	ClosingdSigexchangeState
 
+	// Prometheus monitoring prefix.
 	counterPrefix = "lightningd"
 )
 
@@ -335,10 +343,6 @@ func (n *node) updateChannel(cl channelListing) {
 	}
 }
 
-func (cs channels) Num() int {
-	return len(cs)
-}
-
 // String returns a human-readable description of the address.
 func (addr address) String() string {
 	if len(addr) < 1 {
@@ -379,12 +383,15 @@ func (msat msatoshi) AsSat() string {
 
 // String returns a string formatting the msatoshi amount as BTC, mBTC or sat as appropriate.
 func (msat msatoshi) String() string {
+	if msat == 0 {
+		return ""
+	}
 	sat := float64(int64(msat)) / 1.0e3
-	if sat < 1.0e3 {
+	if sat < 1.0e4 {
 		return fmt.Sprintf("%.0f sat", sat)
 	}
 	btc := sat / 1.0e8
-	if btc < 0.001 {
+	if btc < 0.005 {
 		return fmt.Sprintf("%.4f mBTC", btc*1000.0)
 	}
 	return fmt.Sprintf("%.5f BTC", btc)
@@ -492,6 +499,25 @@ func (ns allNodes) Nodes() nodes {
 	return result
 }
 
+func (ns nodes) NumNormalChannels() int {
+	sum := 0
+	for _, n := range ns {
+		if !n.isPeer {
+			continue
+		}
+		for _, c := range n.Channels {
+			if !c.WithUs() {
+				continue
+			}
+			if c.State != states[ChanneldNormalState] {
+				continue
+			}
+			sum += 1
+		}
+	}
+	return sum
+}
+
 // Implement sort.Interface for nodes to sort them in reasonable order.
 func (ns nodes) Len() int      { return len(ns) }
 func (ns nodes) Swap(i, j int) { ns[i], ns[j] = ns[j], ns[i] }
@@ -562,7 +588,7 @@ func (ns nodes) NumChannelsByState() map[channelState]int64 {
 	byState := map[channelState]int64{}
 	for _, n := range ns {
 		if !n.isPeer {
-			// Nodes that are not our peers can't have cbannels with us.
+			// Nodes that are not our peers can't have channels with us.
 			continue
 		}
 		for _, c := range n.Channels {
@@ -591,6 +617,22 @@ func (cls channelListings) String() string {
 func (c channel) WithUs() bool {
 	// TODO: could use a cleaner check than deducing that if we know the capacity or balance it must be our channel..
 	return c.MsatsTotal > msatoshi(0) || c.MsatsToUs > msatoshi(0)
+}
+
+func (cs channels) BalanceToUs() msatoshi {
+	total := msatoshi(0)
+	for _, c := range cs {
+		total += c.MsatsToUs
+	}
+	return total
+}
+
+func (cs channels) BalanceToThem() msatoshi {
+	total := msatoshi(0)
+	for _, c := range cs {
+		total += (c.MsatsTotal - c.MsatsToUs)
+	}
+	return total
 }
 
 // OurChannels returns the channels that are with our node.

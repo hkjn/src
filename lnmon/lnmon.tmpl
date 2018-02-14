@@ -29,8 +29,9 @@
 	<p>Our version is is <code>{{ .Info.Version }}</code>.</p>
 	<p>Our blockheight is is <code>{{ .Info.Blockheight }}</code>.</p>
 	<p>We know of {{ len .Nodes }} nodes in total.</p>
+	<p>We have {{ len .Nodes.Peers }} peers.</p>
+	<p>We have {{ .Nodes.Peers.NumNormalChannels }} normal channels with our peers.</p>
 	<p>We know of {{ len .Channels }} channels in total.</p>
-	<p>We know of {{ len .Nodes.Peers }} nodes that are our peers.</p>
 
 	<h3>Peers</h3>
 
@@ -41,14 +42,18 @@
 			<th>Last seen</th>
 			<th># channels</th>
 			<th>Channel states</th>
+			<th>Our balance</th>
+			<th>Their balance</th>
 		</tr>
 		{{ range .Nodes.Peers -}}
 		<tr>
 			<td><code>{{ .NodeId.Short }}</code></td>
 			<td>{{ .Alias }}</td>
 			<td>{{ .LastTimestamp.Since }}</td>
-			<td>{{ .Channels.Num }}</td>
+			<td>{{ len .Channels }}</td>
 			<td>{{ .Channels.DescState }}</td>
+			<td>{{ .Channels.BalanceToUs }}</td>
+			<td>{{ .Channels.BalanceToThem }}</td>
 		</tr>
 		{{- end }}
 	</table>
