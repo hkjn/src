@@ -1,0 +1,66 @@
+{{ template "head" . }}
+
+<style>
+
+table.breakdown {
+	margin-top: 1em;
+}
+
+table.breakdown td, table.breakdown th {
+	border: 1px solid #ddd;
+	padding: 8px;
+}
+
+table.breakdown tr:nth-child(even) {
+	background-color: #eee;
+}
+
+table.breakdown th {
+	padding-top: 12px;
+	padding-bottom: 12px;
+	text-align: left;
+}
+</style>
+
+{{ template "prom_right_table_head" }}
+{{ template "prom_right_table_tail" }}
+{{ template "prom_content_head" . }}
+
+<h1>lnmon</h1>
+
+<p>Experimental <code>lnmon</code> consoles go here.</p>
+
+{{ with .Params.node_id }}
+<h2>Viewing only node
+{{ with printf "job_lightningd:aliases:sum{node_id='%s'}" . | query }}
+	{{ range . }}
+	<code>{{ .Labels.alias }}</code>
+	{{ end }}
+{{ end }}
+</h2>
+
+<p>Viewing node with id <code>{{ . }}</code>.</p>
+
+<p>View all nodes <a href="?">here</a>.</p>
+
+{{ end }}
+
+
+<h3>Time since nodes were last seen</h3>
+<div id="nodesLastSeenGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#nodesLastSeenGraph"),
+    colorScheme: "spectrum14",
+    expr: 'bottomk(50, sort(time() - lightningd_aliases{{ with .Params.node_id }}{node_id="{{ . }}"}{{end }}))',
+    name: "[[ alias ]]",
+    renderer: "area",
+    yUnits: "sec",
+    min: 0.0
+});
+</script>
+
+
+{{ template "prom_content_tail" . }}
+
+{{ template "tail" }}
