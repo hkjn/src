@@ -453,13 +453,7 @@ func (s state) updateChannels(cls channelListings) {
 			continue
 		}
 
-		if debugging {
-			fmt.Printf("Before updating source node, we know about %d channels for it\n", len(sn.Channels))
-		}
 		sn.updateChannel(cl)
-		if debugging {
-			fmt.Printf("Ater updating source node, we know about %d channels for it\n", len(sn.Channels))
-		}
 		dn.updateChannel(cl)
 
 		s.Nodes[sn.NodeId] = sn
@@ -499,6 +493,7 @@ func (ns allNodes) Nodes() nodes {
 	return result
 }
 
+// NumNormalChannels returns the number of CHANNELD_NORMAL channels with our node.
 func (ns nodes) NumNormalChannels() int {
 	sum := 0
 	for _, n := range ns {
