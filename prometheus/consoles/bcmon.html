@@ -7,14 +7,71 @@
 
 <h1>bcmon</h1>
 
-<h2>Bitcoin</h2>
+<p>Welcome to a monitoring tool developed by <a href="https://hkjn.me">hkjn</a>.</p>
 
-<h3>Running?</h3>
+<p>This dashboard shows information about the state of a Bitcoin node, which should
+make it easier to monitor its state and learn about the technology.</p>
+
+<h1>Process info for <code>lightningd</code></h1>
+
+<h2>Running?</h2>
 <div id="runningGraph"></div>
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#runningGraph"),
     expr: "bitcoind_running",
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
+<h2>Virtual memory usage</h2>
+<div id="virtualMemoryGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#virtualMemoryGraph"),
+    colorScheme: "cool",
+    expr: 'pid_process_virtual_memory_bytes{job="bcmon"}',
+    name: "Virtual memory (bytes)",
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
+<h2>Resident memory</h2>
+<div id="residentMemoryGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#residentMemoryGraph"),
+    colorScheme: "cool",
+    expr: 'pid_process_resident_memory_bytes{job="bcmon"}',
+    name: "Resident memory (bytes)",
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
+<h2>Rate of CPU usage</h2>
+<div id="cpuUsageRateGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#cpuUsageRateGraph"),
+    expr: 'rate(pid_process_cpu_seconds_total{job="bcmon"}[5m])',
+    colorScheme: "cool",
+    name: "CPU usage rate",
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
+<h2>Number of open file descriptors</h2>
+<div id="openFdsGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#openFdsGraph"),
+    colorScheme: "cool",
+    expr: 'pid_process_open_fds{job="bcmon"}',
+    name: "Number of file descriptors",
     renderer: "area",
     min: 0.0
 });
