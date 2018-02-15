@@ -354,6 +354,17 @@ func (n node) KnownAddress() bool {
 	return n.Addresses[0].Address != "" && n.Addresses[0].Port != 0
 }
 
+// isChannelCandidate returns true if we could open a channel to this node.
+func (n node) isChannelCandidate() bool {
+	if !n.KnownAddress() {
+		return false
+	}
+	if n.Channels.AnyWithUs() {
+		return false
+	}
+	return true
+}
+
 // String returns a human-readable description of the nodes.
 func (ns nodes) String() string {
 	desc := make([]string, len(ns), len(ns))
@@ -400,8 +411,20 @@ func (ns candidates) Less(i, j int) bool {
 		return true
 	}
 	if len(ns[i].Channels) > len(ns[j].Channels) {
-		// Peers with more channels are never "less" than ones with fewer of them.
+		// Peers with more channels are "more" than ones with fewer of them.
 		return false
+	}
+	if len(ns[i].Channels) < len(ns[j].Channels) {
+		// Peers with fewer channels are "less" than ones with more of them.
+		return true
+	}
+	if ns[i].isPeer && !ns[j].isPeer {
+		// Peers that are our peer are "more" than nodes that are not currently our peer.
+		return false
+	}
+	if !ns[i].isPeer && ns[j].isPeer {
+		// Peers that are not our peer are "less" than nodes that are currently our peer.
+		return true
 	}
 	// TODO: should compare ns[i].Channels and ns[j].Channels.
 
@@ -419,14 +442,12 @@ func (ns nodes) ChannelCandidates() candidates {
 	// 3. Improving network graph structure
 	// 4. Fast response time
 	// 5. Long lifetime
-	num := len(ns)
-	result := make(candidates, num, num)
-	for i, n := range ns {
-		// TODO: use if n.isChannelCandidate() to avoid even counting nodes that can't be candidates before sorting.
-		if i >= num {
-			break
+	result := candidates{}
+	for _, n := range ns {
+		if !n.isChannelCandidate() {
+			continue
 		}
-		result[i] = n
+		result = append(result, n)
 	}
 	sort.Sort(sort.Reverse(result))
 	return result

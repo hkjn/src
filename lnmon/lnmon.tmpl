@@ -1,6 +1,6 @@
 <html>
 <body>
-	<h1>Hello!</h1>
+	<h1><a href="#">Hello!</a></h1>
 
 	<p>This is an experiment with Lightning Network running
 	at <code>ln.hkjn.me</code> by
@@ -33,7 +33,7 @@
 	<p>We have {{ .Nodes.Peers.NumNormalChannels }} normal channels with our peers.</p>
 	<p>We know of {{ len .Channels }} channels in total.</p>
 
-	<h3>Peers</h3>
+	<h3 id="peers"><a href="#peers">Peers</a></h3>
 
 	<table>
 		<tr>
@@ -58,7 +58,7 @@
 		{{- end }}
 	</table>
 
-	<h3>Payments</h3>
+	<h3 id="payments"><a href="#payments">Payments</a></h3>
 	<table>
 		<tr>
 			<th>Id</th>
