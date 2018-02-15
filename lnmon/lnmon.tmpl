@@ -58,10 +58,6 @@
 		{{- end }}
 	</table>
 
-	{{ else }}
-	<p><code>lightningd</code> is <strong>not running</strong>.</p>
-	{{- end }}
-
 	<h3>Payments</h3>
 	<table>
 		<tr>
@@ -81,5 +77,28 @@
 		</tr>
 	{{- end }}
 	</table>
+
+	<h3 id="channelCandidates"><a href="#channelCandidates">Candidate nodes for new channels</a></h3>
+	<p>This section shows nodes that we might want to open new channels towards.</p>
+	<table>
+		<tr>
+			<th>Alias</th>
+			<th>Node</th>
+			<th>Last seen</th>
+			<th>Number of channels</th>
+		</tr>
+	{{ range .Nodes.ChannelCandidates -}}
+		<tr>
+			<td>{{ .Alias }}</td>
+			<td>{{ .NodeId }} {{ .Addresses.String}} </td>
+			<td>{{ .LastTimestamp.Since }}</td>
+			<td>{{ len .Channels }}</td>
+		</tr>
+	{{- end }}
+	</table>
+
+	{{ else }}
+	<p><code>lightningd</code> is <strong>not running</strong>.</p>
+	{{- end }}
 </body>
 </html>

@@ -1,12 +1,5 @@
 // lnmon.go is a tool for pulling out and serving up data from lightning-cli for monitoring.
 //
-// TODO:Add view showing candidate nodes to open channels with, ranked in decreasing order with factors like:
-// 1. High availability should rank higher
-// 2. High connectivity (many other nodes having channels to it, with large balances and high volume of HTLCs going between them)
-// 3. Improving network graph structure
-// 4. Fast response time
-// 5. Long lifetime
-//
 // TODO: If we were to track state between CLI polls, we could detect e.g. channel state transitions,
 // new channels, etc., to create an event stream.
 package main
@@ -104,7 +97,7 @@ type (
 		// isPeer is true if this node is one of our peers.
 		isPeer bool
 		// Connected is set to true for nodes that are our peers and also are currently connected.
-		connected bool
+		Connected bool
 		// Channels holds any channels that the node has.
 		Channels channels `json:"channels"`
 
@@ -116,6 +109,8 @@ type (
 	}
 	// nodes describes several nodes.
 	nodes []node
+	// candidates describes candidate nodes to open channels with.
+	candidates nodes
 	// output describes an individual output.
 	output struct {
 		TxId string `json:"txid"`
@@ -258,7 +253,7 @@ func (ts unixTs) Since() string {
 	if d > time.Second {
 		return fmt.Sprintf("%.2f sec", d.Seconds())
 	}
-	return fmt.Sprintf("%.2f ms", d.Nanoseconds()/1e6)
+	return fmt.Sprintf("%.2f ms", float64(d.Nanoseconds()/1e6))
 }
 
 // String returns the name of the state, e.g. "OPENINGD".
@@ -290,7 +285,7 @@ func (p peer) ToNode() node {
 	}
 	return node{
 		isPeer:    true,
-		connected: p.Connected,
+		Connected: p.Connected,
 		Addresses: addrinfo,
 		Channels:  p.Channels,
 		NodeId:    p.PeerId,
@@ -302,7 +297,7 @@ func (n node) String() string {
 	parts := []string{
 		fmt.Sprintf("id: %s", n.NodeId),
 		fmt.Sprintf("isPeer: %v", n.isPeer),
-		fmt.Sprintf("connected: %v", n.connected),
+		fmt.Sprintf("Connected: %v", n.Connected),
 	}
 	if n.Alias != "" {
 		parts = append(parts, fmt.Sprintf("Alias: %s", n.Alias))
@@ -310,7 +305,7 @@ func (n node) String() string {
 	if n.Color != "" {
 		parts = append(parts, fmt.Sprintf("Color: %s", n.Color))
 	}
-	if n.connected {
+	if n.Connected {
 		parts = append(parts, fmt.Sprintf("Addresses: %s", n.Addresses))
 	}
 	if len(n.Channels) > 0 {
@@ -345,14 +340,18 @@ func (n *node) updateChannel(cl channelListing) {
 
 // String returns a human-readable description of the address.
 func (addr address) String() string {
-	if len(addr) < 1 {
-		return fmt.Sprintf("address{}")
+	if len(addr) != 1 {
+		return "<unsupported address>"
 	}
-	parts := make([]string, len(addr), len(addr))
-	for i, a := range addr {
-		parts[i] = fmt.Sprintf("%s:%d", a.Address, a.Port)
+	return fmt.Sprintf("%s:%d", addr[0].Address, addr[0].Port)
+}
+
+func (n node) KnownAddress() bool {
+	if len(n.Addresses) != 1 {
+		// TODO: support > 1 addresses, if this can occur.
+		return false
 	}
-	return strings.Join(parts, ", ")
+	return n.Addresses[0].Address != "" && n.Addresses[0].Port != 0
 }
 
 // String returns a human-readable description of the nodes.
@@ -373,7 +372,64 @@ func (ns nodes) Desc() string {
 func (cs channels) Len() int      { return len(cs) }
 func (cs channels) Swap(i, j int) { cs[i], cs[j] = cs[j], cs[i] }
 func (cs channels) Less(i, j int) bool {
+	// TODO: could have more smartness here.
 	return cs[i].State < cs[j].State
+}
+
+func (ns candidates) Len() int      { return len(ns) }
+func (ns candidates) Swap(i, j int) { ns[i], ns[j] = ns[j], ns[i] }
+func (ns candidates) Less(i, j int) bool {
+	if ns[i].KnownAddress() && !ns[j].KnownAddress() {
+		// Nodes with known addresses are "more" than ones we don't know the address for.
+		return false
+	}
+	if !ns[i].KnownAddress() && ns[j].KnownAddress() {
+		// Nodes without known addresses are "less" than ones than ones we know the address for.
+		return true
+	}
+	if !ns[i].Channels.AnyWithUs() && ns[j].Channels.AnyWithUs() {
+		// Nodes without channels to us are "more" than nodes with channels to us.
+		return false
+	}
+	if ns[i].Channels.AnyWithUs() && !ns[j].Channels.AnyWithUs() {
+		// Nodes with channels to us are "less" than nodes with no channels to us.
+		return true
+	}
+	if len(ns[i].Channels) < len(ns[j].Channels) {
+		// Peers with fewer channels are "less" than ones with more of them.
+		return true
+	}
+	if len(ns[i].Channels) > len(ns[j].Channels) {
+		// Peers with more channels are never "less" than ones with fewer of them.
+		return false
+	}
+	// TODO: should compare ns[i].Channels and ns[j].Channels.
+
+	// Tie-breaker: alphabetic ordering of peer id.
+	return ns[i].NodeId < ns[j].NodeId
+}
+
+// ChannelCandidates returns nodes that are good candidates for new channels.
+//
+// The number of nodes returned may be less than the full set of nodes.
+func (ns nodes) ChannelCandidates() candidates {
+	// TODO: We could use much better metrics to decide candidate nodes to open channels with, like:
+	// 1. High availability should rank higher
+	// 2. High connectivity (many other nodes having channels to it, with large balances and high volume of HTLCs going between them)
+	// 3. Improving network graph structure
+	// 4. Fast response time
+	// 5. Long lifetime
+	num := len(ns)
+	result := make(candidates, num, num)
+	for i, n := range ns {
+		// TODO: use if n.isChannelCandidate() to avoid even counting nodes that can't be candidates before sorting.
+		if i >= num {
+			break
+		}
+		result[i] = n
+	}
+	sort.Sort(sort.Reverse(result))
+	return result
 }
 
 // AsSat returns a description
@@ -425,7 +481,7 @@ func (s state) updateNodes(newNodes nodes) {
 			if on.isPeer {
 				// Note: We avoid marking peers as non-peers when listnodes returns with isPeer=false. This could be less hacky.
 				nn.isPeer = true
-				nn.connected = on.connected
+				nn.Connected = on.Connected
 				if len(nn.Channels) == 0 && len(on.Channels) > 0 {
 					nn.Channels = on.Channels
 				}
@@ -437,6 +493,16 @@ func (s state) updateNodes(newNodes nodes) {
 			s.Nodes[nn.NodeId] = nn
 		}
 	}
+}
+
+// AnyWithUs returns true if any of the channels are with us.
+func (cs channels) AnyWithUs() bool {
+	for _, c := range cs {
+		if c.WithUs() {
+			return true
+		}
+	}
+	return false
 }
 
 // updateChannels updates the state based on the channelListings from listchannels.
@@ -481,16 +547,17 @@ func (ns allNodes) Peers() nodes {
 	return result
 }
 
-// Nodes returns the sorted nodes.
-func (ns allNodes) Nodes() nodes {
+// ChannelCandidates returns nodes that are good candidates for new channels.
+//
+// The number of nodes returned may be less than the full set of nodes.
+func (ns allNodes) ChannelCandidates() candidates {
 	result := make(nodes, len(ns), len(ns))
 	i := 0
 	for _, n := range ns {
 		result[i] = n
 		i += 1
 	}
-	sort.Sort(sort.Reverse(result))
-	return result
+	return result.ChannelCandidates()
 }
 
 // NumNormalChannels returns the number of CHANNELD_NORMAL channels with our node.
@@ -525,7 +592,14 @@ func (ns nodes) Less(i, j int) bool {
 		// Peer nodes are "more" than non-peer nodes.
 		return false
 	}
-	// TODO: Take into account if channel IsOurs().
+	if !ns[i].Channels.AnyWithUs() && ns[j].Channels.AnyWithUs() {
+		// Nodes without channels to us are "less" than nodes with channels to us.
+		return true
+	}
+	if ns[i].Channels.AnyWithUs() && !ns[j].Channels.AnyWithUs() {
+		// Nodes with channels to us are "more" than nodes with no channels to us.
+		return false
+	}
 	if len(ns[i].Channels) < len(ns[j].Channels) {
 		// Peers with fewer channels are "less" than ones with more of them.
 		return true
@@ -534,11 +608,11 @@ func (ns nodes) Less(i, j int) bool {
 		// Peers with more channels are never "less" than ones with fewer of them.
 		return false
 	}
-	if !ns[i].connected && ns[j].connected {
+	if !ns[i].Connected && ns[j].Connected {
 		// Unconnected peers are "less" than connected ones.
 		return true
 	}
-	if ns[i].connected && !ns[j].connected {
+	if ns[i].Connected && !ns[j].Connected {
 		// Connected peers are never "less" than unconnected ones.
 		return false
 	}
@@ -557,7 +631,7 @@ func (ns nodes) Less(i, j int) bool {
 func (ns nodes) NumConnected() int {
 	num := 0
 	for _, n := range ns {
-		if n.connected {
+		if n.Connected {
 			num += 1
 		}
 	}
@@ -1166,7 +1240,7 @@ func main() {
 	http.Handle("/", h)
 
 	if addr == "" {
-		addr = ":80"
+		addr = ":8380"
 	}
 
 	s := &http.Server{

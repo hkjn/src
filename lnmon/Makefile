@@ -24,8 +24,10 @@ build-bin: gen-tmpl
 
 gen-tmpl:
 	@echo "Generating bindata.go.."
-	# docker run --rm --name gentmpl -v $(shell pwd):/home/go/src/hkjn.me/src/lnmon hkjn/golang:tip go-bindata *.tmpl
-	go-bindata *.tmpl
+	docker run --rm --user root \
+	           -v $(shell pwd):/home/go/src/hkjn.me/src/lnmon \
+		   -w /home/go/src/hkjn.me/src/lnmon \
+	    hkjn/golang:tip go-bindata *.tmpl
 
 deploy: build-bin
 	@echo "Deploying lnmon.next binary to $(DEPLOYHOST):$(DEPLOYPORT).."
