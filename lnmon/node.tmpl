@@ -1,0 +1,46 @@
+<html>
+<head>
+<style>
+body {
+	font-family: Arial;
+}
+
+a, a:visited {
+	text-decoration: none;
+	font-weight: bold;
+	color: black;
+}
+table {
+	margin-top: 1em;
+}
+
+table td, table th {
+	border: 1px solid #ddd;
+	padding: 8px;
+}
+
+table tr:nth-child(even) {
+	background-color: #eee;
+}
+
+table th {
+	padding-top: 12px;
+	padding-bottom: 12px;
+	text-align: left;
+}
+</style>
+</head>
+<body>
+	<h1><a href="#"><code>lnmon</code></a></h1>
+
+	<p>This is a monitoring dashboard for the Lightning Network running
+	at <code>ln.hkjn.me</code> by <a href="https://hkjn.me">hkjn</a>.</p>
+
+	<p>Viewing node <code>{{ .NodeId }}</code>.
+	{{ with .Alias }}
+		{{ . }}
+	{{ end }}
+	</p>
+
+</body>
+</html>
