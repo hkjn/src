@@ -49,14 +49,10 @@ RUN make
 USER root
 RUN make install
 RUN rm -rf /usr/local/src && \
-    pacman -Sc
+    pacman --noconfirm -Sc
 USER bitcoin
 
 WORKDIR /usr/local/src/bitcoin
-
-COPY sqlversiontest.cpp /usr/local/src/bitcoin
-RUN g++ -o sqlversiontest sqlversiontest.cpp -lsqlite3 && \
-    ./sqlversiontest
 
 COPY entrypoint.sh /usr/local/bin
 WORKDIR /home/bitcoin
