@@ -31,16 +31,29 @@ table th {
 </style>
 </head>
 <body>
-	<h1><a href="#"><code>lnmon</code></a></h1>
+	<h1><a href="node/{{ .NodeId }}"><code>lnmon</code></a></h1>
 
-	<p>This is a monitoring dashboard for the Lightning Network running
-	at <code>ln.hkjn.me</code> by <a href="https://hkjn.me">hkjn</a>.</p>
+	<p>Viewing node <code>{{ .NodeId }} {{ .Addresses.String }}</code>.</p>
 
-	<p>Viewing node <code>{{ .NodeId }}</code>.
-	{{ with .Alias }}
-		{{ . }}
-	{{ end }}
-	</p>
-
+	<table>
+		<tr>
+			<th>Id</th>
+			<th>Alias</th>
+			<th>Last seen</th>
+			<th># channels</th>
+			<th>Channel states</th>
+			<th>Our balance</th>
+			<th>Their balance</th>
+		</tr>
+		<tr>
+			<td><code>{{ .NodeId.Short }}</code></td>
+			<td>{{ with .Alias }}{{ . }}{{ else }}Unknown alias{{ end }}</td>
+			<td>{{ .LastTimestamp.Since }}</td>
+			<td>{{ len .Channels }}</td>
+			<td>{{ .Channels.DescState }}</td>
+			<td>{{ .Channels.BalanceToUs }}</td>
+			<td>{{ .Channels.BalanceToThem }}</td>
+		</tr>
+	</table>
 </body>
 </html>

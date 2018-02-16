@@ -348,6 +348,9 @@ func (n *node) updateChannel(cl channelListing) {
 
 // String returns a human-readable description of the address.
 func (addr address) String() string {
+	if len(addr) == 0 {
+		return ""
+	}
 	if len(addr) != 1 {
 		return "<unsupported address>"
 	}
