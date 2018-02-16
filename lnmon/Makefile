@@ -20,7 +20,9 @@ build-docker: gen-tmpl
 
 build-bin: gen-tmpl
 	@echo "Building lnmon on host, targeting $(GOOS) / $(GOARCH).."
-	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags="-X main.lnmonVersion=$(shell git log -1 --pretty=format:'%h')" -o lnmon .
+	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build \
+	    -ldflags="-X main.lnmonVersion=$(shell git log -1 --pretty=format:'%h')" \
+	    -o lnmon .
 
 gen-tmpl:
 	@echo "Generating bindata.go.."
