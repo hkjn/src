@@ -7,6 +7,7 @@ body {
 
 a, a:visited {
 	text-decoration: none;
+	font-weight: bold;
 	color: black;
 }
 table {
@@ -35,8 +36,7 @@ table th {
 	<p>This is a monitoring dashboard for the Lightning Network running
 	at <code>ln.hkjn.me</code> by <a href="https://hkjn.me">hkjn</a>.</p>
 
-	<p>This web server is version
-	<code>{{ .MonVersion}}</code> and exists mainly to serve
+	<p>This web server exists mainly to serve
 	the <a href="/metrics">/metrics</a> endpoint for Prometheus
 	to collect data for queries and graphs for Lightning
 	Network metrics.</p>
