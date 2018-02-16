@@ -2,6 +2,10 @@ include ../make/Makefile
 
 NAME=lnmon
 VERSION=0.1.0
+GOOS ?= linux
+GOARCH ?= arm
+DEPLOYHOST ?= prod.hkjn.me
+DEPLOYPORT ?= 6200
 
 .DEFAULT_GOAL=deploy
 
@@ -15,13 +19,16 @@ build-docker: gen-tmpl
 	docker rm lnmonbuild
 
 build-bin: gen-tmpl
-	@echo "Building lnmon on host.."
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm go build -ldflags="-X main.lnmonVersion=$(shell git log -1 --pretty=format:'%h')" -o lnmon .
+	@echo "Building lnmon on host, targeting $(GOOS) / $(GOARCH).."
+	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags="-X main.lnmonVersion=$(shell git log -1 --pretty=format:'%h')" -o lnmon .
 
 gen-tmpl:
 	@echo "Generating bindata.go.."
-	go-bindata *.tmpl
+	docker run --rm --user root \
+	           -v $(shell pwd):/home/go/src/hkjn.me/src/lnmon \
+		   -w /home/go/src/hkjn.me/src/lnmon \
+	    hkjn/golang:tip go-bindata *.tmpl
 
 deploy: build-bin
-	@echo "Deploying lnmon.next binary.."
-	scp -P 6200 lnmon prod.hkjn.me:/etc/bins/lnmon.next
+	@echo "Deploying lnmon.next binary to $(DEPLOYHOST):$(DEPLOYPORT).."
+	scp -P $(DEPLOYPORT) lnmon $(DEPLOYHOST):/etc/bins/lnmon.next

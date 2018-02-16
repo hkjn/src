@@ -89,7 +89,7 @@ func (s bitcoindState) String() string {
 	}
 }
 
-func (s bitcoindState) IsRunning() bool {
+func (s bitcoindState) isRunning() bool {
 	return s.pid != 0
 }
 
@@ -193,7 +193,7 @@ func refresh() {
 		} else {
 			allState = *btcState
 		}
-		if allState.IsRunning() {
+		if allState.isRunning() {
 			if !registeredBitcoin {
 				lc := prometheus.NewProcessCollector(allState.pid, namespace)
 				prometheus.MustRegister(lc)
@@ -238,7 +238,17 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := tmpl.Execute(w, allState); err != nil {
+	data := struct {
+		IsRunning     bool
+		DashboardLink string
+	}{
+		IsRunning: allState.isRunning(),
+	}
+
+	if os.Getenv("BCMON_LINK_DASHBOARD") != "" {
+		data.DashboardLink = os.Getenv("BCMON_LINK_DASHBOARD")
+	}
+	if err := tmpl.Execute(w, data); err != nil {
 		http.Error(w, "Well, that's embarrassing. Please try again later.", http.StatusInternalServerError)
 		log.Printf("Failed to execute template: %v\n", err)
 		return
@@ -258,7 +268,7 @@ func main() {
 	http.HandleFunc("/", indexHandler)
 
 	if addr == "" {
-		addr = ":80"
+		addr = ":9740"
 	}
 	s := &http.Server{
 		Addr: addr,

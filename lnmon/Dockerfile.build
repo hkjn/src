@@ -5,7 +5,7 @@ ENV CGO_ENABLED=0 \
     GOARCH=arm
 
 WORKDIR /home/go/src/hkjn.me/src/lnmon/
-COPY lnmon.go ./
+COPY *.go ./
 COPY ["vendor", "./vendor"]
 USER root
 RUN chown -R go:go /home/go/bin

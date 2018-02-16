@@ -2,6 +2,10 @@ include ../make/Makefile
 
 NAME=bcmon
 VERSION=0.1.0
+GOOS ?= linux
+GOARCH ?= arm
+DEPLOYHOST ?= prod.hkjn.me
+DEPLOYPORT ?= 6200
 
 .DEFAULT_GOAL=deploy
 
@@ -16,12 +20,15 @@ build-docker: gen-tmpl bcmon
 
 build-bin: gen-tmpl
 	@echo "Building bcmon on host.."
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm go build -o bcmon .
+	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o bcmon .
 
 gen-tmpl:
 	@echo "Generating bindata.go.."
-	go-bindata *.tmpl
+	docker run --rm --user root \
+	           -v $(shell pwd):/home/go/src/hkjn.me/src/lnmon \
+		   -w /home/go/src/hkjn.me/src/lnmon \
+	    hkjn/golang:tip go-bindata *.tmpl
 
 deploy: build-bin
 	@echo "Deploying bcmon.next binary.."
-	scp -P 6200 bcmon prod.hkjn.me:/etc/bins/bcmon.next
+	scp -P $(DEPLOYPORT) bcmon $(DEPLOYHOST):/etc/bins/bcmon.next
