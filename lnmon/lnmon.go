@@ -450,7 +450,7 @@ func (ns nodes) ChannelCandidates() candidates {
 		result = append(result, n)
 	}
 	sort.Sort(sort.Reverse(result))
-	return result
+	return result[:20]
 }
 
 // AsSat returns a description
@@ -1238,7 +1238,28 @@ func (h httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.tmpl.Execute(w, h.state); err != nil {
+	data := struct {
+		IsRunning         bool
+		MonVersion        string
+		Alias             alias
+		Info              getInfoResponse
+		NumNodes          int
+		ChannelCandidates candidates
+		Peers             nodes
+		NumChannels       int
+		Payments          payments
+	}{
+		IsRunning:         h.state.IsRunning(),
+		MonVersion:        h.state.MonVersion,
+		Alias:             h.state.Alias,
+		Info:              h.state.Info,
+		NumNodes:          len(h.state.Nodes),
+		ChannelCandidates: h.state.Nodes.ChannelCandidates(),
+		Peers:             h.state.Nodes.Peers(),
+		NumChannels:       len(h.state.Channels),
+		Payments:          h.state.Payments,
+	}
+	if err := h.tmpl.Execute(w, data); err != nil {
 		http.Error(w, "Well, that's embarrassing. Please try again later.", http.StatusInternalServerError)
 		log.Printf("Failed to execute template: %v\n", err)
 		return

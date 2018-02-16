@@ -1,4 +1,27 @@
 <html>
+<head>
+<style>
+
+table {
+	margin-top: 1em;
+}
+
+table td, table th {
+	border: 1px solid #ddd;
+	padding: 8px;
+}
+
+table tr:nth-child(even) {
+	background-color: #eee;
+}
+
+table th {
+	padding-top: 12px;
+	padding-bottom: 12px;
+	text-align: left;
+}
+</style>
+</head>
 <body>
 	<h1><a href="#">Hello!</a></h1>
 
@@ -28,10 +51,10 @@
 	<p>Our address is is <code>{{ .Info.Address }}</code>.</p>
 	<p>Our version is is <code>{{ .Info.Version }}</code>.</p>
 	<p>Our blockheight is is <code>{{ .Info.Blockheight }}</code>.</p>
-	<p>We know of {{ len .Nodes }} nodes in total.</p>
-	<p>We have {{ len .Nodes.Peers }} peers.</p>
-	<p>We have {{ .Nodes.Peers.NumNormalChannels }} normal channels with our peers.</p>
-	<p>We know of {{ len .Channels }} channels in total.</p>
+	<p>We know of {{ .NumNodes }} nodes in total.</p>
+	<p>We have {{ len .Peers }} peers.</p>
+	<p>We have {{ .Peers.NumNormalChannels }} normal channels with our peers.</p>
+	<p>We know of {{ .NumChannels }} channels in total.</p>
 
 	<h3 id="peers"><a href="#peers">Peers</a></h3>
 
@@ -45,7 +68,7 @@
 			<th>Our balance</th>
 			<th>Their balance</th>
 		</tr>
-		{{ range .Nodes.Peers -}}
+		{{ range .Peers -}}
 		<tr>
 			<td><code>{{ .NodeId.Short }}</code></td>
 			<td>{{ .Alias }}</td>
@@ -87,7 +110,7 @@
 			<th>Last seen</th>
 			<th>Number of channels</th>
 		</tr>
-	{{ range .Nodes.ChannelCandidates -}}
+	{{ range .ChannelCandidates -}}
 		<tr>
 			<td>{{ .Alias }}</td>
 			<td>{{ .NodeId }} {{ .Addresses.String}} </td>
