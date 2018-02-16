@@ -1,7 +1,14 @@
 <html>
 <head>
 <style>
+body {
+	font-family: Arial;
+}
 
+a, a:visited {
+	text-decoration: none;
+	color: black;
+}
 table {
 	margin-top: 1em;
 }
@@ -23,11 +30,10 @@ table th {
 </style>
 </head>
 <body>
-	<h1><a href="#">Hello!</a></h1>
+	<h1><a href="#"><code>lnmon</code></a></h1>
 
-	<p>This is an experiment with Lightning Network running
-	at <code>ln.hkjn.me</code> by
-	<a href="https://hkjn.me">hkjn</a>.</p>
+	<p>This is a monitoring dashboard for the Lightning Network running
+	at <code>ln.hkjn.me</code> by <a href="https://hkjn.me">hkjn</a>.</p>
 
 	<p>This web server is version
 	<code>{{ .MonVersion}}</code> and exists mainly to serve
@@ -38,25 +44,55 @@ table th {
 	<p>You may also be interested in the
 	<a href="https://ln.hkjn.me/">Prometheus dashboard</a>
 	scraping data from this tool.</p>
+	
+	<table>
+		<tr>
+			<th>lnmon version</th>
+			<td><code>{{ .MonVersion }}</code></td>
+		</tr>
+		<tr>
+			<th>lightningd running?</th>
+			<td><code>{{ .IsRunning }}</code></td>
+		</tr>
+		<tr>
+			<th>lightningd version</th>
+			<td><code>{{ .Info.Version }}</code></td>
+		</tr>
+		<tr>
+			<th>Node id</th>
+			<td><code>{{ .Info.NodeId }}</code></td>
+		</tr>
+		<tr>
+			<th>Alias</th>
+			<td>{{ with .Alias -}}<code>{{ . }}</code>{{ else }}Unknown alias{{- end }}</td>
+		</tr>
+		<tr>
+			<th>Address</th>
+			<td><code>{{ .Info.Address }}</code></td>
+		</tr>
+		<tr>
+			<th>Blockheight</th>
+			<td>{{ .Info.Blockheight }}</td>
+		</tr>
+		<tr>
+			<th>Total nodes</th>
+			<td>{{ .NumNodes }}</td>
+		</tr>
+		<tr>
+			<th>Total channels</th>
+			<td>{{ .NumChannels }}</td>
+		</tr>
+		<tr>
+			<th>Number of peers</th>
+			<td>{{ len .Peers }}</td>
+		</tr>
+		<tr>
+			<th>Number of normal channels with peers</th>
+			<td>{{ .Peers.NumNormalChannels }}</td>
+		</tr>
+	</table>
 
-	<h2><code>lightningd</code> info</h2>
-	{{ if .IsRunning -}}
-	<p><code>lightningd</code> is <strong>running</strong></p>
-	<p>Our id is <code>{{ .Info.NodeId}}</code>.</p>
-	{{ with .Alias -}}
-	<p>Our alias is <code>{{ . }}</code>.</p>
-	{{ else }}
-	<p>Unknown alias for our own node.</p>
-	{{- end }}
-	<p>Our address is is <code>{{ .Info.Address }}</code>.</p>
-	<p>Our version is is <code>{{ .Info.Version }}</code>.</p>
-	<p>Our blockheight is is <code>{{ .Info.Blockheight }}</code>.</p>
-	<p>We know of {{ .NumNodes }} nodes in total.</p>
-	<p>We have {{ len .Peers }} peers.</p>
-	<p>We have {{ .Peers.NumNormalChannels }} normal channels with our peers.</p>
-	<p>We know of {{ .NumChannels }} channels in total.</p>
-
-	<h3 id="peers"><a href="#peers">Peers</a></h3>
+	<h2 id="peers"><a href="#peers">Peers</a></h2>
 
 	<table>
 		<tr>
@@ -101,7 +137,7 @@ table th {
 	{{- end }}
 	</table>
 
-	<h3 id="channelCandidates"><a href="#channelCandidates">Candidate nodes for new channels</a></h3>
+	<h2 id="channelCandidates"><a href="#channelCandidates">Candidate nodes for new channels</a></h2>
 	<p>This section shows nodes that we might want to open new channels towards.</p>
 	<table>
 		<tr>
@@ -119,9 +155,5 @@ table th {
 		</tr>
 	{{- end }}
 	</table>
-
-	{{ else }}
-	<p><code>lightningd</code> is <strong>not running</strong>.</p>
-	{{- end }}
 </body>
 </html>

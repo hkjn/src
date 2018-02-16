@@ -450,7 +450,11 @@ func (ns nodes) ChannelCandidates() candidates {
 		result = append(result, n)
 	}
 	sort.Sort(sort.Reverse(result))
-	return result[:20]
+	max := 20
+	if len(result) < 20 {
+		max = len(result)
+	}
+	return result[:max]
 }
 
 // AsSat returns a description
@@ -935,7 +939,7 @@ func (s *state) update() error {
 	// This means that any failure to fetch new state from cli will result in empty state.
 	s.MonVersion = lnmonVersion
 	s.Nodes = allNodes{}
-
+	// TODO: grab mutex here to avoid data race when we write and ServeHTTP may read.
 	ps, err := execCmd("pgrep", "-a", "lightningd")
 	if err != nil {
 		return err
