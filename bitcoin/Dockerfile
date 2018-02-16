@@ -48,6 +48,8 @@ RUN make
 
 USER root
 RUN make install
+RUN rm -rf /usr/local/src && \
+    pacman -Sc
 USER bitcoin
 
 WORKDIR /usr/local/src/bitcoin
