@@ -195,6 +195,7 @@ var (
 	debugging    = os.Getenv("LNMON_DEBUGGING") == "1"
 	addr         = os.Getenv("LNMON_ADDR")
 	hostname     = os.Getenv("LNMON_HOSTNAME")
+	httpPrefix   = os.Getenv("LNMON_HTTP_PREFIX")
 )
 
 // getFile returns the contents of the specified file.
@@ -1255,7 +1256,7 @@ func (h httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "400 Bad Request")
 		return
 	}
-	if r.URL.Path != "/" {
+	if r.URL.Path != "/" && r.URL.Path != httpPrefix+"/" {
 		log.Printf("Serving 404 for GET %q\n", r.URL.Path)
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprintf(w, "404 Page Not Found")
@@ -1293,9 +1294,6 @@ func (h httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func main() {
 	log.Printf("lnmon version %q starting..\n", lnmonVersion)
 
-	// Register prometheus metrics and http handler.
-	http.Handle("/metrics", promhttp.Handler())
-
 	h, err := newHTTPHandler()
 	if err != nil {
 		log.Fatalf("Failed to create http handler: %v\n", err)
@@ -1304,6 +1302,12 @@ func main() {
 	go refresh(&h.state)
 
 	http.Handle("/", h)
+	http.Handle("/metrics", promhttp.Handler())
+	if httpPrefix != "" {
+		log.Printf("Serving resources with prefix %q..\n", httpPrefix)
+		http.Handle(httpPrefix+"/", h)
+		http.Handle(httpPrefix+"/metrics", promhttp.Handler())
+	}
 
 	if addr == "" {
 		addr = ":8380"
