@@ -60,15 +60,11 @@ table th {
 		</tr>
 		<tr>
 			<th>Node id</th>
-			<td><code>{{ .Info.NodeId }}</code></td>
+			<td><code><a href="node/{{ .Info.NodeId }}">{{ .Info.NodeId }} {{ .Info.Address }}</a></code></td>
 		</tr>
 		<tr>
 			<th>Alias</th>
 			<td>{{ with .Alias -}}<code>{{ . }}</code>{{ else }}Unknown alias{{- end }}</td>
-		</tr>
-		<tr>
-			<th>Address</th>
-			<td><code>{{ .Info.Address }}</code></td>
 		</tr>
 		<tr>
 			<th>Blockheight</th>
@@ -106,7 +102,7 @@ table th {
 		</tr>
 		{{ range .Peers -}}
 		<tr>
-			<td><code>{{ .NodeId.Short }}</code></td>
+			<td><code><a href="node/{{ .NodeId }}">{{ .NodeId.Short }}</a></code></td>
 			<td>{{ .Alias }}</td>
 			<td>{{ .LastTimestamp.Since }}</td>
 			<td>{{ len .Channels }}</td>
@@ -130,7 +126,7 @@ table th {
 		<tr>
 			<td>{{ .PaymentId }}</td>
 			<td>{{ .Msatoshi.String }}</td>
-			<td>{{ .Destination }}</td>
+			<td><code><a href="node/{{ .Destination }}">{{ .Destination.Short }}</a></code></td>
 			<td>{{ .Timestamp.Time }}</td>
 			<td>{{ .Status }}</td>
 		</tr>
@@ -150,7 +146,7 @@ table th {
 	{{ range .ChannelCandidates -}}
 		<tr>
 			<td>{{ .Alias }}</td>
-			<td>{{ .NodeId }} {{ .Addresses.String}} </td>
+			<td><code><a href="node/{{ .NodeId }}">{{ .NodeId.Short }} {{ .Addresses.String}}</a></code></td>
 			<td>{{ .LastTimestamp.Since }}</td>
 			<td>{{ len .Channels }}</td>
 			<td>{{ .Channels.DescState }}</td>

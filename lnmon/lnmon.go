@@ -125,7 +125,7 @@ type (
 	payment struct {
 		PaymentId       int64    `json:"id"`
 		PaymentHash     string   `json:"payment_hash"`
-		Destination     string   `json:"destination"`
+		Destination     nodeId   `json:"destination"`
 		Msatoshi        msatoshi `json:"msatoshi"`
 		Timestamp       unixTs   `json:"timestamp"`
 		CreatedAt       unixTs   `json:"created_at"`
@@ -777,19 +777,19 @@ func (cs channels) DescState() string {
 	if withUs > 0 {
 		if withUs == 1 {
 			return fmt.Sprintf(
-				"Channel with us (%s): %s",
+				"Channel with us (%s): %s.",
 				strings.Join(desc, ", "),
 				cs.DescBalance(),
 			)
 		} else {
 			return fmt.Sprintf(
-				"%d channels with us, in state %s",
+				"%d channels with us, in state %s.",
 				withUs,
 				strings.Join(desc, ", "),
 			)
 		}
 	} else {
-		return "No channels with us"
+		return "No channels with us."
 	}
 }
 
@@ -1237,8 +1237,7 @@ func (h nodeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "404 Bad Request")
 		return
 	}
-	data := struct{ Node node }{Node: n}
-	if err := h.tmpl.Execute(w, data); err != nil {
+	if err := h.tmpl.Execute(w, n); err != nil {
 		http.Error(w, "Well, that's embarrassing. Please try again later.", http.StatusInternalServerError)
 		log.Printf("Failed to execute template: %v\n", err)
 		return
@@ -1253,9 +1252,10 @@ func newRouter(ih, nh http.Handler, prefix string) *mux.Router {
 	r.Handle("/metrics", promhttp.Handler()).Methods("GET")
 	if prefix != "" {
 		log.Printf("Serving resources with prefix %q..\n", prefix)
-		r.Handle("/", ih).PathPrefix(prefix)
-		r.Handle("/node", nh).PathPrefix(prefix)
-		r.Handle("/metrics", promhttp.Handler()).PathPrefix(prefix)
+		sr := r.PathPrefix(prefix).Subrouter()
+		sr.Handle("/", ih).Methods("GET")
+		sr.Handle("/node", nh).Methods("GET")
+		sr.Handle("/metrics", promhttp.Handler()).Methods("GET")
 	}
 	return r
 }
@@ -1359,7 +1359,7 @@ func main() {
 		log.Fatalf("Failed to create http handlers: %v\n", err)
 	}
 	ih.registerMetrics()
-	router := getRouter(ih, nh, httpPrefix)
+	router := newRouter(ih, nh, httpPrefix)
 	http.Handle("/", router)
 	go refresh(s)
 
