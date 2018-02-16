@@ -145,6 +145,7 @@ table th {
 			<th>Node</th>
 			<th>Last seen</th>
 			<th>Number of channels</th>
+			<th>Channel state</th>
 		</tr>
 	{{ range .ChannelCandidates -}}
 		<tr>
@@ -152,6 +153,7 @@ table th {
 			<td>{{ .NodeId }} {{ .Addresses.String}} </td>
 			<td>{{ .LastTimestamp.Since }}</td>
 			<td>{{ len .Channels }}</td>
+			<td>{{ .Channels.DescState }}</td>
 		</tr>
 	{{- end }}
 	</table>

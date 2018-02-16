@@ -359,9 +359,6 @@ func (n node) isChannelCandidate() bool {
 	if !n.KnownAddress() {
 		return false
 	}
-	if n.Channels.AnyWithUs() {
-		return false
-	}
 	return true
 }
 
@@ -398,14 +395,6 @@ func (ns candidates) Less(i, j int) bool {
 		// Nodes without known addresses are "less" than ones than ones we know the address for.
 		return true
 	}
-	if !ns[i].Channels.AnyWithUs() && ns[j].Channels.AnyWithUs() {
-		// Nodes without channels to us are "more" than nodes with channels to us.
-		return false
-	}
-	if ns[i].Channels.AnyWithUs() && !ns[j].Channels.AnyWithUs() {
-		// Nodes with channels to us are "less" than nodes with no channels to us.
-		return true
-	}
 	if len(ns[i].Channels) < len(ns[j].Channels) {
 		// Peers with fewer channels are "less" than ones with more of them.
 		return true
@@ -414,8 +403,12 @@ func (ns candidates) Less(i, j int) bool {
 		// Peers with more channels are "more" than ones with fewer of them.
 		return false
 	}
-	if len(ns[i].Channels) < len(ns[j].Channels) {
-		// Peers with fewer channels are "less" than ones with more of them.
+	if !ns[i].Channels.AnyWithUs() && ns[j].Channels.AnyWithUs() {
+		// Nodes without channels to us are "more" than nodes with channels to us.
+		return false
+	}
+	if ns[i].Channels.AnyWithUs() && !ns[j].Channels.AnyWithUs() {
+		// Nodes with channels to us are "less" than nodes with no channels to us.
 		return true
 	}
 	if ns[i].isPeer && !ns[j].isPeer {
@@ -713,6 +706,7 @@ func (c channel) WithUs() bool {
 	return c.MsatsTotal > msatoshi(0) || c.MsatsToUs > msatoshi(0)
 }
 
+// BalanceToUs returns the total msatoshi to us in the channels.
 func (cs channels) BalanceToUs() msatoshi {
 	total := msatoshi(0)
 	for _, c := range cs {
@@ -721,12 +715,30 @@ func (cs channels) BalanceToUs() msatoshi {
 	return total
 }
 
+// BalanceToThem returns the total msatoshi to them in the channels.
 func (cs channels) BalanceToThem() msatoshi {
 	total := msatoshi(0)
 	for _, c := range cs {
 		total += (c.MsatsTotal - c.MsatsToUs)
 	}
 	return total
+}
+
+func (cs channels) DescBalance() string {
+	us := cs.BalanceToUs()
+	them := cs.BalanceToThem()
+	if us == 0 && them == 0 {
+		return "no balance in channel!?"
+	}
+	usDesc := us.String()
+	themDesc := them.String()
+	if us == 0 {
+		usDesc = "0"
+	}
+	if them == 0 {
+		themDesc = "0"
+	}
+	return fmt.Sprintf("%s / %s", usDesc, themDesc)
 }
 
 // OurChannels returns the channels that are with our node.
@@ -755,11 +767,19 @@ func (cs channels) DescState() string {
 		}
 	}
 	if withUs > 0 {
-		plural := ""
-		if withUs > 1 {
-			plural = "s"
+		if withUs == 1 {
+			return fmt.Sprintf(
+				"Channel with us (%s): %s",
+				strings.Join(desc, ", "),
+				cs.DescBalance(),
+			)
+		} else {
+			return fmt.Sprintf(
+				"%d channels with us, in state %s",
+				withUs,
+				strings.Join(desc, ", "),
+			)
 		}
-		return fmt.Sprintf("%d channel%s with us, in state %s", withUs, plural, strings.Join(desc, ", "))
 	} else {
 		return "No channels with us"
 	}
@@ -1248,9 +1268,9 @@ func (h httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Alias             alias
 		Info              getInfoResponse
 		NumNodes          int
+		NumChannels       int
 		ChannelCandidates candidates
 		Peers             nodes
-		NumChannels       int
 		Payments          payments
 	}{
 		IsRunning:         h.state.IsRunning(),
@@ -1258,9 +1278,9 @@ func (h httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Alias:             h.state.Alias,
 		Info:              h.state.Info,
 		NumNodes:          len(h.state.Nodes),
+		NumChannels:       len(h.state.Channels),
 		ChannelCandidates: h.state.Nodes.ChannelCandidates(),
 		Peers:             h.state.Nodes.Peers(),
-		NumChannels:       len(h.state.Channels),
 		Payments:          h.state.Payments,
 	}
 	if err := h.tmpl.Execute(w, data); err != nil {
