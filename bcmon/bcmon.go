@@ -72,8 +72,6 @@ type (
 const counterPrefix = "bitcoind"
 
 var (
-	// TODO: eliminate global variable
-	allState   state
 	addr       = os.Getenv("BCMON_ADDR")
 	hostname   = os.Getenv("BCMON_HOSTNAME")
 	httpPrefix = os.Getenv("BCMON_HTTP_PREFIX")
@@ -202,8 +200,10 @@ func (h indexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	data := struct {
 		IsRunning     bool
 		DashboardLink string
+		MonVersion    string
 	}{
-		IsRunning: allState.isRunning(),
+		IsRunning:  h.s.isRunning(),
+		MonVersion: h.s.MonVersion,
 	}
 
 	if os.Getenv("BCMON_LINK_DASHBOARD") != "" {
