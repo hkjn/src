@@ -13,8 +13,8 @@ build-docker:
 
 install: build-docker
 	@echo "Setting capabilities to allow binding to privileged ports.."
-	sudo setcap "cap_net_bind_service=+ep" ${GOPATH}/bin/caddy
+	sudo setcap "cap_net_bind_service=+ep" caddy
 	@echo "Adjusting ulimit.."
-	ulimit -n 8192 ${GOPATH}/bin/caddy
+	ulimit -n 8192 caddy
 	@echo "Installing caddy binary.."
 	install caddy /etc/caddy
