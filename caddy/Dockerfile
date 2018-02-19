@@ -2,7 +2,7 @@ FROM hkjn/golang:tip
 
 COPY install.sh /usr/local/bin/
 USER root
-RUN chown -R go:go /home/go/src
+RUN chown -R go:go /home/go/src /home/go/bin
 USER go
 RUN install.sh
 
