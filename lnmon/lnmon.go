@@ -20,6 +20,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/crypto/acme/autocert"
@@ -124,7 +125,7 @@ type (
 	payment struct {
 		PaymentId       int64    `json:"id"`
 		PaymentHash     string   `json:"payment_hash"`
-		Destination     string   `json:"destination"`
+		Destination     nodeId   `json:"destination"`
 		Msatoshi        msatoshi `json:"msatoshi"`
 		Timestamp       unixTs   `json:"timestamp"`
 		CreatedAt       unixTs   `json:"created_at"`
@@ -161,9 +162,13 @@ type (
 	}
 	channelStateNum int
 	channelState    string
-	httpHandler     struct {
-		tmpl  template.Template
-		state state
+	indexHandler    struct {
+		tmpl template.Template
+		s    *state
+	}
+	nodeHandler struct {
+		tmpl template.Template
+		s    *state
 	}
 )
 
@@ -182,6 +187,8 @@ const (
 )
 
 var (
+	// allState state
+
 	states = map[channelStateNum]channelState{
 		ChannelUnknownState:          "<unknown channel state>",
 		ChanneldNormalState:          "CHANNELD_NORMAL",
@@ -195,6 +202,7 @@ var (
 	debugging    = os.Getenv("LNMON_DEBUGGING") == "1"
 	addr         = os.Getenv("LNMON_ADDR")
 	hostname     = os.Getenv("LNMON_HOSTNAME")
+	httpPrefix   = os.Getenv("LNMON_HTTP_PREFIX")
 )
 
 // getFile returns the contents of the specified file.
@@ -340,6 +348,9 @@ func (n *node) updateChannel(cl channelListing) {
 
 // String returns a human-readable description of the address.
 func (addr address) String() string {
+	if len(addr) == 0 {
+		return ""
+	}
 	if len(addr) != 1 {
 		return "<unsupported address>"
 	}
@@ -769,19 +780,19 @@ func (cs channels) DescState() string {
 	if withUs > 0 {
 		if withUs == 1 {
 			return fmt.Sprintf(
-				"Channel with us (%s): %s",
+				"Channel with us (%s): %s.",
 				strings.Join(desc, ", "),
 				cs.DescBalance(),
 			)
 		} else {
 			return fmt.Sprintf(
-				"%d channels with us, in state %s",
+				"%d channels with us, in state %s.",
 				withUs,
 				strings.Join(desc, ", "),
 			)
 		}
 	} else {
-		return "No channels with us"
+		return "No channels with us."
 	}
 }
 
@@ -1130,138 +1141,52 @@ func refresh(s *state) {
 		}
 
 		// lightning-cli listinvoice
-		// lightning-cli listpayments
 		time.Sleep(time.Minute)
 	}
 }
 
-// newHTTPHandler returns a new http handler.
-func newHTTPHandler() (*httpHandler, error) {
-	s, err := getFile("lnmon.tmpl")
+// newIndexHandler returns a new http handler for the index page.
+func newIndexHandler(s *state) (*indexHandler, error) {
+	b, err := getFile("index.tmpl")
 	if err != nil {
 		return nil, err
 	}
-	tmpl, err := template.New("index").Parse(string(s))
+	tmpl, err := template.New("index").Parse(string(b))
 	if err != nil {
 		return nil, err
 	}
-	return &httpHandler{
-		tmpl: *tmpl,
-		state: state{
-			Nodes: allNodes{},
-			gauges: map[string]prometheus.Gauge{
-				"running": prometheus.NewGauge(prometheus.GaugeOpts{
-					Namespace: counterPrefix,
-					Name:      "running",
-					Help:      "Whether lightningd process is running (1) or not (0).",
-				}),
-				"num_channels": prometheus.NewGauge(
-					prometheus.GaugeOpts{
-						Namespace: counterPrefix,
-						Name:      "num_channels",
-						Help:      "Number of Lightning channels this node knows about.",
-					},
-				),
-				"num_nodes": prometheus.NewGauge(
-					prometheus.GaugeOpts{
-						Namespace: counterPrefix,
-						Name:      "num_nodes",
-						Help:      "Number of Lightning nodes known by this node.",
-					},
-				),
-				"total_funds": prometheus.NewGauge(
-					prometheus.GaugeOpts{
-						Namespace: counterPrefix,
-						Name:      "total_funds",
-						Help:      "Sum of all funds available for opening channels.",
-					},
-				),
-			},
-			counterVecs: map[string]*prometheus.CounterVec{
-				"aliases": prometheus.NewCounterVec(
-					prometheus.CounterOpts{
-						Namespace: counterPrefix,
-						Name:      "aliases",
-						Help:      "Alias for each node id.",
-					},
-					[]string{"node_id", "alias"},
-				),
-				"info": prometheus.NewCounterVec(
-					prometheus.CounterOpts{
-						Namespace: counterPrefix,
-						Name:      "info",
-						Help:      "Info of lightningd and lnmon version.",
-					},
-					[]string{"lnmon_version", "lightningd_version"},
-				),
-			},
-			gaugeVecs: map[string]*prometheus.GaugeVec{
-				"num_peers": prometheus.NewGaugeVec(
-					prometheus.GaugeOpts{
-						Namespace: counterPrefix,
-						Name:      "num_peers",
-						Help:      "Number of Lightning peers of this node.",
-					},
-					[]string{"connected"},
-				),
-				"our_channels": prometheus.NewGaugeVec(
-					prometheus.GaugeOpts{
-						Namespace: counterPrefix,
-						Name:      "our_channels",
-						Help:      "Number of channels per state to and from our node.",
-					},
-					[]string{"state"},
-				),
-				"channel_capacities_msatoshi": prometheus.NewGaugeVec(
-					prometheus.GaugeOpts{
-						Namespace: counterPrefix,
-						Name:      "channel_capacities_msatoshi",
-						Help:      "Capacity of channels in millisatoshi by name and channel state.",
-					},
-					[]string{"node_id", "state"},
-				),
-				"channel_balances_msatoshi": prometheus.NewGaugeVec(
-					prometheus.GaugeOpts{
-						Namespace: counterPrefix,
-						Name:      "channel_balances_msatoshi",
-						Help:      "Balance to us of channels in millisatoshi by name and channel state.",
-					},
-					[]string{"node_id", "state", "direction"},
-				),
-			},
-		},
-	}, nil
+	return &indexHandler{tmpl: *tmpl, s: s}, nil
+}
+
+// newNodeHandler returns a new http handler for the /node page.
+func newNodeHandler(s *state) (*nodeHandler, error) {
+	b, err := getFile("node.tmpl")
+	if err != nil {
+		return nil, err
+	}
+	tmpl, err := template.New("node").Parse(string(b))
+	if err != nil {
+		return nil, err
+	}
+	return &nodeHandler{tmpl: *tmpl, s: s}, nil
 }
 
 // registerMetrics registers the Prometheus monitoring metrics.
-func (h httpHandler) registerMetrics() {
-	for _, m := range h.state.gauges {
+func (h indexHandler) registerMetrics() {
+	for _, m := range h.s.gauges {
 		prometheus.MustRegister(m)
 	}
-	for _, m := range h.state.counterVecs {
+	for _, m := range h.s.counterVecs {
 		prometheus.MustRegister(m)
 	}
-	for _, m := range h.state.gaugeVecs {
+	for _, m := range h.s.gaugeVecs {
 		prometheus.MustRegister(m)
 	}
 }
 
-// ServeHTTP the index page.
-func (h httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+// ServeHTTP serves the index page.
+func (h indexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%v] HTTP %s %s\n", r.RemoteAddr, r.Method, r.URL)
-	if r.Method != "GET" {
-		log.Printf("Serving 400 for HTTP %s %q\n", r.Method, r.URL.Path)
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "400 Bad Request")
-		return
-	}
-	if r.URL.Path != "/" {
-		log.Printf("Serving 404 for GET %q\n", r.URL.Path)
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, "404 Page Not Found")
-		return
-	}
-
 	data := struct {
 		IsRunning         bool
 		MonVersion        string
@@ -1273,15 +1198,15 @@ func (h httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Peers             nodes
 		Payments          payments
 	}{
-		IsRunning:         h.state.IsRunning(),
-		MonVersion:        h.state.MonVersion,
-		Alias:             h.state.Alias,
-		Info:              h.state.Info,
-		NumNodes:          len(h.state.Nodes),
-		NumChannels:       len(h.state.Channels),
-		ChannelCandidates: h.state.Nodes.ChannelCandidates(),
-		Peers:             h.state.Nodes.Peers(),
-		Payments:          h.state.Payments,
+		IsRunning:         h.s.IsRunning(),
+		MonVersion:        h.s.MonVersion,
+		Alias:             h.s.Alias,
+		Info:              h.s.Info,
+		NumNodes:          len(h.s.Nodes),
+		NumChannels:       len(h.s.Channels),
+		ChannelCandidates: h.s.Nodes.ChannelCandidates(),
+		Peers:             h.s.Nodes.Peers(),
+		Payments:          h.s.Payments,
 	}
 	if err := h.tmpl.Execute(w, data); err != nil {
 		http.Error(w, "Well, that's embarrassing. Please try again later.", http.StatusInternalServerError)
@@ -1290,28 +1215,161 @@ func (h httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ServeHTTP serves the /node page.
+func (h nodeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	nid := vars["id"]
+
+	log.Printf("[%v] nodeHandler serving HTTP for %s %s\n", r.RemoteAddr, r.Method, r.URL)
+	if r.Method != "GET" {
+		log.Printf("Serving 400 for HTTP %s %q\n", r.Method, r.URL.Path)
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "400 Bad Request")
+		return
+	}
+	if len(nid) != 66 {
+		log.Printf("Serving 400 for HTTP %s %q\n", r.Method, r.URL.Path)
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "400 Bad Request")
+		return
+	}
+	n, exists := h.s.Nodes[nodeId(nid)]
+	if !exists {
+		log.Printf("Serving 404 for HTTP %s %q\n", r.Method, r.URL.Path)
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprintf(w, "404 Bad Request")
+		return
+	}
+	if err := h.tmpl.Execute(w, n); err != nil {
+		http.Error(w, "Well, that's embarrassing. Please try again later.", http.StatusInternalServerError)
+		log.Printf("Failed to execute template: %v\n", err)
+		return
+	}
+}
+
+// newRouter returns a new http router.
+func newRouter(ih, nh http.Handler, prefix string) *mux.Router {
+	r := mux.NewRouter()
+	r.Handle("/", ih).Methods("GET")
+	r.Handle("/node/{id:[a-f0-9]+}", nh).Methods("GET")
+	r.Handle("/metrics", promhttp.Handler()).Methods("GET")
+	if prefix != "" {
+		log.Printf("Serving resources with prefix %q..\n", prefix)
+		sr := r.PathPrefix(prefix).Subrouter()
+		sr.Handle("/", ih).Methods("GET")
+		sr.Handle("/node", nh).Methods("GET")
+		sr.Handle("/metrics", promhttp.Handler()).Methods("GET")
+	}
+	return r
+}
+
+// newState returns a new state.
+func newState() *state {
+	return &state{
+		Nodes: allNodes{},
+		gauges: map[string]prometheus.Gauge{
+			"running": prometheus.NewGauge(prometheus.GaugeOpts{
+				Namespace: counterPrefix,
+				Name:      "running",
+				Help:      "Whether lightningd process is running (1) or not (0).",
+			}),
+			"num_channels": prometheus.NewGauge(
+				prometheus.GaugeOpts{
+					Namespace: counterPrefix,
+					Name:      "num_channels",
+					Help:      "Number of Lightning channels this node knows about.",
+				},
+			),
+			"num_nodes": prometheus.NewGauge(
+				prometheus.GaugeOpts{
+					Namespace: counterPrefix,
+					Name:      "num_nodes",
+					Help:      "Number of Lightning nodes known by this node.",
+				},
+			),
+			"total_funds": prometheus.NewGauge(
+				prometheus.GaugeOpts{
+					Namespace: counterPrefix,
+					Name:      "total_funds",
+					Help:      "Sum of all funds available for opening channels.",
+				},
+			),
+		},
+		counterVecs: map[string]*prometheus.CounterVec{
+			"aliases": prometheus.NewCounterVec(
+				prometheus.CounterOpts{
+					Namespace: counterPrefix,
+					Name:      "aliases",
+					Help:      "Alias for each node id.",
+				},
+				[]string{"node_id", "alias"},
+			),
+			"info": prometheus.NewCounterVec(
+				prometheus.CounterOpts{
+					Namespace: counterPrefix,
+					Name:      "info",
+					Help:      "Info of lightningd and lnmon version.",
+				},
+				[]string{"lnmon_version", "lightningd_version"},
+			),
+		},
+		gaugeVecs: map[string]*prometheus.GaugeVec{
+			"num_peers": prometheus.NewGaugeVec(
+				prometheus.GaugeOpts{
+					Namespace: counterPrefix,
+					Name:      "num_peers",
+					Help:      "Number of Lightning peers of this node.",
+				},
+				[]string{"connected"},
+			),
+			"our_channels": prometheus.NewGaugeVec(
+				prometheus.GaugeOpts{
+					Namespace: counterPrefix,
+					Name:      "our_channels",
+					Help:      "Number of channels per state to and from our node.",
+				},
+				[]string{"state"},
+			),
+			"channel_capacities_msatoshi": prometheus.NewGaugeVec(
+				prometheus.GaugeOpts{
+					Namespace: counterPrefix,
+					Name:      "channel_capacities_msatoshi",
+					Help:      "Capacity of channels in millisatoshi by name and channel state.",
+				},
+				[]string{"node_id", "state"},
+			),
+			"channel_balances_msatoshi": prometheus.NewGaugeVec(
+				prometheus.GaugeOpts{
+					Namespace: counterPrefix,
+					Name:      "channel_balances_msatoshi",
+					Help:      "Balance to us of channels in millisatoshi by name and channel state.",
+				},
+				[]string{"node_id", "state", "direction"},
+			),
+		},
+	}
+}
+
 func main() {
 	log.Printf("lnmon version %q starting..\n", lnmonVersion)
-
-	// Register prometheus metrics and http handler.
-	http.Handle("/metrics", promhttp.Handler())
-
-	h, err := newHTTPHandler()
+	s := newState()
+	ih, err := newIndexHandler(s)
 	if err != nil {
-		log.Fatalf("Failed to create http handler: %v\n", err)
+		log.Fatalf("Failed to create http handlers: %v\n", err)
 	}
-	h.registerMetrics()
-	go refresh(&h.state)
-
-	http.Handle("/", h)
+	nh, err := newNodeHandler(s)
+	if err != nil {
+		log.Fatalf("Failed to create http handlers: %v\n", err)
+	}
+	ih.registerMetrics()
+	router := newRouter(ih, nh, httpPrefix)
+	http.Handle("/", router)
+	go refresh(s)
 
 	if addr == "" {
 		addr = ":8380"
 	}
-
-	s := &http.Server{
-		Addr: addr,
-	}
+	server := &http.Server{Addr: addr}
 	if addr == ":443" {
 		fmt.Printf("Serving TLS at %q as %q..\n", addr, hostname)
 		m := autocert.Manager{
@@ -1327,10 +1385,10 @@ func main() {
 		}
 		go httpServer.ListenAndServe()
 
-		s.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
-		log.Fatal(s.ListenAndServeTLS("", ""))
+		server.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
+		log.Fatal(server.ListenAndServeTLS("", ""))
 	} else {
 		fmt.Printf("Serving plaintext HTTP on %s..\n", addr)
-		log.Fatal(s.ListenAndServe())
+		log.Fatal(server.ListenAndServe())
 	}
 }
