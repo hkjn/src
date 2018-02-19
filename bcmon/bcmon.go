@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/crypto/acme/autocert"
@@ -53,10 +54,18 @@ type (
 		BytesSentPerMsg map[string]int64 `json:"bytessent_per_msg"`
 		BytesRecvPerMsg map[string]int64 `json:"bytesrecv_per_msg"`
 	}
-	bitcoindState struct {
-		pid      int
-		args     []string
-		peerInfo []peerInfo
+	// state describes the last known state.
+	state struct {
+		// MonVersion is the version of bcmon.
+		MonVersion string
+		pid        int
+		args       []string
+		peerInfo   []peerInfo
+		gauges     map[string]prometheus.Gauge
+	}
+	indexHandler struct {
+		tmpl template.Template
+		s    *state
 	}
 )
 
@@ -64,14 +73,10 @@ const counterPrefix = "bitcoind"
 
 var (
 	// TODO: eliminate global variable
-	allState        bitcoindState
-	bitcoindRunning = prometheus.NewGauge(prometheus.GaugeOpts{
-		Namespace: counterPrefix,
-		Name:      "running",
-		Help:      "Whether bitcoind process is running (1) or not (0).",
-	})
-	addr     = os.Getenv("BCMON_ADDR")
-	hostname = os.Getenv("BCMON_HOSTNAME")
+	allState   state
+	addr       = os.Getenv("BCMON_ADDR")
+	hostname   = os.Getenv("BCMON_HOSTNAME")
+	httpPrefix = os.Getenv("BCMON_HTTP_PREFIX")
 )
 
 // getFile returns the contents of the specified file.
@@ -80,16 +85,7 @@ func getFile(f string) ([]byte, error) {
 	return Asset(f)
 }
 
-// String returns a human-readable description of the bitcoind state.
-func (s bitcoindState) String() string {
-	if s.pid == 0 {
-		return "bitcoindState{not running}"
-	} else {
-		return fmt.Sprintf("bitcoindState{pid: %d, args: %q}", s.pid, strings.Join(s.args, " "))
-	}
-}
-
-func (s bitcoindState) isRunning() bool {
+func (s state) isRunning() bool {
 	return s.pid != 0
 }
 
@@ -157,86 +153,51 @@ func (c cli) GetPeerInfo() (*[]peerInfo, error) {
 	return &resp, nil
 }
 
-// getBitcoindState returns the current bitcoind state.
-func getBitcoindState() (*bitcoindState, error) {
+// update refreshes the state.
+func (s *state) update() error {
 	ps, err := execCmd("pgrep", "-a", "bitcoind")
 	if err != nil {
-		return nil, err
+		return err
 	}
 	parts := strings.Split(ps, " ")
 	// Note: seems to get >= 1 parts even if pgrep returns non-success, seems like there's still >= 1 parts..
 	if len(parts) < 1 || len(parts[0]) == 0 {
-		return nil, fmt.Errorf("failed to parse bitcoind status: %v", ps)
+		return fmt.Errorf("failed to parse bitcoind status: %v", ps)
 	}
 	pid, err := strconv.Atoi(parts[0])
 	if err != nil {
-		return nil, err
+		return err
 	}
-	s := bitcoindState{
-		pid:  pid,
-		args: []string{},
-	}
+	s.pid = pid
 	for _, arg := range parts[1:] {
 		s.args = append(s.args, arg)
 	}
-	return &s, nil
+	return nil
 }
 
-func refresh() {
-	// TODO: Maybe don't assume that bitcoind always is in "pid" namespace..
-	namespace := "pid"
-	registeredBitcoin := false
-	for {
-		btcState, err := getBitcoindState()
-		if err != nil {
-			log.Printf("Failed to get bitcoind state: %v\n", err)
-		} else {
-			allState = *btcState
-		}
-		if allState.isRunning() {
-			if !registeredBitcoin {
-				lc := prometheus.NewProcessCollector(allState.pid, namespace)
-				prometheus.MustRegister(lc)
-				registeredBitcoin = true
-				log.Printf("Registered ProcessCollector for bitcoind pid %d in namespace %q\n", allState.pid, namespace)
-			}
-			bitcoindRunning.Set(1)
-		} else {
-			bitcoindRunning.Set(0)
-		}
+// reset forgets all lightningd state.
+func (s *state) reset() {
+	s.pid = 0
+	s.args = []string{}
+	s.peerInfo = []peerInfo{}
+}
 
-		time.Sleep(time.Minute)
+// newIndexHandler returns a new http handler for the index page.
+func newIndexHandler(s *state) (*indexHandler, error) {
+	b, err := getFile("index.tmpl")
+	if err != nil {
+		return nil, err
 	}
+	tmpl, err := template.New("index").Parse(string(b))
+	if err != nil {
+		return nil, err
+	}
+	return &indexHandler{tmpl: *tmpl, s: s}, nil
 }
 
-// indexHandler serves the index page.
-func indexHandler(w http.ResponseWriter, r *http.Request) {
+// ServeHTTP serves the index page.
+func (h indexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%v] HTTP %s %s\n", r.RemoteAddr, r.Method, r.URL)
-	if r.Method != "GET" {
-		log.Printf("Serving 400 for HTTP %s %q\n", r.Method, r.URL.Path)
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "400 Bad Request")
-		return
-	}
-	if r.URL.Path != "/" {
-		log.Printf("Serving 404 for GET %q\n", r.URL.Path)
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, "404 Page Not Found")
-		return
-	}
-	// TODO: read and parse .tmpl once on startup
-	s, err := getFile("bcmon.tmpl")
-	if err != nil {
-		http.Error(w, "Well, that's embarrassing. Please try again later.", http.StatusInternalServerError)
-		log.Fatalf("Failed to read lnmon.tmpl: %v\n", err)
-		return
-	}
-	tmpl, err := template.New("index").Parse(string(s))
-	if err != nil {
-		http.Error(w, "Well, that's embarrassing. Please try again later.", http.StatusInternalServerError)
-		log.Fatalf("Failed to parse .tmpl: %v\n", err)
-		return
-	}
 
 	data := struct {
 		IsRunning     bool
@@ -248,31 +209,88 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	if os.Getenv("BCMON_LINK_DASHBOARD") != "" {
 		data.DashboardLink = os.Getenv("BCMON_LINK_DASHBOARD")
 	}
-	if err := tmpl.Execute(w, data); err != nil {
+	if err := h.tmpl.Execute(w, data); err != nil {
 		http.Error(w, "Well, that's embarrassing. Please try again later.", http.StatusInternalServerError)
 		log.Printf("Failed to execute template: %v\n", err)
 		return
 	}
 }
 
+// registerMetrics registers the Prometheus monitoring metrics.
+func (h indexHandler) registerMetrics() {
+	for _, m := range h.s.gauges {
+		prometheus.MustRegister(m)
+	}
+}
+
+func refresh(s *state) {
+	// TODO: Maybe don't assume that bitcoind always is in "pid" namespace..
+	namespace := "pid"
+	registeredBitcoin := false
+	for {
+		if err := s.update(); err != nil {
+			// TODO: increment counter here, so we can alert on possible lightningd crashes.
+			log.Printf("Failed to get state: %v\n", err)
+			s.reset()
+		}
+		if s.isRunning() {
+			if !registeredBitcoin {
+				lc := prometheus.NewProcessCollector(s.pid, namespace)
+				prometheus.MustRegister(lc)
+				registeredBitcoin = true
+				log.Printf("Registered ProcessCollector for bitcoind pid %d in namespace %q\n", s.pid, namespace)
+			}
+			s.gauges["running"].Set(1)
+		} else {
+			s.gauges["running"].Set(0)
+		}
+
+		time.Sleep(time.Minute)
+	}
+}
+
+// newRouter returns a new http router.
+func newRouter(ih http.Handler, prefix string) *mux.Router {
+	r := mux.NewRouter()
+	r.Handle("/", ih).Methods("GET")
+	r.Handle("/metrics", promhttp.Handler()).Methods("GET")
+	if prefix != "" {
+		log.Printf("Serving resources with prefix %q..\n", prefix)
+		sr := r.PathPrefix(prefix).Subrouter()
+		sr.Handle("/", ih).Methods("GET")
+		sr.Handle("/metrics", promhttp.Handler()).Methods("GET")
+	}
+	return r
+}
+
+// newState returns a new state.
+func newState() *state {
+	return &state{
+		gauges: map[string]prometheus.Gauge{
+			"running": prometheus.NewGauge(prometheus.GaugeOpts{
+				Namespace: counterPrefix,
+				Name:      "running",
+				Help:      "Whether bitcoind process is running (1) or not (0).",
+			}),
+		},
+	}
+}
+
 func main() {
-	// The Handler function provides a default handler to expose metrics
-	// Metrics have to be registered to be exposed:
-	prometheus.MustRegister(bitcoindRunning)
-
-	// via an HTTP server. "/metrics" is the usual endpoint for that.
-	http.Handle("/metrics", promhttp.Handler())
-
-	go refresh()
-
-	http.HandleFunc("/", indexHandler)
+	s := newState()
+	ih, err := newIndexHandler(s)
+	if err != nil {
+		log.Fatalf("Failed to create http handlers: %v\n", err)
+	}
+	ih.registerMetrics()
+	router := newRouter(ih, httpPrefix)
+	http.Handle("/", router)
+	go refresh(s)
 
 	if addr == "" {
 		addr = ":9740"
 	}
-	s := &http.Server{
-		Addr: addr,
-	}
+	server := &http.Server{Addr: addr}
 	if addr == ":443" {
 		fmt.Printf("Serving TLS at %q as %q..\n", addr, hostname)
 		m := autocert.Manager{
@@ -288,10 +306,10 @@ func main() {
 		}
 		go httpServer.ListenAndServe()
 
-		s.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
-		log.Fatal(s.ListenAndServeTLS("", ""))
+		server.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
+		log.Fatal(server.ListenAndServeTLS("", ""))
 	} else {
 		fmt.Printf("Serving plaintext HTTP on %s..\n", addr)
-		log.Fatal(s.ListenAndServe())
+		log.Fatal(server.ListenAndServe())
 	}
 }
