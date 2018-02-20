@@ -36,6 +36,14 @@ type (
 		Port        int    `json:"port"`
 	}
 	address []addressInfo
+	// channeFundlListing describes one channel from listfunds output.
+	channelFundListing struct {
+		PeerId          nodeId  `json:"peer_id"`
+		ShortChannelId  string  `json:"short_channel_id"`
+		ChannelSat      satoshi `json:"channel_sat"`
+		ChannelTotalSat satoshi `json:"channel_total_sat"`
+		FundingTxId     string  `json:"funding_tx_id"`
+	}
 	// channelListing describes one channel from listchannels output.
 	channelListing struct {
 		Source          nodeId `json:"source"`
@@ -52,8 +60,10 @@ type (
 	// channelListings describes several channels from listchannels output.
 	channelListings []channelListing
 
-	// msatoshi is number of millisatoshis, used in the LN protocol.
+	// msatoshi is number of millisatoshis, the main unit used in the LN protocol.
 	msatoshi int64
+	// satoshi is number of satoshis, also sometimes used in the LN protocol.
+	satoshi int64
 	// channel describes an individual channel.
 	//
 	// For channels to our own node, we know the state and msatoshi details, but
@@ -120,7 +130,12 @@ type (
 		Value  int64 `json:"value"`
 	}
 	// outputs describes several outputs.
-	outputs []output
+	outputs             []output
+	channelFundListings []channelFundListing
+	fundListing         struct {
+		Outputs  outputs             `json:"outputs"`
+		Channels channelFundListings `json:"channels"`
+	}
 
 	payment struct {
 		PaymentId       int64    `json:"id"`
@@ -155,7 +170,7 @@ type (
 		Nodes       allNodes
 		Channels    channelListings
 		Payments    payments
-		Outputs     outputs
+		Outputs     fundListing
 		gauges      map[string]prometheus.Gauge
 		counterVecs map[string]*prometheus.CounterVec
 		gaugeVecs   map[string]*prometheus.GaugeVec
@@ -668,14 +683,14 @@ func (ns nodes) NumConnected() int {
 }
 
 // String returns a human-readable description of the outputs.
-func (outs outputs) String() string {
-	return fmt.Sprintf("outputs totalling %v sat", outs.Sum())
+func (fs fundListing) String() string {
+	return fmt.Sprintf("outputs totalling %v sat", fs.Sum())
 }
 
-// Sum returns the total value of all the outputs.
-func (outs outputs) Sum() int64 {
+// Sum returns the total value of all the outputs in the fund listing.
+func (fs fundListing) Sum() int64 {
 	sum := int64(0)
-	for _, o := range outs {
+	for _, o := range fs.Outputs {
 		sum += o.Value
 	}
 	return sum
@@ -899,18 +914,16 @@ func (c cli) ListChannels() (*channelListings, error) {
 }
 
 // ListFunds returns the lightning-cli response to listfunds.
-func (c cli) ListFunds() (*outputs, error) {
+func (c cli) ListFunds() (*fundListing, error) {
 	respstring, err := c.exec("listfunds")
 	if err != nil {
 		return nil, err
 	}
-	resp := struct {
-		Outputs outputs `json:"outputs"`
-	}{}
+	resp := fundListing{}
 	if err := json.Unmarshal([]byte(respstring), &resp); err != nil {
 		return nil, err
 	}
-	return &resp.Outputs, nil
+	return &resp, nil
 }
 
 // ListNodes returns the lightning-cli response to listnodes.
@@ -1019,7 +1032,7 @@ func (s *state) update() error {
 	}
 	s.Outputs = *outputs
 	s.gauges["total_funds"].Set(float64(s.Outputs.Sum()))
-	log.Printf("Learned of %d %v.\n", len(s.Outputs), s.Outputs)
+	log.Printf("Learned of %d %v.\n", len(s.Outputs.Outputs), s.Outputs)
 
 	peerNodes, err := c.ListPeers()
 	if err != nil {
@@ -1113,7 +1126,7 @@ func (s *state) reset() {
 	s.Nodes = allNodes{}
 	s.Channels = channelListings{}
 	s.Payments = payments{}
-	s.Outputs = outputs{}
+	s.Outputs = fundListing{}
 }
 
 func refresh(s *state) {
