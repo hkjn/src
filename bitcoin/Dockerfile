@@ -4,15 +4,10 @@
 FROM hkjn/arch
 
 ARG bitcoin_version
-ARG lightning_version
 
-ENV BITCOIN_VERSION=${bitcoin_version} \
-    LIGHTNING_VERSION=${lightning_version}
+ENV BITCOIN_VERSION=${bitcoin_version}
 
 # Install dependencies.
-RUN pacman-key --init
-RUN pacman-key --populate archlinux
-RUN pacman-key --refresh-keys
 RUN pacman -Syyu --noconfirm
 RUN pacman -S --noconfirm git base-devel boost libevent jq python
 
@@ -36,11 +31,17 @@ USER root
 RUN make install
 USER bitcoin
 
+ARG lightning_version
+ARG lightning_remote
+
+ENV LIGHTNING_VERSION=${lightning_version} \
+    LIGHTNING_REMOTE=${lightning_remote}
+
 WORKDIR /usr/local/src/lightning
 USER root
 RUN chown -R bitcoin:bitcoin /usr/local/src/lightning
 USER bitcoin
-RUN git clone https://github.com/elementsproject/lightning . && \
+RUN git clone ${LIGHTNING_REMOTE} . && \
     git checkout ${LIGHTNING_VERSION} && \
     echo "Building lightning at $(git show)"
 
