@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -27,9 +28,7 @@ import (
 )
 
 type (
-	cli struct {
-		callCounters map[string]prometheus.Counter
-	}
+	cli         struct{}
 	addressInfo struct {
 		AddressType string `json:"type"`
 		Address     string `json:"address"`
@@ -118,6 +117,26 @@ type (
 		LastTimestamp unixTs  `json:"last_timestamp"`
 		Addresses     address `json:"addresses"`
 	}
+	// invoiceRequest is a request to create a new invoice.
+	// lightning-cli invoice -k msatoshi=N label=L description=D ->
+	// payment_hash, expires_at, bolt11
+	invoiceRequest struct {
+		Msatoshi    msatoshi `json:"msatoshi"`
+		Label       string   `json:"label"`
+		Description string   `json:"description"`
+	}
+	// invoiceListing is a single result from listinvoices.
+	invoiceListing struct {
+		Label            string   `json:"label"`
+		PaymentHash      string   `json:"payment_hash"`
+		Msatoshi         msatoshi `json:"msatoshi"`
+		Status           string   `json:"status"`
+		ExpiryTime       unixTs   `json:"expiry_time"`
+		ExpiresAt        unixTs   `json:"expires_at"`
+		PayIndex         int      `json:"pay_index"`
+		MsatoshiReceived msatoshi `json:"msatoshi_received"`
+	}
+
 	// nodes describes several nodes.
 	nodes []node
 	// candidates describes candidate nodes to open channels with.
@@ -162,28 +181,36 @@ type (
 	// state describes the last known state.
 	state struct {
 		// MonVersion is the version of lnmon.
-		MonVersion  string
-		pid         int
-		args        []string
-		Alias       alias
-		Info        getInfoResponse
-		Nodes       allNodes
-		Channels    channelListings
-		Payments    payments
-		Outputs     fundListing
-		gauges      map[string]prometheus.Gauge
-		counterVecs map[string]*prometheus.CounterVec
-		gaugeVecs   map[string]*prometheus.GaugeVec
+		MonVersion   string
+		pid          int
+		args         []string
+		Alias        alias
+		Info         getInfoResponse
+		Nodes        allNodes
+		Channels     channelListings
+		Payments     payments
+		Outputs      fundListing
+		Invoices     []invoiceListing
+		gauges       map[string]prometheus.Gauge
+		counterVecs  map[string]*prometheus.CounterVec
+		gaugeVecs    map[string]*prometheus.GaugeVec
+		callCounters map[string]prometheus.Counter
 	}
 	channelStateNum int
 	channelState    string
-	indexHandler    struct {
+	// indexHandler serves the index requests.
+	indexHandler struct {
 		tmpl template.Template
 		s    *state
 	}
+	// nodeHandler serves /node requests.
 	nodeHandler struct {
 		tmpl template.Template
 		s    *state
+	}
+	// cmdHandler serves /cmd requests.
+	cmdHandler struct {
+		s *state
 	}
 )
 
@@ -855,37 +882,13 @@ func execCmd(cmd string, arg ...string) (string, error) {
 	return out.String(), nil
 }
 
-// newCli returns a new cli.
-func newCli() *cli {
-	cliCalls := []string{
-		"getinfo",
-	}
-	counters := map[string]prometheus.Counter{}
-	for _, call := range cliCalls {
-		c := prometheus.NewCounter(
-			prometheus.CounterOpts{
-				Namespace: counterPrefix,
-				Name:      call + "calls_total",
-				Help:      fmt.Sprintf("Number of calls to %q CLI.", call),
-			},
-		)
-		counters[call] = c
-		// prometheus.MustRegister(c)
-	}
-	return &cli{callCounters: counters}
-}
-
+// exec returns output when executing specified lightning-cli command.
 func (c cli) exec(cmd string) (string, error) {
 	return execCmd("lightning-cli", cmd)
 }
 
-func (c cli) incCounter(call string) {
-}
-
 // GetInfo returns the getinfo response.
 func (c cli) GetInfo() (*getInfoResponse, error) {
-	c.incCounter("getinfo")
-
 	infostring, err := c.exec("getinfo")
 	if err != nil {
 		return nil, err
@@ -941,10 +944,21 @@ func (c cli) ListNodes() (*nodes, error) {
 	return &resp.Nodes, nil
 }
 
+// ListInvoice returns the listinvoices response.
+func (c cli) ListInvoices() (*[]invoiceListing, error) {
+	respstring, err := c.exec("listinvoices")
+	if err != nil {
+		return nil, err
+	}
+	resp := []invoiceListing{}
+	if err := json.Unmarshal([]byte(respstring), &resp); err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
 // ListPayments returns the listpayments response.
 func (c cli) ListPayments() (*payments, error) {
-	c.incCounter("listpayments")
-
 	respstring, err := c.exec("listpayments")
 	if err != nil {
 		return nil, err
@@ -977,6 +991,16 @@ func (c cli) ListPeers() (*nodes, error) {
 	return &result, nil
 }
 
+// incCounter increments the call counter keeping track of the number of CLI calls.
+func (s *state) incCounter(call string) {
+	c, exists := s.callCounters[call]
+	if !exists {
+		log.Printf("Bug: no such call %q for incCounter()\n", call)
+		return
+	}
+	c.Inc()
+}
+
 // update refreshes the state.
 func (s *state) update() error {
 	// Note that we reset all state between lightning-cli calls, to make sure we're not presenting stale data from earlier.
@@ -1003,11 +1027,12 @@ func (s *state) update() error {
 		s.args = append(s.args, arg)
 	}
 
-	c := newCli()
+	c := &cli{}
 	info, err := c.GetInfo()
 	if err != nil {
 		return err
 	}
+	s.incCounter("getinfo")
 	s.Info = *info
 	log.Printf("lightningd getinfo response: %+v\n", info)
 	s.counterVecs["info"].Reset()
@@ -1022,6 +1047,7 @@ func (s *state) update() error {
 	if err != nil {
 		return err
 	}
+	s.incCounter("listchannels")
 	s.Channels = *channels
 	s.gauges["num_channels"].Set(float64(len(s.Channels)))
 	log.Printf("Learned of %d channels.\n", len(s.Channels))
@@ -1030,6 +1056,7 @@ func (s *state) update() error {
 	if err != nil {
 		return err
 	}
+	s.incCounter("listfunds")
 	s.Outputs = *outputs
 	s.gauges["total_funds"].Set(float64(s.Outputs.Sum()))
 	log.Printf("Learned of %d %v.\n", len(s.Outputs.Outputs), s.Outputs)
@@ -1038,6 +1065,7 @@ func (s *state) update() error {
 	if err != nil {
 		return err
 	}
+	s.incCounter("listpeers")
 	s.updateNodes(*peerNodes)
 
 	peers := s.Nodes.Peers() // TODO: could do the below with entire s.Nodes too; methods filter out non-peers where applicable.
@@ -1059,11 +1087,12 @@ func (s *state) update() error {
 	if err != nil {
 		return err
 	}
+	s.incCounter("listnodes")
 	s.updateNodes(*nodes)
 	s.gauges["num_nodes"].Set(float64(len(s.Nodes)))
 	// log.Printf("lightningd listnodes response: %+v\n", nodes)
 
-	// TODO: remove s.Channels
+	// TODO: remove s.Channels entirely?
 	s.updateChannels(s.Channels)
 
 	s.counterVecs["aliases"].Reset()
@@ -1107,6 +1136,7 @@ func (s *state) update() error {
 	if err != nil {
 		return err
 	}
+	s.incCounter("listpayments")
 	s.Payments = *payments
 
 	n, exists := s.Nodes[s.Info.NodeId]
@@ -1119,6 +1149,8 @@ func (s *state) update() error {
 
 // reset forgets all lightningd state.
 func (s *state) reset() {
+	// TODO: need to also reset gauges here, or we'll continue thinking that we had data for number of channels, nodes, balances
+	// etc if lightningd crashes.
 	s.pid = 0
 	s.args = []string{}
 	s.Alias = alias("")
@@ -1189,6 +1221,9 @@ func (h indexHandler) registerMetrics() {
 	for _, m := range h.s.gauges {
 		prometheus.MustRegister(m)
 	}
+	for _, c := range h.s.callCounters {
+		prometheus.MustRegister(c)
+	}
 	for _, m := range h.s.counterVecs {
 		prometheus.MustRegister(m)
 	}
@@ -1228,18 +1263,12 @@ func (h indexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ServeHTTP serves the /node page.
+// ServeHTTP serves /node requests.
 func (h nodeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	nid := vars["id"]
 
 	log.Printf("[%v] nodeHandler serving HTTP for %s %s\n", r.RemoteAddr, r.Method, r.URL)
-	if r.Method != "GET" {
-		log.Printf("Serving 400 for HTTP %s %q\n", r.Method, r.URL.Path)
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, "400 Bad Request")
-		return
-	}
 	if len(nid) != 66 {
 		log.Printf("Serving 400 for HTTP %s %q\n", r.Method, r.URL.Path)
 		w.WriteHeader(http.StatusBadRequest)
@@ -1260,11 +1289,81 @@ func (h nodeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ServeHTTP serves /cmd requests.
+func (h cmdHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	log.Printf("[%s] cmdHandler serving HTTP for %s %s\n", r.RemoteAddr, r.Method, r.URL)
+	// TODO; dos resistance.
+
+	w.Header().Set("Content-Type", "application/json")
+
+	var ir invoiceRequest
+	b, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("Serving 400 for HTTP %s %q: %q\n", r.Method, r.URL.Path, string(b))
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "400 Bad Request")
+		return
+	}
+	if err := json.Unmarshal(b, &ir); err != nil {
+		log.Printf("Serving 400 for HTTP %s %q: %q\n", r.Method, r.URL.Path, string(b))
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "400 Bad Request")
+		return
+	}
+	if ir.Msatoshi == msatoshi(0) {
+		log.Printf("Missing %q value in request, serving 400 for HTTP %s %q: %q\n", "msatoshi", r.Method, r.URL.Path, string(b))
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "400 Bad Request")
+		return
+	}
+	if ir.Label == "" {
+		log.Printf("Missing %q value in request, serving 400 for HTTP %s %q: %q\n", "label", r.Method, r.URL.Path, string(b))
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "400 Bad Request")
+		return
+	}
+	if ir.Description == "" {
+		log.Printf("Missing %q value in request, serving 400 for HTTP %s %q: %q\n", "description", r.Method, r.URL.Path, string(b))
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "400 Bad Request")
+		return
+	}
+
+	log.Printf("TODO: should call lightning-cli invoice here..")
+	// Note that bolt11 field only exists in lightning-cli invoice response, not in listinvoice
+
+	rj, err := json.Marshal(ir)
+	if err != nil {
+		log.Printf("Failed to serialize JSON response: %v\n", err)
+		http.Error(w, "Well, that's embarrassing. Please try again later.", http.StatusInternalServerError)
+		return
+	}
+	if _, err := w.Write(rj); err != nil {
+		log.Printf("Failed to write JSON response: %v\n", err)
+		http.Error(w, "Well, that's embarrassing. Please try again later.", http.StatusInternalServerError)
+		return
+	}
+}
+
 // newRouter returns a new http router.
-func newRouter(ih, nh http.Handler, prefix string) *mux.Router {
+func newRouter(s *state, prefix string) (*mux.Router, error) {
+	ih, err := newIndexHandler(s)
+	if err != nil {
+		return nil, err
+	}
+	ih.registerMetrics()
+
+	nh, err := newNodeHandler(s)
+	if err != nil {
+		return nil, err
+	}
+
+	ch := cmdHandler{s}
+
 	r := mux.NewRouter()
 	r.Handle("/", ih).Methods("GET")
 	r.Handle("/node/{id:[a-f0-9]+}", nh).Methods("GET")
+	r.Handle("/cmd", ch).Methods("POST")
 	r.Handle("/metrics", promhttp.Handler()).Methods("GET")
 	if prefix != "" {
 		log.Printf("Serving resources with prefix %q..\n", prefix)
@@ -1273,12 +1372,22 @@ func newRouter(ih, nh http.Handler, prefix string) *mux.Router {
 		sr.Handle("/node", nh).Methods("GET")
 		sr.Handle("/metrics", promhttp.Handler()).Methods("GET")
 	}
-	return r
+
+	return r, nil
 }
 
 // newState returns a new state.
 func newState() *state {
-	return &state{
+	cliCalls := []string{
+		"getinfo",
+		"listchannels",
+		"listfunds",
+		"listnodes",
+		"listinvoices",
+		"listpayments",
+		"listpeers",
+	}
+	s := state{
 		Nodes: allNodes{},
 		gauges: map[string]prometheus.Gauge{
 			"running": prometheus.NewGauge(prometheus.GaugeOpts{
@@ -1308,6 +1417,7 @@ func newState() *state {
 				},
 			),
 		},
+		callCounters: map[string]prometheus.Counter{},
 		counterVecs: map[string]*prometheus.CounterVec{
 			"aliases": prometheus.NewCounterVec(
 				prometheus.CounterOpts{
@@ -1361,21 +1471,27 @@ func newState() *state {
 			),
 		},
 	}
+
+	for _, call := range cliCalls {
+		c := prometheus.NewCounter(
+			prometheus.CounterOpts{
+				Namespace: counterPrefix,
+				Name:      call + "_calls_total",
+				Help:      fmt.Sprintf("Number of calls to %q via CLI.", call),
+			},
+		)
+		s.callCounters[call] = c
+	}
+	return &s
 }
 
 func main() {
 	log.Printf("lnmon version %q starting..\n", lnmonVersion)
 	s := newState()
-	ih, err := newIndexHandler(s)
+	router, err := newRouter(s, httpPrefix)
 	if err != nil {
-		log.Fatalf("Failed to create http handlers: %v\n", err)
+		log.Fatalf("Failed to create router: %v\n", err)
 	}
-	nh, err := newNodeHandler(s)
-	if err != nil {
-		log.Fatalf("Failed to create http handlers: %v\n", err)
-	}
-	ih.registerMetrics()
-	router := newRouter(ih, nh, httpPrefix)
 	http.Handle("/", router)
 	go refresh(s)
 
