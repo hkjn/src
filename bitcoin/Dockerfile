@@ -4,11 +4,8 @@
 FROM hkjn/arch
 
 ARG bitcoin_version
-ARG lightning_version
 
-ENV BITCOIN_VERSION=${bitcoin_version} \
-    LIGHTNING_VERSION=${lightning_version} \
-    LIGHTNING_REMOTE=https://github.com/rustyrussell/lightning
+ENV BITCOIN_VERSION=${bitcoin_version}
 
 # Install dependencies.
 RUN pacman -Syyu --noconfirm
@@ -33,6 +30,12 @@ RUN echo "Building bitcoin at: $(git show)" && \
 USER root
 RUN make install
 USER bitcoin
+
+ARG lightning_version
+ARG lightning_remote
+
+ENV LIGHTNING_VERSION=${lightning_version} \
+    LIGHTNING_REMOTE=${lightning_remote}
 
 WORKDIR /usr/local/src/lightning
 USER root
