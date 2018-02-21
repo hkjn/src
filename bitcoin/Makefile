@@ -1,6 +1,6 @@
 include ../make/Makefile
 NAME = bitcoin
-VERSION ?= lightning-2018-02-21
+VERSION = lightning-2018-02-21
 BITCOIN_VERSION ?= e117cf
 LIGHTNING_VERSION ?= 3dbace
 LIGHTNING_REMOTE ?= https://github.com/ElementsProject/lightning

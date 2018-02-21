@@ -1,8 +1,10 @@
 FROM hkjn/golang:tip
 
+ARG goarch
+
 ENV CGO_ENABLED=0 \
     GOOS=linux \
-    GOARCH=arm
+    GOARCH=${goarch}
 
 WORKDIR /home/go/src/hkjn.me/src/lnmon/
 COPY *.go ./

@@ -11,11 +11,11 @@ DEPLOYPORT ?= 6200
 
 build-docker: gen-tmpl
 	@echo "Building lnmon in container.."
-	docker build -t lnmon-build -f Dockerfile.build .
+	docker build -t lnmon-build --build-arg goarch=$(GOARCH) -f Dockerfile.build .
 	@echo "Running lnmon-build container.."
 	docker run --name lnmonbuild lnmon-build
 	@echo "Copying out lnmonbuild artifacts.."
-	docker cp lnmonbuild:/home/go/bin/linux_arm/lnmon .
+	docker cp lnmonbuild:/home/go/bin/lnmon .
 	docker rm lnmonbuild
 
 build-bin: gen-tmpl

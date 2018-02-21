@@ -2,6 +2,8 @@
 # Connect to known LN peers on mainnet.
 #
 set -euo pipefail
+# z.decenter.world
+lightning-cli connect 02d2eabbbacc7c25bbd73b39e65d28237705f7bde76f557e94fb41cb18a9ec0084 ::ffff:174.138.11.8
 # SLEEPYARK / Blockstream store
 lightning-cli connect 02f6725f9c1c40333b67faea92fd211c183050f28df32cac3f9d69685fe9665432 104.198.32.198
 # #RECKLESS
