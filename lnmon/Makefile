@@ -13,7 +13,7 @@ build-docker: gen-tmpl
 	@echo "Building lnmon in container.."
 	docker build -t lnmon-build -f Dockerfile.build .
 	@echo "Running lnmon-build container.."
-	docker run --name lnmonbuild lnmon-build
+	docker run --name lnmonbuild --build-arg goarch=$(GOARCH) lnmon-build
 	@echo "Copying out lnmonbuild artifacts.."
 	docker cp lnmonbuild:/home/go/bin/linux_arm/lnmon .
 	docker rm lnmonbuild
