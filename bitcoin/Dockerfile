@@ -50,7 +50,8 @@ RUN make
 USER root
 RUN make install
 RUN rm -rf /usr/local/src && \
-    pacman --noconfirm -Sc
+    pacman --noconfirm -Sc && \
+    rm -rf /var/cache/pacman/pkg/*
 USER bitcoin
 
 WORKDIR /usr/local/src/bitcoin
