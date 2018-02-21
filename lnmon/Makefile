@@ -15,7 +15,7 @@ build-docker: gen-tmpl
 	@echo "Running lnmon-build container.."
 	docker run --name lnmonbuild lnmon-build
 	@echo "Copying out lnmonbuild artifacts.."
-	docker cp lnmonbuild:/home/go/bin/linux_arm/lnmon .
+	docker cp lnmonbuild:/home/go/bin/lnmon .
 	docker rm lnmonbuild
 
 build-bin: gen-tmpl
