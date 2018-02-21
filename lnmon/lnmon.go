@@ -1068,7 +1068,7 @@ func (s *state) update() error {
 	s.incCounter("listpeers")
 	s.updateNodes(*peerNodes)
 
-	peers := s.Nodes.Peers() // TODO: could do the below with entire s.Nodes too; methods filter out non-peers where applicable.
+	peers := s.Nodes.Peers()
 	s.gaugeVecs["num_peers"].With(prometheus.Labels{"connected": "connected"}).Set(float64(peers.NumConnected()))
 	s.gaugeVecs["num_peers"].With(prometheus.Labels{"connected": "unconnected"}).Set(float64(len(peers) - peers.NumConnected()))
 
@@ -1149,8 +1149,6 @@ func (s *state) update() error {
 
 // reset forgets all lightningd state.
 func (s *state) reset() {
-	// TODO: need to also reset gauges here, or we'll continue thinking that we had data for number of channels, nodes, balances
-	// etc if lightningd crashes.
 	s.pid = 0
 	s.args = []string{}
 	s.Alias = alias("")
@@ -1159,6 +1157,12 @@ func (s *state) reset() {
 	s.Channels = channelListings{}
 	s.Payments = payments{}
 	s.Outputs = fundListing{}
+	s.counterVecs["aliases"].Reset()
+	s.counterVecs["info"].Reset()
+	s.gaugeVecs["num_peers"].Reset()
+	s.gaugeVecs["our_channels"].Reset()
+	s.gaugeVecs["channel_capacities_msatoshi"].Reset()
+	s.gaugeVecs["channel_balances_msatoshi"].Reset()
 }
 
 func refresh(s *state) {
