@@ -1040,6 +1040,69 @@ func (info getInfoResponse) Equal(other getInfoResponse) bool {
 	return true
 }
 
+// Equal returns true if the fundlistings are the same.
+func (fl fundListing) Equal(other fundListing) bool {
+	if !fl.Outputs.Equal(other.Outputs) {
+		return false
+	}
+	if !fl.Channels.Equal(other.Channels) {
+		return false
+	}
+	return true
+}
+
+// Equal returns true if the outputs are the same.
+func (outs outputs) Equal(other outputs) bool {
+	if len(outs) != len(other) {
+		return false
+	}
+	for i, o := range outs {
+		if o.TxId != other[i].TxId {
+			return false
+		}
+		if o.Output != other[i].Output {
+			return false
+		}
+		if o.Value != other[i].Value {
+			return false
+		}
+	}
+	return true
+}
+
+// Equal returns true if the channel fund listings are the same.
+func (cs channelFundListings) Equal(other channelFundListings) bool {
+	if len(cs) != len(other) {
+		return false
+	}
+	for i, l := range cs {
+		if !l.Equal(other[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+// Equal returns true if the channel fund listings are the same.
+func (cfl channelFundListing) Equal(other channelFundListing) bool {
+	if cfl.PeerId != other.PeerId {
+		return false
+	}
+	if cfl.ShortChannelId != other.ShortChannelId {
+		return false
+	}
+	if cfl.ChannelSat != other.ChannelSat {
+		return false
+	}
+	if cfl.ChannelTotalSat != other.ChannelTotalSat {
+		return false
+	}
+	if cfl.FundingTxId != other.FundingTxId {
+		return false
+	}
+	return true
+}
+
 // update refreshes the state.
 func (s *state) update() error {
 	// Note that we reset all state between lightning-cli calls, to make sure we're not presenting stale data from earlier.
@@ -1100,7 +1163,7 @@ func (s *state) update() error {
 		return err
 	}
 	s.incCounter("listfunds")
-	if len(s.Outputs.Outputs) != len(outputs.Outputs) {
+	if !s.Outputs.Equal(*outputs) {
 		log.Printf("We now know of %d %v.\n", len(s.Outputs.Outputs), s.Outputs)
 	}
 	s.Outputs = *outputs
