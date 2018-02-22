@@ -1001,6 +1001,45 @@ func (s *state) incCounter(call string) {
 	c.Inc()
 }
 
+// Equal returns true if the addresses are the same.
+func (addr address) Equal(other address) bool {
+	if len(addr) != len(other) {
+		return false
+	}
+	for i, a := range addr {
+		if a.AddressType != other[i].AddressType {
+			return false
+		}
+		if a.Address != other[i].Address {
+			return false
+		}
+		if a.Port != other[i].Port {
+			return false
+		}
+	}
+	return true
+}
+
+// Equal returns true if the info responses are the same.
+func (info getInfoResponse) Equal(other getInfoResponse) bool {
+	if info.NodeId != other.NodeId {
+		return false
+	}
+	if info.Port != other.Port {
+		return false
+	}
+	if !info.Address.Equal(other.Address) {
+		return false
+	}
+	if info.Version != other.Version {
+		return false
+	}
+	if info.Blockheight != other.Blockheight {
+		return false
+	}
+	return true
+}
+
 // update refreshes the state.
 func (s *state) update() error {
 	// Note that we reset all state between lightning-cli calls, to make sure we're not presenting stale data from earlier.
@@ -1033,15 +1072,17 @@ func (s *state) update() error {
 		return err
 	}
 	s.incCounter("getinfo")
-	s.Info = *info
-	log.Printf("lightningd getinfo response: %+v\n", info)
-	s.counterVecs["info"].Reset()
-	s.counterVecs["info"].With(
-		prometheus.Labels{
-			"lnmon_version":      s.MonVersion,
-			"lightningd_version": s.Info.Version,
-		},
-	).Set(1.0)
+	if !s.Info.Equal(*info) {
+		log.Printf("lightningd getinfo response changed: %+v\n", info)
+		s.Info = *info
+		s.counterVecs["info"].Reset()
+		s.counterVecs["info"].With(
+			prometheus.Labels{
+				"lnmon_version":      s.MonVersion,
+				"lightningd_version": s.Info.Version,
+			},
+		).Set(1.0)
+	}
 
 	channels, err := c.ListChannels()
 	if err != nil {
@@ -1140,7 +1181,7 @@ func (s *state) update() error {
 	s.Payments = *payments
 
 	n, exists := s.Nodes[s.Info.NodeId]
-	if exists {
+	if exists && s.Alias != n.Alias {
 		s.Alias = n.Alias
 		log.Printf("Found that our own alias is %q.\n", s.Alias)
 	}
@@ -1159,6 +1200,8 @@ func (s *state) reset() {
 	s.Outputs = fundListing{}
 	s.counterVecs["aliases"].Reset()
 	s.counterVecs["info"].Reset()
+	s.gauges["num_channels"].Set(0.0)
+	s.gauges["total_funds"].Set(0.0)
 	s.gaugeVecs["num_peers"].Reset()
 	s.gaugeVecs["our_channels"].Reset()
 	s.gaugeVecs["channel_capacities_msatoshi"].Reset()
