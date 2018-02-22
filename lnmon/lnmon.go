@@ -1089,18 +1089,22 @@ func (s *state) update() error {
 		return err
 	}
 	s.incCounter("listchannels")
+	if len(s.Channels) != len(*channels) {
+		log.Printf("We now know of %d channels.\n", len(s.Channels))
+	}
 	s.Channels = *channels
 	s.gauges["num_channels"].Set(float64(len(s.Channels)))
-	log.Printf("Learned of %d channels.\n", len(s.Channels))
 
 	outputs, err := c.ListFunds()
 	if err != nil {
 		return err
 	}
 	s.incCounter("listfunds")
+	if len(s.Outputs.Outputs) != len(outputs.Outputs) {
+		log.Printf("We now know of %d %v.\n", len(s.Outputs.Outputs), s.Outputs)
+	}
 	s.Outputs = *outputs
 	s.gauges["total_funds"].Set(float64(s.Outputs.Sum()))
-	log.Printf("Learned of %d %v.\n", len(s.Outputs.Outputs), s.Outputs)
 
 	peerNodes, err := c.ListPeers()
 	if err != nil {
