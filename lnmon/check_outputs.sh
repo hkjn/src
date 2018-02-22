@@ -81,8 +81,7 @@ SELECT
 FROM outputs
 WHERE
   -- output_status_available
-  status=0
-GROUP BY type_desc;
+  status=0;
 EOF
 )
 echo "${RESULT}"
