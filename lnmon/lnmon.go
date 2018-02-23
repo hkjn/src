@@ -515,8 +515,11 @@ func (msat msatoshi) String() string {
 		return ""
 	}
 	sat := float64(int64(msat)) / 1.0e3
+	if sat < 1.0 {
+		return fmt.Sprintf("%d msat", msat)
+	}
 	if sat < 1.0e4 {
-		return fmt.Sprintf("%.0f sat", sat)
+		return fmt.Sprintf("%.3f sat", sat)
 	}
 	btc := sat / 1.0e8
 	if btc < 0.005 {
@@ -1447,7 +1450,7 @@ func (h cmdHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("TODO: should call lightning-cli invoice here..")
+	log.Printf("TODO: should call lightning-cli invoice -k msatoshi=%v (%T) -label=%v -description=%v.\n", ir.Msatoshi, ir.Msatoshi, ir.Label, ir.Description)
 	// Note that bolt11 field only exists in lightning-cli invoice response, not in listinvoice
 
 	rj, err := json.Marshal(ir)
@@ -1488,6 +1491,7 @@ func newRouter(s *state, prefix string) (*mux.Router, error) {
 		sr := r.PathPrefix(prefix).Subrouter()
 		sr.Handle("/", ih).Methods("GET")
 		sr.Handle("/node", nh).Methods("GET")
+		sr.Handle("/cmd", ch).Methods("POST")
 		sr.Handle("/metrics", promhttp.Handler()).Methods("GET")
 	}
 
