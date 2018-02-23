@@ -200,7 +200,7 @@ type (
 		gauges       map[string]prometheus.Gauge
 		counterVecs  map[string]*prometheus.CounterVec
 		gaugeVecs    map[string]*prometheus.GaugeVec
-		callCounters map[string]prometheus.Counter
+		callCounters map[string]*prometheus.CounterVec
 	}
 	channelStateNum int
 	channelState    string
@@ -1020,16 +1020,6 @@ func (c cli) ListPeers() (*nodes, error) {
 	return &result, nil
 }
 
-// incCounter increments the call counter keeping track of the number of CLI calls.
-func (s *state) incCounter(call string) {
-	c, exists := s.callCounters[call]
-	if !exists {
-		log.Printf("Bug: no such call %q for incCounter()\n", call)
-		return
-	}
-	c.Inc()
-}
-
 // Equal returns true if the addresses are the same.
 func (addr address) Equal(other address) bool {
 	if len(addr) != len(other) {
@@ -1159,11 +1149,12 @@ func (s *state) update() error {
 	}
 
 	c := &cli{}
+	s.counterVecs["cli_calls"].With(prometheus.Labels{"call": "getinfo"}).Inc()
 	info, err := c.GetInfo()
 	if err != nil {
+		s.counterVecs["cli_failures"].With(prometheus.Labels{"call": "getinfo"}).Inc()
 		return err
 	}
-	s.incCounter("getinfo")
 	if !s.Info.Equal(*info) {
 		log.Printf("lightningd getinfo response changed: %+v\n", info)
 		s.Info = *info
@@ -1176,33 +1167,36 @@ func (s *state) update() error {
 		).Set(1.0)
 	}
 
+	s.counterVecs["cli_calls"].With(prometheus.Labels{"call": "listchannels"}).Inc()
 	channels, err := c.ListChannels()
 	if err != nil {
+		s.counterVecs["cli_failures"].With(prometheus.Labels{"call": "listchannels"}).Inc()
 		return err
 	}
-	s.incCounter("listchannels")
 	if len(s.Channels) != len(*channels) {
 		s.Channels = *channels
 		log.Printf("We now know of %d channels.\n", len(s.Channels))
 	}
 	s.gauges["num_channels"].Set(float64(len(s.Channels)))
 
+	s.counterVecs["cli_calls"].With(prometheus.Labels{"call": "listfunds"}).Inc()
 	outputs, err := c.ListFunds()
 	if err != nil {
+		s.counterVecs["cli_failures"].With(prometheus.Labels{"call": "listfunds"}).Inc()
 		return err
 	}
-	s.incCounter("listfunds")
 	if !s.Outputs.Equal(*outputs) {
 		s.Outputs = *outputs
 		log.Printf("We now know of %d %v.\n", len(s.Outputs.Outputs), s.Outputs)
 	}
 	s.gauges["total_funds"].Set(float64(s.Outputs.Sum()))
 
+	s.counterVecs["cli_calls"].With(prometheus.Labels{"call": "listpeers"}).Inc()
 	peerNodes, err := c.ListPeers()
 	if err != nil {
+		s.counterVecs["cli_failures"].With(prometheus.Labels{"call": "listpeers"}).Inc()
 		return err
 	}
-	s.incCounter("listpeers")
 	s.updateNodes(*peerNodes)
 
 	peers := s.Nodes.Peers()
@@ -1220,11 +1214,13 @@ func (s *state) update() error {
 
 	// We merge in the output from listpeers with the one from listnodes above.
 	// log.Printf("lightningd listpeers response: %+v\n", peers)
+
+	s.counterVecs["cli_calls"].With(prometheus.Labels{"call": "listnodes"}).Inc()
 	nodes, err := c.ListNodes()
 	if err != nil {
+		s.counterVecs["cli_failures"].With(prometheus.Labels{"call": "listnodes"}).Inc()
 		return err
 	}
-	s.incCounter("listnodes")
 	s.updateNodes(*nodes)
 	s.gauges["num_nodes"].Set(float64(len(s.Nodes)))
 	// log.Printf("lightningd listnodes response: %+v\n", nodes)
@@ -1269,11 +1265,12 @@ func (s *state) update() error {
 		}
 	}
 
+	s.counterVecs["cli_calls"].With(prometheus.Labels{"call": "listpayments"}).Inc()
 	payments, err := c.ListPayments()
 	if err != nil {
+		s.counterVecs["cli_failures"].With(prometheus.Labels{"call": "listpayments"}).Inc()
 		return err
 	}
-	s.incCounter("listpayments")
 	s.Payments = *payments
 
 	n, exists := s.Nodes[s.Info.NodeId]
@@ -1491,9 +1488,11 @@ func (h cmdHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c := &cli{}
+	h.s.counterVecs["cli_calls"].With(prometheus.Labels{"call": "invoice"}).Inc()
 	// Note that bolt11 field only exists in lightning-cli invoice response, not in listinvoice
 	resp, err := c.Invoice(ir)
 	if err != nil {
+		h.s.counterVecs["cli_failures"].With(prometheus.Labels{"call": "invoice"}).Inc()
 		// TODO: maybe return actual error to user?
 		log.Printf("Failed to generate invoice: %v\n", err)
 		log.Printf("Serving 400 for HTTP %s %q: %q\n", r.Method, r.URL.Path, string(b))
@@ -1501,7 +1500,6 @@ func (h cmdHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "400 Bad Request")
 		return
 	}
-	h.s.incCounter("invoice")
 	log.Printf("lightning-cli invoice response: %+v\n", resp)
 
 	fmt.Fprintf(w, resp.Bolt11)
@@ -1542,16 +1540,6 @@ func newRouter(s *state, prefix string) (*mux.Router, error) {
 
 // newState returns a new state.
 func newState() *state {
-	cliCalls := []string{
-		"getinfo",
-		"invoice",
-		"listchannels",
-		"listfunds",
-		"listnodes",
-		"listinvoices",
-		"listpayments",
-		"listpeers",
-	}
 	s := state{
 		Nodes: allNodes{},
 		gauges: map[string]prometheus.Gauge{
@@ -1582,7 +1570,6 @@ func newState() *state {
 				},
 			),
 		},
-		callCounters: map[string]prometheus.Counter{},
 		counterVecs: map[string]*prometheus.CounterVec{
 			"aliases": prometheus.NewCounterVec(
 				prometheus.CounterOpts{
@@ -1599,6 +1586,22 @@ func newState() *state {
 					Help:      "Info of lightningd and lnmon version.",
 				},
 				[]string{"lnmon_version", "lightningd_version"},
+			),
+			"cli_calls": prometheus.NewCounterVec(
+				prometheus.CounterOpts{
+					Namespace: counterPrefix,
+					Name:      "cli_calls_total",
+					Help:      "Number of calls to cli command via CLI.",
+				},
+				[]string{"call"},
+			),
+			"cli_failures": prometheus.NewCounterVec(
+				prometheus.CounterOpts{
+					Namespace: counterPrefix,
+					Name:      "cli_failures_total",
+					Help:      "Number of failed calls to cli command via CLI.",
+				},
+				[]string{"call"},
 			),
 		},
 		gaugeVecs: map[string]*prometheus.GaugeVec{
@@ -1635,17 +1638,6 @@ func newState() *state {
 				[]string{"node_id", "state", "direction"},
 			),
 		},
-	}
-
-	for _, call := range cliCalls {
-		c := prometheus.NewCounter(
-			prometheus.CounterOpts{
-				Namespace: counterPrefix,
-				Name:      call + "_calls_total",
-				Help:      fmt.Sprintf("Number of calls to %q via CLI.", call),
-			},
-		)
-		s.callCounters[call] = c
 	}
 	return &s
 }
