@@ -137,6 +137,13 @@ type (
 		PayIndex         int      `json:"pay_index"`
 		MsatoshiReceived msatoshi `json:"msatoshi_received"`
 	}
+	// invoiceResponse is the response from lightning-cli invoice.
+	invoiceResponse struct {
+		PaymentHash string `json:"payment_hash"`
+		ExpiryTime  unixTs `json:"expiry_time"`
+		ExpiresAt   unixTs `json:"expires_at"`
+		Bolt11      string `json:"bolt11"`
+	}
 
 	// nodes describes several nodes.
 	nodes []node
@@ -869,28 +876,33 @@ func (s state) IsRunning() bool {
 // execCmd executes specified command with arguments and returns the output.
 func execCmd(cmd string, arg ...string) (string, error) {
 	c := exec.Command(cmd, arg...)
-	out := bytes.Buffer{}
+	stdout := bytes.Buffer{}
 	stderr := bytes.Buffer{}
-	c.Stdout = &out
+	c.Stdout = &stdout
 	c.Stderr = &stderr
 	if err := c.Run(); err != nil {
 		if _, ok := err.(*exec.ExitError); ok {
 			// Command exited with non-zero status.
-			errstring := stderr.String()
 			errmsg := fmt.Sprintf("Command %q exited with non-zero status: %v", fmt.Sprintf("%s %s", cmd, strings.Join(arg, " ")), err)
+			errstring := stderr.String()
 			if errstring != "" {
-				errmsg += fmt.Sprintf(", stderr=%q", stderr.String())
+				errmsg += fmt.Sprintf(", stderr=%s", stderr.String())
+			}
+			outstring := stdout.String()
+			if outstring != "" {
+				errmsg += fmt.Sprintf(", stout=%s", stdout.String())
 			}
 			return "", fmt.Errorf(errmsg)
 		}
 		return "", err
 	}
-	return out.String(), nil
+	return stdout.String(), nil
 }
 
 // exec returns output when executing specified lightning-cli command.
-func (c cli) exec(cmd string) (string, error) {
-	return execCmd("lightning-cli", cmd)
+func (c cli) exec(cmd string, args ...string) (string, error) {
+	allArgs := append([]string{cmd}, args...)
+	return execCmd("lightning-cli", allArgs...)
 }
 
 // GetInfo returns the getinfo response.
@@ -901,6 +913,19 @@ func (c cli) GetInfo() (*getInfoResponse, error) {
 	}
 	resp := getInfoResponse{}
 	if err := json.Unmarshal([]byte(infostring), &resp); err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
+// Invoice returns the lightning-cli response to invoice.
+func (c cli) Invoice(r invoiceRequest) (*invoiceResponse, error) {
+	respstring, err := c.exec("invoice", fmt.Sprintf("%d", r.Msatoshi), r.Label, r.Description)
+	if err != nil {
+		return nil, err
+	}
+	resp := invoiceResponse{}
+	if err := json.Unmarshal([]byte(respstring), &resp); err != nil {
 		return nil, err
 	}
 	return &resp, nil
@@ -1412,11 +1437,18 @@ func (h nodeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // ServeHTTP serves /cmd requests.
 func (h cmdHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%s] cmdHandler serving HTTP for %s %s\n", r.RemoteAddr, r.Method, r.URL)
-	// TODO; dos resistance.
+	// TODO; dos resistance instead of origin whitelist.
+	whitelist := "35.198.134.215"
+	if !strings.Contains(r.RemoteAddr, whitelist) {
+		log.Printf("Remote addr is not in whitelist\n")
+		log.Printf("Serving 401 for HTTP %s %q\n", r.Method, r.URL.Path)
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintf(w, "401 Unauthorized")
+		return
+	}
 	// TODO: allow connecting to new peers via lightning-cli connect?
 
 	w.Header().Set("Content-Type", "application/json")
-
 	var ir invoiceRequest
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -1450,20 +1482,21 @@ func (h cmdHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("TODO: should call lightning-cli invoice -k msatoshi=%v (%T) -label=%v -description=%v.\n", ir.Msatoshi, ir.Msatoshi, ir.Label, ir.Description)
+	c := &cli{}
 	// Note that bolt11 field only exists in lightning-cli invoice response, not in listinvoice
-
-	rj, err := json.Marshal(ir)
+	resp, err := c.Invoice(ir)
 	if err != nil {
-		log.Printf("Failed to serialize JSON response: %v\n", err)
-		http.Error(w, "Well, that's embarrassing. Please try again later.", http.StatusInternalServerError)
+		// TODO: maybe return actual error to user?
+		log.Printf("Failed to generate invoice: %v\n", err)
+		log.Printf("Serving 400 for HTTP %s %q: %q\n", r.Method, r.URL.Path, string(b))
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "400 Bad Request")
 		return
 	}
-	if _, err := w.Write(rj); err != nil {
-		log.Printf("Failed to write JSON response: %v\n", err)
-		http.Error(w, "Well, that's embarrassing. Please try again later.", http.StatusInternalServerError)
-		return
-	}
+	log.Printf("lightning-cli invoice response: %+v\n", resp)
+
+	fmt.Fprintf(w, resp.Bolt11)
+	log.Printf("Wrote bolt11 as response: %s\n", resp.Bolt11)
 }
 
 // newRouter returns a new http router.
