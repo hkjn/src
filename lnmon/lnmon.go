@@ -119,12 +119,17 @@ type (
 		Addresses     address `json:"addresses"`
 	}
 	// invoiceRequest is a request to create a new invoice.
-	// lightning-cli invoice -k msatoshi=N label=L description=D ->
-	// payment_hash, expires_at, bolt11
 	invoiceRequest struct {
 		Msatoshi    msatoshi `json:"msatoshi"`
 		Label       string   `json:"label"`
 		Description string   `json:"description"`
+	}
+	// invoiceResponse is the response from lightning-cli invoice.
+	invoiceResponse struct {
+		PaymentHash string `json:"payment_hash"`
+		ExpiryTime  unixTs `json:"expiry_time"`
+		ExpiresAt   unixTs `json:"expires_at"`
+		Bolt11      string `json:"bolt11"`
 	}
 	// invoiceListing is a single result from listinvoices.
 	invoiceListing struct {
@@ -136,13 +141,6 @@ type (
 		ExpiresAt        unixTs   `json:"expires_at"`
 		PayIndex         int      `json:"pay_index"`
 		MsatoshiReceived msatoshi `json:"msatoshi_received"`
-	}
-	// invoiceResponse is the response from lightning-cli invoice.
-	invoiceResponse struct {
-		PaymentHash string `json:"payment_hash"`
-		ExpiryTime  unixTs `json:"expiry_time"`
-		ExpiresAt   unixTs `json:"expires_at"`
-		Bolt11      string `json:"bolt11"`
 	}
 
 	// nodes describes several nodes.
@@ -1435,8 +1433,18 @@ func (h nodeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // ServeHTTP serves /cmd requests.
+//
+// TODO: allow connecting to new peers via lightning-cli connect?
 func (h cmdHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	action := vars["action"]
 	log.Printf("[%s] cmdHandler serving HTTP for %s %s\n", r.RemoteAddr, r.Method, r.URL)
+	if action != "invoice" {
+		log.Printf("Bad action=%q, serving 400 for HTTP %s %q\n", action, r.Method, r.URL.Path)
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "400 Bad Request")
+		return
+	}
 	// TODO; dos resistance instead of origin whitelist.
 	whitelist := "35.198.134.215"
 	if !strings.Contains(r.RemoteAddr, whitelist) {
@@ -1446,10 +1454,8 @@ func (h cmdHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "401 Unauthorized")
 		return
 	}
-	// TODO: allow connecting to new peers via lightning-cli connect?
 
 	w.Header().Set("Content-Type", "application/json")
-	var ir invoiceRequest
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("Serving 400 for HTTP %s %q: %q\n", r.Method, r.URL.Path, string(b))
@@ -1457,8 +1463,9 @@ func (h cmdHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "400 Bad Request")
 		return
 	}
+	var ir invoiceRequest
 	if err := json.Unmarshal(b, &ir); err != nil {
-		log.Printf("Serving 400 for HTTP %s %q: %q\n", r.Method, r.URL.Path, string(b))
+		log.Printf("Failed to unmarshal as cmdRequest, serving 400 for HTTP %s %q: %q\n", r.Method, r.URL.Path, string(b))
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "400 Bad Request")
 		return
@@ -1517,14 +1524,14 @@ func newRouter(s *state, prefix string) (*mux.Router, error) {
 	r := mux.NewRouter()
 	r.Handle("/", ih).Methods("GET")
 	r.Handle("/node/{id:[a-f0-9]+}", nh).Methods("GET")
-	r.Handle("/cmd", ch).Methods("POST")
+	r.Handle("/cmd/{action:[a-z]+}", ch).Methods("POST")
 	r.Handle("/metrics", promhttp.Handler()).Methods("GET")
 	if prefix != "" {
 		log.Printf("Serving resources with prefix %q..\n", prefix)
 		sr := r.PathPrefix(prefix).Subrouter()
 		sr.Handle("/", ih).Methods("GET")
 		sr.Handle("/node", nh).Methods("GET")
-		sr.Handle("/cmd", ch).Methods("POST")
+		sr.Handle("/cmd/{action:[a-z]+}", ch).Methods("POST")
 		sr.Handle("/metrics", promhttp.Handler()).Methods("GET")
 	}
 
