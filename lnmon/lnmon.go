@@ -1501,6 +1501,7 @@ func (h cmdHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "400 Bad Request")
 		return
 	}
+	h.s.incCounter("invoice")
 	log.Printf("lightning-cli invoice response: %+v\n", resp)
 
 	fmt.Fprintf(w, resp.Bolt11)
@@ -1543,6 +1544,7 @@ func newRouter(s *state, prefix string) (*mux.Router, error) {
 func newState() *state {
 	cliCalls := []string{
 		"getinfo",
+		"invoice",
 		"listchannels",
 		"listfunds",
 		"listnodes",
