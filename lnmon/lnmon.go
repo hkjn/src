@@ -24,6 +24,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	"golang.org/x/crypto/acme/autocert"
 )
 
@@ -496,8 +497,8 @@ func (ns nodes) ChannelCandidates() candidates {
 		result = append(result, n)
 	}
 	sort.Sort(sort.Reverse(result))
-	max := 20
-	if len(result) < 20 {
+	max := 50
+	if len(result) < 50 {
 		max = len(result)
 	}
 	return result[:max]
@@ -528,6 +529,8 @@ func (msat msatoshi) String() string {
 //
 // TODO: Add test case; when we saw node that was peer with one cnannel in OPENINGD, subsequent listpeers results with CHANNELD_AWAITING_LOCKIN
 // did not affect the presented state.
+//
+// TODO: might want to forget nodes that no longer are included in listnodes output..
 func (s state) updateNodes(newNodes nodes) {
 	for _, nn := range newNodes {
 		on, exists := s.Nodes[nn.NodeId]
@@ -1153,9 +1156,9 @@ func (s *state) update() error {
 	}
 	s.incCounter("listchannels")
 	if len(s.Channels) != len(*channels) {
+		s.Channels = *channels
 		log.Printf("We now know of %d channels.\n", len(s.Channels))
 	}
-	s.Channels = *channels
 	s.gauges["num_channels"].Set(float64(len(s.Channels)))
 
 	outputs, err := c.ListFunds()
@@ -1164,9 +1167,9 @@ func (s *state) update() error {
 	}
 	s.incCounter("listfunds")
 	if !s.Outputs.Equal(*outputs) {
+		s.Outputs = *outputs
 		log.Printf("We now know of %d %v.\n", len(s.Outputs.Outputs), s.Outputs)
 	}
-	s.Outputs = *outputs
 	s.gauges["total_funds"].Set(float64(s.Outputs.Sum()))
 
 	peerNodes, err := c.ListPeers()
@@ -1407,6 +1410,7 @@ func (h nodeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h cmdHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%s] cmdHandler serving HTTP for %s %s\n", r.RemoteAddr, r.Method, r.URL)
 	// TODO; dos resistance.
+	// TODO: allow connecting to new peers via lightning-cli connect?
 
 	w.Header().Set("Content-Type", "application/json")
 
