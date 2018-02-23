@@ -1445,7 +1445,8 @@ func (h cmdHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "400 Bad Request")
 		return
 	}
-	// TODO; dos resistance instead of origin whitelist.
+	// TODO; build dos resistance instead of origin whitelist: separate goroutine with max capacity, being drained with
+	// delay between each lightning-cli execution. Possibly with max cap per-client.
 	whitelist := "35.198.134.215"
 	if !strings.Contains(r.RemoteAddr, whitelist) {
 		log.Printf("Remote addr is not in whitelist\n")
