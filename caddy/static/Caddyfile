@@ -1,0 +1,4 @@
+static.hkjn.me
+push
+log    /var/log/access.log
+root /www/static.hkjn.me

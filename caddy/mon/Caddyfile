@@ -4,10 +4,6 @@ redir 302 {
   if {path} is /
   / /ln/consoles/index.html
 }
-static.mon.hkjn.me {
-    root /var/www/static.mon.hkjn.me
-    gzip
-}
 log    /var/log/access.log
 proxy  /dash 127.0.0.1:8080
 proxy  /ln   127.0.0.1:9090
