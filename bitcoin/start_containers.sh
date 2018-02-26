@@ -9,7 +9,12 @@ fatal() {
 
 [ -e /etc/lnmon/lnmon.env ] || fatal "No /etc/lnmon/lnmon.env file."
 
-source /etc/lnmon/lnmon.env
+. /etc/lnmon/lnmon.env
+
+LNMON_IP_ADDR=${LNMON_IP_ADDR:-""}
+LNMON_ALIAS=${LNMON_ALIAS:-""}
+LNMON_RGB=${LNMON_RGB:-"112233"}
+LNMON_LOG_LEVEL=${LNMON_LOG_LEVEL:-"info"}
 
 [ "${LNMON_IP_ADDR}" ] || fatal "No LNMON_IP_ADDR specified."
 [ "${LNMON_ALIAS}" ] || fatal "No LNMON_ALIAS specified."
