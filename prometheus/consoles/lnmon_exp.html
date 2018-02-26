@@ -32,7 +32,7 @@ table.breakdown th {
 
 <p>Donate using LN:
 <form id="lndonate" action="http://ln.hkjn.me:8380/cmd/invoice" method="POST">
-	Amount: <input type="number" name="amount"><br/>
+	Amount: <input type="number" class="amount" name="amount"><br/>
 	<input type="submit" value="Submit">
 </form>
 </p>
@@ -71,9 +71,10 @@ new PromConsole.Graph({
 <script>
 $(document).ready(function() {
 	alert("FIXMEH: document ready");
-	$("#lndonate").click(function(){
-		$(this).hide();
-		alert("FIXMEH: testing");
+	$("#lndonate").submit(function(event) {
+		event.preventDefault();
+		var amount=$("#lndonate > input.amount").val();
+		alert("FIXMEH: should submit request to /cmd/invoice: " + amount);
 	});
 });
 </script>
