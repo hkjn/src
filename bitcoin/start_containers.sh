@@ -7,7 +7,7 @@ fatal() {
 	exit 1
 }
 
-[ ! -e /etc/lnmon/lnmon.env ] || fatal "No /etc/lnmon/lnmon.env file."
+[ -e /etc/lnmon/lnmon.env ] || fatal "No /etc/lnmon/lnmon.env file."
 
 source /etc/lnmon/lnmon.env
 
