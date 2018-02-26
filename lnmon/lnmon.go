@@ -1165,6 +1165,7 @@ func (s *state) update() error {
 				"lightningd_version": s.Info.Version,
 			},
 		).Set(1.0)
+		s.gauges["blockheight"].Set(float64(s.Info.Blockheight))
 	}
 
 	s.counterVecs["cli_calls"].With(prometheus.Labels{"call": "listchannels"}).Inc()
@@ -1293,6 +1294,7 @@ func (s *state) reset() {
 	s.Outputs = fundListing{}
 	s.counterVecs["aliases"].Reset()
 	s.counterVecs["info"].Reset()
+	s.gauges["blockheight"].Set(0.0)
 	s.gauges["num_channels"].Set(0.0)
 	s.gauges["total_funds"].Set(0.0)
 	s.gaugeVecs["num_peers"].Reset()
@@ -1543,6 +1545,11 @@ func newState() *state {
 	s := state{
 		Nodes: allNodes{},
 		gauges: map[string]prometheus.Gauge{
+			"blockheight": prometheus.NewGauge(prometheus.GaugeOpts{
+				Namespace: counterPrefix,
+				Name:      "blockheight",
+				Help:      "Reported blockheight from lightningd.",
+			}),
 			"running": prometheus.NewGauge(prometheus.GaugeOpts{
 				Namespace: counterPrefix,
 				Name:      "running",
