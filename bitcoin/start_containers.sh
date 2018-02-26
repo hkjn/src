@@ -1,6 +1,6 @@
 set -eu
 
-IMAGE=${IMAGE:-"hkjn/bitcoin:lightning-2018-02-19-amd64"}
+IMAGE=${IMAGE:-"hkjn/bitcoin:lightning-2018-02-21-amd64"}
 
 fatal() {
 	echo "FATAL: $@" >&2
@@ -44,10 +44,10 @@ if ! docker container inspect ln 1>/dev/null; then
 	            -v /crypt/lightning:/home/bitcoin/.lightning \
 	            ${IMAGE} \
 	              --network=bitcoin \
-	              --ipaddr=${IP_ADDR} \
-	              --log-level=${LOG_LEVEL} \
-	              --alias=${ALIAS} \
-	              --rgb=${RGB}
+	              --ipaddr=${LNMON_IP_ADDR} \
+	              --log-level=${LNMON_LOG_LEVEL} \
+	              --alias=${LNMON_ALIAS} \
+	              --rgb=${LNMON_RGB}
 fi
 
 if ! docker container inspect bcmon 1>/dev/null; then
