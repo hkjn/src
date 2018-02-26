@@ -26,10 +26,13 @@ table.breakdown th {
 {{ template "prom_right_table_tail" }}
 {{ template "prom_content_head" . }}
 
+<h1>lnmon</h1>
+
 <p>Welcome to a monitoring tool developed by <a href="https://hkjn.me">hkjn</a>.</p>
 
-<p>This dashboard shows information about the state of a Lightning Network node, to make it
-easier to monitor its state and learn about the technology.</p>
+<p>This dashboard shows information about the state of a Lightning Network node running
+<a href="https://github.com/ElementsProject/lightning">c-lightning</a>, to make it
+easier to see what's going on with the node and learn about the technology.</p>
 
 {{ with .Params.node_id }}
 <h2>Viewing only node
@@ -76,6 +79,18 @@ new PromConsole.Graph({
 </script>
 
 <h1>Node info</h1>
+
+<h2>Blockheight</h2>
+<div id="blockheightGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#blockheightGraph"),
+    expr: "lightningd_blockheight",
+    colorScheme: "spectrum14",
+    name: "Blockheight",
+    yTitle: "Blockheight"
+});
+</script>
 
 <h2>Nodes</h2>
 
