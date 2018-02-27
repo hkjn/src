@@ -13,4 +13,5 @@ mon.hkjn.me {
   log    /var/log/mon.hkjn.me.access.log
   proxy  /dash 127.0.0.1:8080
   proxy  /ln   127.0.0.1:9090
+  proxy /lnmon 163.172.162.18:8380
 }
