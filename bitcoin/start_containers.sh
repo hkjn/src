@@ -21,6 +21,14 @@ LNMON_LOG_LEVEL=${LNMON_LOG_LEVEL:-"info"}
 [ "${LNMON_RGB}" ] || fatal "No LNMON_RGB specified."
 [ "${LNMON_LOG_LEVEL}" ] || fatal "No LNMON_LOG_LEVEL specified."
 
+DOCKER_MIN_VERSION='[1, 13, 1]'
+if docker version --format '{{.Server.Version}}' | python -c "import sys; v=[int(x) for x in sys.stdin.read().split('.')]; good=v >= [1, 13, 1]; sys.exit(v >= $DOCKER_MIN_VERSION)"; then
+	echo "FATAL: Docker version $(docker version --format '{{.Server.Version}}') is too old; need at least ${DOCKER_MIN_VERSION}." >&2
+	exit 1
+fi
+
+if docker version --format '{{.Server.Version}}'
+
 if ! docker network inspect bitcoin-net 1>/dev/null; then
 	echo "Creating bitcoin-net network.."
 	docker network create --driver=bridge --subnet=10.4.2.0/24 bitcoin-net
