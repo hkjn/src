@@ -2,10 +2,6 @@ variable "gcloud_credentials" {
   default = ".gcp/tf-dns-editor.json"
 }
 
-variable "hkjnprod_enabled" {
-  default = true
-}
-
 variable "scaleway_organization_file" {
   default = ".scaleway/scaleway0_organization"
 }

@@ -78,9 +78,13 @@ output "dropcore_ip" {
   value = "${digitalocean_droplet.dropcore.ipv4_address}"
 }
 
-output "hkjn_prod_ip" {
+output "hkjn_ln_old_ip" {
   value = "${module.scaleway.public_ip}"
 }
+
+#output "hkjn_ln_ip" {
+#  value = "${module.ln_scaleway.public_ip}"
+#}
 
 output "hkjn_ip_gz0" {
   value = "${google_dns_record_set.hkjn_gz0.rrdatas[0]}"

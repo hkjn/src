@@ -6,5 +6,13 @@ provider "scaleway" {
 
 module "scaleway" {
   source = "./scaleway"
-  enabled = "${var.hkjnprod_enabled}"
+  enabled = "true"
+  machine_name = "prod.hkjn.me"
+  image = "ee0d3a38-1e8a-4407-bc02-d35dd588efa2"
 }
+
+#module "ln_scaleway" {
+#  source = "./scaleway"
+#  enabled = "false"
+#  machine_name = "ln.hkjn.me"
+#}

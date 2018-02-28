@@ -4,7 +4,7 @@ resource "scaleway_ip" "hkjnprod" {
 
 resource "scaleway_server" "hkjnprod" {
   count = "${var.enabled ? 1 : 0}"
-  name           = "prod.hkjn.me"
+  name           = "${var.machine_name}"
   image          = "${var.image}"
   type           = "C1"
   public_ip      = "${element(scaleway_ip.hkjnprod.*.ip, count.index)}"
