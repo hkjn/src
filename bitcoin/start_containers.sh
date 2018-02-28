@@ -14,7 +14,7 @@ fatal() {
 LNMON_IP_ADDR=${LNMON_IP_ADDR:-""}
 LNMON_ALIAS=${LNMON_ALIAS:-""}
 LNMON_RGB=${LNMON_RGB:-"112233"}
-LNMON_LOG_LEVEL=${LNMON_LOG_LEVEL:-"info"}
+LNMON_LOG_LEVEL=${LNMON_LOG_LEVEL:-"debug"}
 
 [ "${LNMON_IP_ADDR}" ] || fatal "No LNMON_IP_ADDR specified."
 [ "${LNMON_ALIAS}" ] || fatal "No LNMON_ALIAS specified."
