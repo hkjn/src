@@ -22,15 +22,15 @@ elif [[ "$ID_LIKE" = "debian" ]]; then
 	if ! which docker 1>/dev/null; then
 		apt-get -y update
 		apt-get -y upgrade
-		apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+		apt-get install -y aptitude apt-transport-https ca-certificates curl software-properties-common
 		curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-		if ! apt-key fingerprint 0EBFCD88 2>/dev/null | grep "9DC8 5822 9FC7 DD38 854A E2D8 8D81 803C 0EBF CD88" 1>/dev/null; then
+		if ! apt-key fingerprint 0EBFCD88 2>/dev/null | grep -v "9DC8 5822 9FC7 DD38 854A E2D8 8D81 803C 0EBF CD88" 1>/dev/null; then
 			echo "FATAL: Bad fingerprint of Docker gpg key." >&2
 			exit 1
 		fi
 		add-apt-repository "deb [arch=armhf] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 		apt-get -y update
-		apt-get -y install docker-ce
+		aptitude -y install docker-ce
 	fi
 	adduser --ingroup docker --shell /bin/bash --disabled-password $RUSER
 else
@@ -69,11 +69,9 @@ chmod 0440 /etc/sudoers.d/user_sudo
 # TODO: Following seems to start interactive shell on ubuntu; should
 # run following commands automatically..
 su - $RUSER
-mkdir -p src/hkjn.me
-cd src/hkjn.me
-git clone https://github.com/hkjn/scripts.git
-git clone https://github.com/hkjn/dotfiles.git
-cd dotfiles
+mkdir -p src/hkjn.me/src
+git clone https://github.com/hkjn/src src/hkjn.me/src
+cd src/hkjn.me/src/dotfiles
 cp .bash* ~/
 
 echo 'Done bootstrapping host.'
