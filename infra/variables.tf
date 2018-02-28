@@ -104,7 +104,7 @@ variable "vpn_ip" {
   default = "163.172.184.153"
 }
 
-variable "z_decenter_world_ip" {
+variable "ln0_decenter_world_ip" {
   default = "174.138.11.8"
 }
 

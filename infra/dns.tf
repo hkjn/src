@@ -262,12 +262,12 @@ resource "google_dns_managed_zone" "decenter_world_zone" {
   dns_name = "decenter.world."
 }
 
-resource "google_dns_record_set" "z_decenter_world" {
-  name = "z.${google_dns_managed_zone.decenter_world_zone.dns_name}"
+resource "google_dns_record_set" "ln0_decenter_world" {
+  name = "ln0.${google_dns_managed_zone.decenter_world_zone.dns_name}"
   type = "A"
   ttl  = 60
   managed_zone = "${google_dns_managed_zone.decenter_world_zone.name}"
-  rrdatas = ["${var.z_decenter_world_ip}"]
+  rrdatas = ["${var.ln0_decenter_world_ip}"]
 }
 
 resource "google_dns_record_set" "decenter_world" {
