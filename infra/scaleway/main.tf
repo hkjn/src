@@ -23,17 +23,3 @@ module "volume2" {
   server_id = "${scaleway_server.hkjnprod.id}"
   enabled = "${var.enabled}"
 }
-
-module "volume3" {
-  source = "./volume"
-  name = "prodvolume3"
-  server_id = "${scaleway_server.hkjnprod.id}"
-  enabled = "${var.enabled}"
-}
-
-module "volume4" {
-  source = "./volume"
-  name = "prodvolume4"
-  server_id = "${scaleway_server.hkjnprod.id}"
-  enabled = "${var.enabled}"
-}

@@ -4,7 +4,7 @@ NAME=lnmon
 VERSION=$(shell git log -1 --pretty=format:'%h')
 GOOS ?= linux
 GOARCH ?= arm
-DEPLOYUSER ?= $USER
+DEPLOYUSER ?= $(USER)
 DEPLOYHOST ?= prod.hkjn.me
 DEPLOYPORT ?= 6200
 

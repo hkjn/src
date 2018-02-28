@@ -30,8 +30,9 @@ table.breakdown th {
 
 <p>Welcome to a monitoring tool developed by <a href="https://hkjn.me">hkjn</a>.</p>
 
-<p>This dashboard shows information about the state of a Lightning Network node, which should
-make it easier to monitor its state and learn about the technology.</p>
+<p>This dashboard shows information about the state of a Lightning Network node running
+<a href="https://github.com/ElementsProject/lightning">c-lightning</a>, to make it
+easier to see what's going on with the node and learn about the technology.</p>
 
 {{ with .Params.node_id }}
 <h2>Viewing only node
@@ -48,9 +49,65 @@ make it easier to monitor its state and learn about the technology.</p>
 
 {{ end }}
 
+<h1>Network info</h1>
+
+<h2>Total channels</h2>
+<div id="numChannelsGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#numChannelsGraph"),
+    expr: "lightningd_num_channels",
+    colorScheme: "spectrum14",
+    name: "Number of channels",
+    renderer: "area",
+    min: 0.0,
+    yTitle: "Number of channels"
+});
+</script>
+
+<h2>Total nodes</h2>
+<div id="numNodesGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#numNodesGraph"),
+    colorScheme: "spectrum14",
+    expr: "lightningd_num_nodes",
+    name: "Number of total nodes",
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
+<h1>Node info</h1>
+
+<h2>Blockheight</h2>
+<div id="blockheightGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#blockheightGraph"),
+    expr: "lightningd_blockheight",
+    colorScheme: "spectrum14",
+    name: "Blockheight",
+    yTitle: "Blockheight"
+});
+</script>
+
+<h2>Nodes</h2>
+
+<h3>Number of peers</h3>
+<div id="numPeersGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#numPeersGraph"),
+    colorScheme: "spectrum14",
+    expr: "lightningd_num_peers",
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
 <h2>Channels</h2>
 
-<h3>Number of channels by state</h3>
 <p>This graph shows the number of channels to and from our node that are in each state.</p>
 <div id="ourChannelsGraph"></div>
 <script>
@@ -66,6 +123,7 @@ new PromConsole.Graph({
 <h3>Capacity of our channels</h3>
 
 <h4>Normal channels</h4>
+
 <p>This graph shows the capacity (amount of funds that could be sent + received) for all channels in
 normal state (<code>CHANNELD_NORMAL</code>).</p>
 <div id="channelCapacityNormalGraph"></div>
@@ -104,6 +162,7 @@ new PromConsole.Graph({
 </table>
 
 <h4>Other channels</h4>
+
 <p>This graph shows the capacity (amount of funds that could be sent + received) for all channels in
 non-normal states (i.e. not <code>CHANNELD_NORMAL</code>).</p>
 <div id="channelCapacityAbnormalGraph"></div>
@@ -145,9 +204,10 @@ new PromConsole.Graph({
 {{ end }}
 </table>
 
-
 <h3>Balance on our side of channels</h3>
-<p>This graph shows the balance committed to us in our channels, i.e. funds we could send to others if we wanted to.</p>
+
+<p>This graph shows the balance committed to us in our channels, i.e. funds we
+could send to others if we wanted to.</p>
 
 <div id="channelToUsBalanceGraph"></div>
 <script>
@@ -189,8 +249,9 @@ new PromConsole.Graph({
 </table>
 
 <h3>Balance on their side of channels</h3>
-<p>This graph shows the balance committed to them in our channels, i.e. funds that could be sent to us
-if the other node wanted to.</p>
+
+<p>This graph shows the balance committed to them in our channels, i.e. funds
+that could be sent to us if the other node wanted to.</p>
 
 <div id="channelToThemBalanceGraph"></div>
 <script>
@@ -232,6 +293,7 @@ new PromConsole.Graph({
 </table>
 
 <h3>Funds available to open channels</h3>
+
 <div id="fundsGraph"></div>
 <script>
 new PromConsole.Graph({
@@ -242,101 +304,6 @@ new PromConsole.Graph({
     renderer: "area",
     yUnits: "BTC",
     yTitle: "Funds",
-    min: 0.0
-});
-</script>
-
-<h3>Number of channels on the network</h3>
-<div id="numChannelsGraph"></div>
-<script>
-new PromConsole.Graph({
-    node: document.querySelector("#numChannelsGraph"),
-    expr: "lightningd_num_channels",
-    colorScheme: "spectrum14",
-    name: "Number of channels",
-    renderer: "area",
-    min: 0.0,
-    yTitle: "Number of channels"
-});
-</script>
-
-<h2>Nodes</h2>
-
-<h3>Number of peers</h3>
-<div id="numPeersGraph"></div>
-<script>
-new PromConsole.Graph({
-    node: document.querySelector("#numPeersGraph"),
-    colorScheme: "spectrum14",
-    expr: "lightningd_num_peers",
-    renderer: "area",
-    min: 0.0
-});
-</script>
-
-<h3>Number of total known nodes on the network</h3>
-<div id="numNodesGraph"></div>
-<script>
-new PromConsole.Graph({
-    node: document.querySelector("#numNodesGraph"),
-    colorScheme: "spectrum14",
-    expr: "lightningd_num_nodes",
-    name: "Number of total nodes",
-    renderer: "area",
-    min: 0.0
-});
-</script>
-
-<h1>Process info for <code>lightningd</code></h1>
-
-<h2>Virtual memory usage</h2>
-<div id="virtualMemoryGraph"></div>
-<script>
-new PromConsole.Graph({
-    node: document.querySelector("#virtualMemoryGraph"),
-    colorScheme: "cool",
-    expr: 'pid_process_virtual_memory_bytes{job="lnmon"}',
-    name: "Virtual memory (bytes)",
-    renderer: "area",
-    min: 0.0
-});
-</script>
-
-<h2>Resident memory</h2>
-<div id="residentMemoryGraph"></div>
-<script>
-new PromConsole.Graph({
-    node: document.querySelector("#residentMemoryGraph"),
-    colorScheme: "cool",
-    expr: 'pid_process_resident_memory_bytes{job="lnmon"}',
-    name: "Resident memory (bytes)",
-    renderer: "area",
-    min: 0.0
-});
-</script>
-
-<h2>Rate of CPU usage</h2>
-<div id="cpuUsageRateGraph"></div>
-<script>
-new PromConsole.Graph({
-    node: document.querySelector("#cpuUsageRateGraph"),
-    expr: 'rate(pid_process_cpu_seconds_total{job="lnmon"}[5m])',
-    colorScheme: "cool",
-    name: "CPU usage rate",
-    renderer: "area",
-    min: 0.0
-});
-</script>
-
-<h2>Number of open file descriptors</h2>
-<div id="openFdsGraph"></div>
-<script>
-new PromConsole.Graph({
-    node: document.querySelector("#openFdsGraph"),
-    colorScheme: "cool",
-    expr: 'pid_process_open_fds{job="lnmon"}',
-    name: "Number of file descriptors",
-    renderer: "area",
     min: 0.0
 });
 </script>

@@ -1165,6 +1165,7 @@ func (s *state) update() error {
 				"lightningd_version": s.Info.Version,
 			},
 		).Set(1.0)
+		s.gauges["blockheight"].Set(float64(s.Info.Blockheight))
 	}
 
 	s.counterVecs["cli_calls"].With(prometheus.Labels{"call": "listchannels"}).Inc()
@@ -1293,6 +1294,7 @@ func (s *state) reset() {
 	s.Outputs = fundListing{}
 	s.counterVecs["aliases"].Reset()
 	s.counterVecs["info"].Reset()
+	s.gauges["blockheight"].Set(0.0)
 	s.gauges["num_channels"].Set(0.0)
 	s.gauges["total_funds"].Set(0.0)
 	s.gaugeVecs["num_peers"].Reset()
@@ -1375,6 +1377,7 @@ func (h indexHandler) registerMetrics() {
 // ServeHTTP serves the index page.
 func (h indexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%v] HTTP %s %s\n", r.RemoteAddr, r.Method, r.URL)
+	h.s.counterVecs["http_calls"].With(prometheus.Labels{"call": "index"}).Inc()
 	data := struct {
 		IsRunning         bool
 		MonVersion        string
@@ -1409,6 +1412,7 @@ func (h nodeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	nid := vars["id"]
 
 	log.Printf("[%v] nodeHandler serving HTTP for %s %s\n", r.RemoteAddr, r.Method, r.URL)
+	h.s.counterVecs["http_calls"].With(prometheus.Labels{"call": "node"}).Inc()
 	if len(nid) != 66 {
 		log.Printf("Serving 400 for HTTP %s %q\n", r.Method, r.URL.Path)
 		w.WriteHeader(http.StatusBadRequest)
@@ -1431,27 +1435,20 @@ func (h nodeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // ServeHTTP serves /cmd requests.
 //
+// TODO: if more DoS resistance is needed, could cap per-RemoteAddr requests per second/minute.
 // TODO: allow connecting to new peers via lightning-cli connect?
 func (h cmdHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	action := vars["action"]
 	log.Printf("[%s] cmdHandler serving HTTP for %s %s\n", r.RemoteAddr, r.Method, r.URL)
+	h.s.counterVecs["http_calls"].With(prometheus.Labels{"call": "cmd"}).Inc()
 	if action != "invoice" {
 		log.Printf("Bad action=%q, serving 400 for HTTP %s %q\n", action, r.Method, r.URL.Path)
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "400 Bad Request")
 		return
 	}
-	// TODO; build dos resistance instead of origin whitelist: separate goroutine with max capacity, being drained with
-	// delay between each lightning-cli execution. Possibly with max cap per-client.
-	whitelist := "35.198.134.215"
-	if !strings.Contains(r.RemoteAddr, whitelist) {
-		log.Printf("Remote addr is not in whitelist\n")
-		log.Printf("Serving 401 for HTTP %s %q\n", r.Method, r.URL.Path)
-		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprintf(w, "401 Unauthorized")
-		return
-	}
+	h.s.counterVecs["http_calls"].With(prometheus.Labels{"call": "cmd_invoice"}).Inc()
 
 	w.Header().Set("Content-Type", "application/json")
 	b, err := ioutil.ReadAll(r.Body)
@@ -1543,6 +1540,11 @@ func newState() *state {
 	s := state{
 		Nodes: allNodes{},
 		gauges: map[string]prometheus.Gauge{
+			"blockheight": prometheus.NewGauge(prometheus.GaugeOpts{
+				Namespace: counterPrefix,
+				Name:      "blockheight",
+				Help:      "Reported blockheight from lightningd.",
+			}),
 			"running": prometheus.NewGauge(prometheus.GaugeOpts{
 				Namespace: counterPrefix,
 				Name:      "running",
@@ -1586,6 +1588,14 @@ func newState() *state {
 					Help:      "Info of lightningd and lnmon version.",
 				},
 				[]string{"lnmon_version", "lightningd_version"},
+			),
+			"http_calls": prometheus.NewCounterVec(
+				prometheus.CounterOpts{
+					Namespace: counterPrefix,
+					Name:      "http_calls_total",
+					Help:      "Number of calls to http handlers.",
+				},
+				[]string{"call"},
 			),
 			"cli_calls": prometheus.NewCounterVec(
 				prometheus.CounterOpts{
