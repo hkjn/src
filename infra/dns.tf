@@ -6,17 +6,7 @@ resource "google_dns_managed_zone" "hkjn_zone" {
   dns_name = "hkjn.me."
 }
 
-resource "google_dns_record_set" "hkjn_prod" {
-  count = "${var.hkjnprod_enabled ? 1 : 0}"
-  name = "prod.${google_dns_managed_zone.hkjn_zone.dns_name}"
-  type = "A"
-  ttl  = 150
-  managed_zone = "${google_dns_managed_zone.hkjn_zone.name}"
-  rrdatas      = ["${module.scaleway.public_ip}"]
-}
-
 resource "google_dns_record_set" "hkjn_ln" {
-  count = "${var.hkjnprod_enabled ? 1 : 0}"
   name = "ln.${google_dns_managed_zone.hkjn_zone.dns_name}"
   type = "A"
   ttl  = 150
@@ -272,6 +262,17 @@ resource "google_dns_managed_zone" "decenter_world_zone" {
   name     = "decenter-world-zone"
   dns_name = "decenter.world."
 }
+
+resource "google_dns_record_set" "z_decenter_world" {
+  name = "z.${google_dns_managed_zone.decenter_world_zone.dns_name}"
+  type = "A"
+  ttl  = 60
+  managed_zone = "${google_dns_managed_zone.decenter_world_zone.name}"
+  rrdatas = [
+    "174.138.11.8",
+  ]
+}
+
 
 resource "google_dns_record_set" "decenter_world" {
   name = "${google_dns_managed_zone.decenter_world_zone.dns_name}"

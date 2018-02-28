@@ -5,7 +5,7 @@ VERSION=$(shell git log -1 --pretty=format:'%h')
 GOOS ?= linux
 GOARCH ?= arm
 DEPLOYUSER ?= $(USER)
-DEPLOYHOST ?= prod.hkjn.me
+DEPLOYHOST ?= ln.hkjn.me
 DEPLOYPORT ?= 6200
 
 .DEFAULT_GOAL=deploy
