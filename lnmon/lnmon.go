@@ -871,6 +871,10 @@ func (s state) IsRunning() bool {
 	return s.pid != 0
 }
 
+func (ir invoiceRequest) String() string {
+	return fmt.Sprintf("invoiceRequest{msatoshi: %v, label: %q, description: %q}", ir.Msatoshi, ir.Label, ir.Description)
+}
+
 // execCmd executes specified command with arguments and returns the output.
 func execCmd(cmd string, arg ...string) (string, error) {
 	c := exec.Command(cmd, arg...)
@@ -1486,8 +1490,8 @@ func (h cmdHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	c := &cli{}
 	h.s.counterVecs["cli_calls"].With(prometheus.Labels{"call": "invoice"}).Inc()
-	// Note that bolt11 field only exists in lightning-cli invoice response, not in listinvoice
-	resp, err := c.Invoice(ir)
+	log.Printf("Creating invoice from %v..\n", ir)
+	iv, err := c.Invoice(ir)
 	if err != nil {
 		h.s.counterVecs["cli_failures"].With(prometheus.Labels{"call": "invoice"}).Inc()
 		// TODO: maybe return actual error to user?
@@ -1497,10 +1501,10 @@ func (h cmdHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "400 Bad Request")
 		return
 	}
-	log.Printf("lightning-cli invoice response: %+v\n", resp)
+	log.Printf("lightning-cli invoice response: %+v\n", iv)
 
-	fmt.Fprintf(w, resp.Bolt11)
-	log.Printf("Wrote bolt11 as response: %s\n", resp.Bolt11)
+	fmt.Fprintf(w, iv.Bolt11)
+	log.Printf("Wrote bolt11 as response: %s\n", iv.Bolt11)
 }
 
 // newRouter returns a new http router.
