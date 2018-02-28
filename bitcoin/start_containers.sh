@@ -102,4 +102,5 @@ if ! docker container inspect lnmon 1>/dev/null; then
 	           -v /crypt/lightning:/home/bitcoin/.lightning:ro \
 	           ${IMAGE}
 fi
+echo "All done."
 
