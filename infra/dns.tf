@@ -6,6 +6,14 @@ resource "google_dns_managed_zone" "hkjn_zone" {
   dns_name = "hkjn.me."
 }
 
+resource "google_dns_record_set" "hkjn_ln0" {
+  name = "ln0.${google_dns_managed_zone.hkjn_zone.dns_name}"
+  type = "A"
+  ttl  = 150
+  managed_zone = "${google_dns_managed_zone.hkjn_zone.name}"
+  rrdatas      = ["${module.ln_scaleway.public_ip}"]
+}
+
 resource "google_dns_record_set" "hkjn_ln" {
   name = "ln.${google_dns_managed_zone.hkjn_zone.dns_name}"
   type = "A"
@@ -94,15 +102,6 @@ resource "google_dns_record_set" "hkjn_admin2" {
   rrdatas = [
     "${google_compute_instance.admin2.network_interface.0.access_config.0.assigned_nat_ip}",
   ]
-}
-
-resource "google_dns_record_set" "hkjn_cities" {
-  count = "${var.cities_enabled ? 1 : 0}"
-  name = "cities.${google_dns_managed_zone.hkjn_zone.dns_name}"
-  type = "A"
-  ttl  = 300
-  managed_zone = "${google_dns_managed_zone.hkjn_zone.name}"
-  rrdatas      = ["1.2.3.4"]
 }
 
 resource "google_dns_record_set" "hkjn_builder" {
@@ -263,16 +262,13 @@ resource "google_dns_managed_zone" "decenter_world_zone" {
   dns_name = "decenter.world."
 }
 
-resource "google_dns_record_set" "z_decenter_world" {
-  name = "z.${google_dns_managed_zone.decenter_world_zone.dns_name}"
+resource "google_dns_record_set" "ln0_decenter_world" {
+  name = "ln0.${google_dns_managed_zone.decenter_world_zone.dns_name}"
   type = "A"
   ttl  = 60
   managed_zone = "${google_dns_managed_zone.decenter_world_zone.name}"
-  rrdatas = [
-    "174.138.11.8",
-  ]
+  rrdatas = ["${var.ln0_decenter_world_ip}"]
 }
-
 
 resource "google_dns_record_set" "decenter_world" {
   name = "${google_dns_managed_zone.decenter_world_zone.dns_name}"

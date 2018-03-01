@@ -104,8 +104,8 @@ variable "vpn_ip" {
   default = "163.172.184.153"
 }
 
-variable "cities_enabled" {
-  default = "false"
+variable "ln0_decenter_world_ip" {
+  default = "174.138.11.8"
 }
 
 variable "builder_enabled" {

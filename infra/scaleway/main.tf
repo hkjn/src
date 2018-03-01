@@ -1,9 +1,8 @@
 resource "scaleway_ip" "hkjnprod" {
-  count = "${var.enabled ? 1 : 0}"
+  count = "1"
 }
 
 resource "scaleway_server" "hkjnprod" {
-  count = "${var.enabled ? 1 : 0}"
   name           = "${var.machine_name}"
   image          = "${var.image}"
   type           = "C1"
@@ -14,12 +13,10 @@ module "volume1" {
   source = "./volume"
   name = "prodvolume1"
   server_id = "${scaleway_server.hkjnprod.id}"
-  enabled = "${var.enabled}"
 }
 
 module "volume2" {
   source = "./volume"
   name = "prodvolume2"
   server_id = "${scaleway_server.hkjnprod.id}"
-  enabled = "${var.enabled}"
 }

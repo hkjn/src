@@ -1,5 +1,5 @@
 #
-# Config for local prometheus.
+# Global prometheus config.
 #
 global:
   scrape_interval: 1m     # Set the scrape interval to every 15 seconds. Default is every 1 minute.
@@ -15,36 +15,44 @@ alerting:
 
 # Load rules once and periodically evaluate them according to the global
 # 'evaluation_interval'.
-rule_files:
-  - 'rules.yml'
+# rule_files:
+#  - 'rules.yml'
 
 scrape_configs:
   # The job name is added as a label `job=<job_name>` to any timeseries scraped from this
   # config.
   - job_name: 'node_exporter'
     static_configs:
-      - targets: ['localhost:9100']
+      - targets: ['mon.hkjn.me:9100', 'ln.hkjn.me:9100', 'z.decenter.world:9100']
+        labels:
+          group: 'production'
+          kind: 'monitoring'
+
+  - job_name: 'prometheus_mon'
+    metrics_path: '/ln/metrics'
+    static_configs:
+      - targets: ['mon.hkjn.me:9090']
         labels:
           group: 'production'
           kind: 'monitoring'
 
   - job_name: 'prometheus'
     static_configs:
-      - targets: ['localhost:9090']
+      - targets: ['ln.hkjn.me:9090', 'z.decenter.world:9090']
         labels:
           group: 'production'
           kind: 'monitoring'
 
   - job_name: 'lnmon'
     static_configs:
-      - targets: ['localhost:8380']
+      - targets: ['ln.hkjn.me:8380', 'z.decenter.world:8380']
         labels:
           group: 'production'
           kind: 'monitoring'
 
   - job_name: 'bcmon'
     static_configs:
-      - targets: ['localhost:9740']
+      - targets: ['ln.hkjn.me:9740', 'z.decenter.world:8380']
         labels:
           group: 'production'
           kind: 'monitoring'
