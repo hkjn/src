@@ -1371,8 +1371,8 @@ func (s *state) update() error {
 		return err
 	}
 	if !s.Invoices.Equal(*invoices) {
-		log.Printf("We learned of new invoices: %v\n", s.Invoices)
 		s.Invoices = *invoices
+		log.Printf("We learned of new invoices: %v\n", s.Invoices)
 	}
 
 	s.counterVecs["cli_calls"].With(prometheus.Labels{"call": "listpayments"}).Inc()
@@ -1382,8 +1382,8 @@ func (s *state) update() error {
 		return err
 	}
 	if !s.Payments.Equal(*payments) {
-		log.Printf("We learned of new payments: %v\n", s.Payments)
 		s.Payments = *payments
+		log.Printf("We learned of new payments: %v\n", s.Payments)
 	}
 
 	n, exists := s.Nodes[s.Info.NodeId]
