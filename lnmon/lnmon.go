@@ -139,10 +139,13 @@ type (
 		Status           string   `json:"status"`
 		ExpiryTime       unixTs   `json:"expiry_time"`
 		ExpiresAt        unixTs   `json:"expires_at"`
+		PaidTimestamp    unixTs   `json:"paid_timestamp"`
+		PaidAt           unixTs   `json:"paid_at"`
 		PayIndex         int      `json:"pay_index"`
 		MsatoshiReceived msatoshi `json:"msatoshi_received"`
 	}
-
+	// invoiceListings describes several results from listinvoices.
+	invoiceListings []invoiceListing
 	// nodes describes several nodes.
 	nodes []node
 	// candidates describes candidate nodes to open channels with.
@@ -196,7 +199,7 @@ type (
 		Channels     channelListings
 		Payments     payments
 		Outputs      fundListing
-		Invoices     []invoiceListing
+		Invoices     invoiceListings
 		gauges       map[string]prometheus.Gauge
 		counterVecs  map[string]*prometheus.CounterVec
 		gaugeVecs    map[string]*prometheus.GaugeVec
@@ -978,16 +981,18 @@ func (c cli) ListNodes() (*nodes, error) {
 }
 
 // ListInvoice returns the listinvoices response.
-func (c cli) ListInvoices() (*[]invoiceListing, error) {
+func (c cli) ListInvoices() (*invoiceListings, error) {
 	respstring, err := c.exec("listinvoices")
 	if err != nil {
 		return nil, err
 	}
-	resp := []invoiceListing{}
+	resp := struct {
+		Invoices invoiceListings `json:"invoices"`
+	}{}
 	if err := json.Unmarshal([]byte(respstring), &resp); err != nil {
 		return nil, err
 	}
-	return &resp, nil
+	return &resp.Invoices, nil
 }
 
 // ListPayments returns the listpayments response.
@@ -1069,6 +1074,96 @@ func (fl fundListing) Equal(other fundListing) bool {
 		return false
 	}
 	if !fl.Channels.Equal(other.Channels) {
+		return false
+	}
+	return true
+}
+
+// Equal returns true if the invoice listings are the same.
+func (ils invoiceListings) Equal(other invoiceListings) bool {
+	if len(ils) != len(other) {
+		return false
+	}
+	for i, il := range ils {
+		if !il.Equal(other[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+// Equal returns true if the invoice listings are the same.
+func (il invoiceListing) Equal(other invoiceListing) bool {
+	if il.Label != other.Label {
+		return false
+	}
+	if il.PaymentHash != other.PaymentHash {
+		return false
+	}
+	if il.Msatoshi != other.Msatoshi {
+		return false
+	}
+	if il.Status != other.Status {
+		return false
+	}
+	if il.ExpiryTime != other.ExpiryTime {
+		return false
+	}
+	if il.ExpiresAt != other.ExpiresAt {
+		return false
+	}
+	if il.PaidTimestamp != other.PaidTimestamp {
+		return false
+	}
+	if il.PaidAt != other.PaidAt {
+		return false
+	}
+	if il.PayIndex != other.PayIndex {
+		return false
+	}
+	if il.MsatoshiReceived != other.MsatoshiReceived {
+		return false
+	}
+	return true
+}
+
+// Equal returns true if the payments are the same.
+func (ps payments) Equal(other payments) bool {
+	if len(ps) != len(other) {
+		return false
+	}
+	for i, p := range ps {
+		if !p.Equal(other[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+// Equal returns true if the payments are the same.
+func (p payment) Equal(other payment) bool {
+	if p.PaymentId != other.PaymentId {
+		return false
+	}
+	if p.PaymentHash != other.PaymentHash {
+		return false
+	}
+	if p.Destination != other.Destination {
+		return false
+	}
+	if p.Msatoshi != other.Msatoshi {
+		return false
+	}
+	if p.Timestamp != other.Timestamp {
+		return false
+	}
+	if p.CreatedAt != other.CreatedAt {
+		return false
+	}
+	if p.Status != other.Status {
+		return false
+	}
+	if p.PaymentPreimage != other.PaymentPreimage {
 		return false
 	}
 	return true
@@ -1217,9 +1312,8 @@ func (s *state) update() error {
 		s.gaugeVecs["our_channels"].With(prometheus.Labels{"state": string(state)}).Set(float64(n))
 	}
 
-	// We merge in the output from listpeers with the one from listnodes above.
+	// We merge in the output from listpeers with the one from listpeers above.
 	// log.Printf("lightningd listpeers response: %+v\n", peers)
-
 	s.counterVecs["cli_calls"].With(prometheus.Labels{"call": "listnodes"}).Inc()
 	nodes, err := c.ListNodes()
 	if err != nil {
@@ -1270,13 +1364,28 @@ func (s *state) update() error {
 		}
 	}
 
+	s.counterVecs["cli_calls"].With(prometheus.Labels{"call": "listinvoices"}).Inc()
+	invoices, err := c.ListInvoices()
+	if err != nil {
+		s.counterVecs["cli_failures"].With(prometheus.Labels{"call": "listinvoices"}).Inc()
+		return err
+	}
+	if !s.Invoices.Equal(*invoices) {
+		log.Printf("We learned of new invoices: %v\n", s.Invoices)
+		s.Invoices = *invoices
+	}
+	s.Invoices = *invoices
+
 	s.counterVecs["cli_calls"].With(prometheus.Labels{"call": "listpayments"}).Inc()
 	payments, err := c.ListPayments()
 	if err != nil {
 		s.counterVecs["cli_failures"].With(prometheus.Labels{"call": "listpayments"}).Inc()
 		return err
 	}
-	s.Payments = *payments
+	if !s.Payments.Equal(*payments) {
+		log.Printf("We learned of new payments: %v\n", s.Payments)
+		s.Payments = *payments
+	}
 
 	n, exists := s.Nodes[s.Info.NodeId]
 	if exists && s.Alias != n.Alias {
@@ -1331,7 +1440,6 @@ func refresh(s *state) {
 			s.gauges["running"].Set(0)
 		}
 
-		// lightning-cli listinvoice
 		time.Sleep(time.Minute)
 	}
 }
@@ -1391,6 +1499,7 @@ func (h indexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		NumChannels       int
 		ChannelCandidates candidates
 		Peers             nodes
+		Invoices          []invoiceListing
 		Payments          payments
 	}{
 		IsRunning:         h.s.IsRunning(),
@@ -1401,6 +1510,7 @@ func (h indexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		NumChannels:       len(h.s.Channels),
 		ChannelCandidates: h.s.Nodes.ChannelCandidates(),
 		Peers:             h.s.Nodes.Peers(),
+		Invoices:          h.s.Invoices,
 		Payments:          h.s.Payments,
 	}
 	if err := h.tmpl.Execute(w, data); err != nil {
