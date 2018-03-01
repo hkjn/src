@@ -1,8 +1,21 @@
 #
 # Sample script for downloading checksummsed bitcoin blocks and chainstate from S3-compatible storage.
 #
-set -euo pipefail
-declare BLOCK=508652
+set -eu
+BLOCK=508652
+
+[ -e /etc/secrets/digitalocean/digitalocean0_gpg_pass ] || {
+	echo "FATAL: No /etc/secrets/digitalocean/digitalocean0_gpg_pass." >&2
+	exit 1
+}
+[ -e /etc/secrets/digitalocean/digitalocean0_spaces_key ] || {
+	echo "FATAL: No /etc/secrets/digitalocean/digitalocean0_spaces_key." >&2
+	exit 1
+}
+[ -e /etc/secrets/digitalocean/digitalocean0_spaces_secret ] || {
+	echo "FATAL: No /etc/secrets/digitalocean/digitalocean0_spaces_secret." >&2
+	exit 1
+}
 
 echo "Downloading blocks up to ${BLOCK}.."
 docker run --name bitcoin-dl -d -v /crypt:/crypt \
