@@ -20,14 +20,17 @@ table.breakdown th {
 	padding-bottom: 12px;
 	text-align: left;
 }
-form#lndonate {
-	width: 40em;
-	text-align: right;
+.formwrapper {
 	border: 1px solid #ddd;
 	padding: 1em;
+	width: 45em;
+}
+form#lndonate {
+	width: 100%;
+	text-align: right;
 }
 form#lndonate > input {
-       width: 20em;
+	width: 20em;
 }
 </style>
 
@@ -47,6 +50,7 @@ easier to see what's going on with the node and learn about the technology.</p>
 
 <p>You can generate test invoices to this LN node or donate to support this work:</p>
 
+<div class="formwrapper">
 <form id="lndonate" action="/lnmon/cmd/invoice" method="POST">
 	Amount in msatoshi: <input type="number" class="amount" name="amount" value="10000"><br/>
 	Label: <input type="text" class="donate_label" name="label" value="placeholder label"><br/>
@@ -54,6 +58,7 @@ easier to see what's going on with the node and learn about the technology.</p>
 	<input type="submit" value="Get invoice">
 </form>
 <textarea id="donate_info" cols=60 rows=3></textarea>
+</form>
 
 {{ with .Params.node_id }}
 <h2>Viewing only node
