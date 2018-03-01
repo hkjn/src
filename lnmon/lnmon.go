@@ -1374,7 +1374,6 @@ func (s *state) update() error {
 		log.Printf("We learned of new invoices: %v\n", s.Invoices)
 		s.Invoices = *invoices
 	}
-	s.Invoices = *invoices
 
 	s.counterVecs["cli_calls"].With(prometheus.Labels{"call": "listpayments"}).Inc()
 	payments, err := c.ListPayments()
