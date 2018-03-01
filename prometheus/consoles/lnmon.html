@@ -36,10 +36,12 @@ easier to see what's going on with the node and learn about the technology.</p>
 
 <p>Donate using LN:
 <form id="lndonate" action="/lnmon/cmd/invoice" method="POST">
-	Amount: <input type="number" class="amount" name="amount">
-	<input type="submit" value="Submit">
+	Amount in msatoshi: <input type="number" class="amount" name="amount" value="10000">
+	Label: <input type="text" class="label" name="label" value="">
+	Description: <input type="text" class="desc" name="desc" value="Donation">
+	<input type="submit" value="Get invoice">
 </form>
-<textarea id="donate_info"></textarea>
+<textarea id="donate_info" cols=50 rows=2></textarea>
 </p>
 
 {{ with .Params.node_id }}
@@ -321,17 +323,20 @@ new PromConsole.Graph({
 <script>
 $(document).ready(function() {
 	$("#donate_info").hide();
+	$("#lndonate > input.label").val("donation_" + Date.now());
 	$("#lndonate").submit(function(event) {
 		event.preventDefault();
 		var amount=parseInt($("#lndonate > input.amount").val(), 10);
+		var label=$("#lndonate > input.label").val();
+		var desc=$("#lndonate > input.desc").val();
 		var action=$("#lndonate").attr("action");
 		console.log("Should submit request to with amount=" + amount + " to " + action);
 		$.ajax({
 			contentType: 'application/json',
 			data: JSON.stringify({
 				"msatoshi": amount,
-				"label": "donation_" + Date.now(),
-				"description": "Test tx / donation"
+				"label": label,
+				"description": desc
 			}),
 			dataType: 'text',
 			complete: function(xhr, desc) {
