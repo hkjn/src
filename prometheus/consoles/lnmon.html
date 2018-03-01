@@ -8,7 +8,7 @@ table.breakdown {
 
 table.breakdown td, table.breakdown th {
 	border: 1px solid #ddd;
-	padding: 8px;
+	padding: 1em;
 }
 
 table.breakdown tr:nth-child(even) {
@@ -19,6 +19,15 @@ table.breakdown th {
 	padding-top: 12px;
 	padding-bottom: 12px;
 	text-align: left;
+}
+form#lndonate {
+	width: 40em;
+	text-align: right;
+	border: 1px solid #ddd;
+	padding: 1em;
+}
+form#lndonate > input {
+       width: 20em;
 }
 </style>
 
@@ -34,15 +43,17 @@ table.breakdown th {
 <a href="https://github.com/ElementsProject/lightning">c-lightning</a>, to make it
 easier to see what's going on with the node and learn about the technology.</p>
 
-<p>Donate using LN:
+<h2>Donate</h2>
+
+<p>You can generate test invoices to this LN node or donate to support this work:</p>
+
 <form id="lndonate" action="/lnmon/cmd/invoice" method="POST">
-	Amount in msatoshi: <input type="number" class="amount" name="amount" value="10000">
-	Label: <input type="text" class="label" name="label" value="">
-	Description: <input type="text" class="desc" name="desc" value="Donation">
+	Amount in msatoshi: <input type="number" class="amount" name="amount" value="10000"><br/>
+	Label: <input type="text" class="donate_label" name="label" value="placeholder label"><br/>
+	Description: <input type="text" class="desc" name="desc" value="Donation"><br/>
 	<input type="submit" value="Get invoice">
 </form>
-<textarea id="donate_info" cols=50 rows=2></textarea>
-</p>
+<textarea id="donate_info" cols=60 rows=3></textarea>
 
 {{ with .Params.node_id }}
 <h2>Viewing only node
@@ -323,14 +334,15 @@ new PromConsole.Graph({
 <script>
 $(document).ready(function() {
 	$("#donate_info").hide();
-	$("#lndonate > input.label").val("donation_" + Date.now());
+	var label = "donation " + Date.now();
+	$("#lndonate > input.donate_label").val(label);
 	$("#lndonate").submit(function(event) {
 		event.preventDefault();
 		var amount=parseInt($("#lndonate > input.amount").val(), 10);
-		var label=$("#lndonate > input.label").val();
+		var label=$("#lndonate > input.donate_label").val();
 		var desc=$("#lndonate > input.desc").val();
 		var action=$("#lndonate").attr("action");
-		console.log("Should submit request to with amount=" + amount + " to " + action);
+		console.log("Should submit request to with amount=" + amount + ", label=" + label + ", description=" + desc + " to " + action);
 		$.ajax({
 			contentType: 'application/json',
 			data: JSON.stringify({
