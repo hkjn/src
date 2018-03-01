@@ -1425,7 +1425,7 @@ func (h nodeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	n, exists := h.s.Nodes[nodeId(nid)]
 	if !exists {
-		log.Printf("Serving 404 for HTTP %s %q\n", r.Method, r.URL.Path)
+		log.Printf("No such node %v, serving 404 for HTTP %s %q\n", nid, r.Method, r.URL.Path)
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprintf(w, "404 Bad Request")
 		return
@@ -1531,7 +1531,7 @@ func newRouter(s *state, prefix string) (*mux.Router, error) {
 		log.Printf("Serving resources with prefix %q..\n", prefix)
 		sr := r.PathPrefix(prefix).Subrouter()
 		sr.Handle("/", ih).Methods("GET")
-		sr.Handle("/node", nh).Methods("GET")
+		sr.Handle("/node/{id:[a-f0-9]+}", nh).Methods("GET")
 		sr.Handle("/cmd/{action:[a-z]+}", ch).Methods("POST")
 		sr.Handle("/metrics", promhttp.Handler()).Methods("GET")
 	}
