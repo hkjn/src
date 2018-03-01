@@ -129,8 +129,8 @@ func query(api *krakenapi.KrakenApi) (resp *response, err error) {
 		if i > 0 {
 			prefix = fmt.Sprintf("[retry %d] ", i)
 		}
-		fmt.Printf("%sFetching ticker for BTC / EUR..\n", prefix)
-		ticker, err = api.Ticker(krakenapi.XXBTZEUR)
+		fmt.Printf("%sFetching tickers..\n", prefix)
+		ticker, err = api.Ticker(krakenapi.XXBTZEUR, krakenapi.XETHXXBT, krakenapi.BCHXBT, krakenapi.XLTCXXBT)
 		if err == nil {
 			resp.ticker = ticker
 			break
@@ -214,7 +214,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to query Kraken: %v\n", err)
 	}
-	fmt.Printf("Opening BTC price: %+v\n", resp.ticker.XXBTZEUR.OpeningPrice)
+	fmt.Printf("Opening BTC/EUR price: %+v\n", resp.ticker.XXBTZEUR.OpeningPrice)
+	fmt.Printf("Opening ETH/BTC price: %+v\n", resp.ticker.XETHXXBT.OpeningPrice)
+	fmt.Printf("Opening BCH/BTC price: %+v\n", resp.ticker.BCHXBT.OpeningPrice)
+	fmt.Printf("Opening LTC/BTC price: %+v\n", resp.ticker.XLTCXXBT.OpeningPrice)
 
 	fmt.Println("Balances:")
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', tabwriter.AlignRight)
