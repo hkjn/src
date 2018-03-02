@@ -874,8 +874,19 @@ func (s state) IsRunning() bool {
 	return s.pid != 0
 }
 
+// String returns a human-readable description of the invoice request.
 func (ir invoiceRequest) String() string {
 	return fmt.Sprintf("invoiceRequest{msatoshi: %v, label: %q, description: %q}", ir.Msatoshi, ir.Label, ir.Description)
+}
+
+// String returns a human-readable description of the invoice listing.
+func (il invoiceListings) String() string {
+	return fmt.Sprintf("%d invoices", len(il))
+}
+
+// String returns a human-readable description of the payments.
+func (ps payments) String() string {
+	return fmt.Sprintf("%d payments", len(ps))
 }
 
 // execCmd executes specified command with arguments and returns the output.
@@ -895,7 +906,7 @@ func execCmd(cmd string, arg ...string) (string, error) {
 			}
 			outstring := stdout.String()
 			if outstring != "" {
-				errmsg += fmt.Sprintf(", stout=%s", stdout.String())
+				errmsg += fmt.Sprintf(", stdout=%s", stdout.String())
 			}
 			return "", fmt.Errorf(errmsg)
 		}
