@@ -32,6 +32,9 @@ form#lndonate {
 form#lndonate > input {
 	width: 20em;
 }
+.hidden {
+	display: none;
+}
 </style>
 
 {{ template "prom_right_table_head" }}
@@ -61,7 +64,7 @@ data graphed here.</p>
 	Description: <input type="text" class="desc" name="desc" value="Donation"><br/>
 	<input type="submit" value="Get invoice">
 </form>
-<textarea id="donate_info" cols=60 rows=4></textarea>
+<textarea id="donate_info" class="hidden" cols=60 rows=4></textarea>
 </div>
 
 {{ with .Params.node_id }}
@@ -342,7 +345,6 @@ new PromConsole.Graph({
 <script src="https://static.hkjn.me/jquery-3.3.1.min.js" defer></script>
 <script>
 $(document).ready(function() {
-	$("#donate_info").hide();
 	var label = "Donation at timestamp " + Date.now();
 	$("#lndonate > input.donate_label").val(label);
 	$("#lndonate").submit(function(event) {
@@ -353,7 +355,7 @@ $(document).ready(function() {
 		var action=$("#lndonate").attr("action");
 		console.log("Should submit request to with amount=" + amount + ", label=" + label + ", description=" + desc + " to " + action);
 		$("#lndonate").hide();
-		$("#donate_info").show().text("Generating invoice..");
+		$("#donate_info").removeClass("hidden").text("Generating invoice..");
 		$.ajax({
 			contentType: 'application/json',
 			data: JSON.stringify({
