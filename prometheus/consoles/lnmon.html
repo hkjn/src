@@ -61,7 +61,7 @@ data graphed here.</p>
 	Description: <input type="text" class="desc" name="desc" value="Donation"><br/>
 	<input type="submit" value="Get invoice">
 </form>
-<textarea id="donate_info" cols=60 rows=3></textarea>
+<textarea id="donate_info" cols=60 rows=4></textarea>
 </div>
 
 {{ with .Params.node_id }}
@@ -352,6 +352,8 @@ $(document).ready(function() {
 		var desc=$("#lndonate > input.desc").val();
 		var action=$("#lndonate").attr("action");
 		console.log("Should submit request to with amount=" + amount + ", label=" + label + ", description=" + desc + " to " + action);
+		$("#lndonate").hide();
+		$("#donate_info").show().text("Generating invoice..");
 		$.ajax({
 			contentType: 'application/json',
 			data: JSON.stringify({
@@ -365,11 +367,10 @@ $(document).ready(function() {
 				if (xhr.status == 200 && desc === 'success') {
 					console.log("invoice created: " + xhr);
 					var bolt11 = xhr.responseText;
-					$("#lndonate").hide();
-					$("#donate_info").show().text(bolt11);
+					$("#donate_info").text(bolt11);
 				} else {
 					console.log("Failed to generate invoice.");
-					$("#donate_info").show().text("Failed to generate invoice; got status " + xhr.status + ": " + desc)
+					$("#donate_info").text("Failed to generate invoice; got status " + xhr.status + ": " + desc)
 				}
 			},
 			processData: false,
