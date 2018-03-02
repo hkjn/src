@@ -80,6 +80,32 @@ new PromConsole.Graph({
 });
 </script>
 
+<h2>Rate of <code>lightning-cli</code> calls</h2>
+<div id="cliCallsGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#cliCallsGraph"),
+    colorScheme: "cool",
+    expr: 'rate(lightningd_cli_calls_total[30m])',
+    name: "30m rate of cli calls",
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
+<h2>Rate of <code>lightning-cli</code> failures</h2>
+<div id="cliFailuresGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#cliFailuresGraph"),
+    colorScheme: "cool",
+    expr: 'rate(lightningd_cli_failures_total[30m])',
+    name: "30m rate of cli failures",
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
 {{ template "prom_content_tail" . }}
 
 {{ template "tail" }}
