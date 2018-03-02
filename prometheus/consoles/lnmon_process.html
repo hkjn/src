@@ -87,7 +87,7 @@ new PromConsole.Graph({
     node: document.querySelector("#cliCallsGraph"),
     colorScheme: "cool",
     expr: 'rate(lightningd_cli_calls_total[30m])',
-    name: "Rate of lightning-cli [[ call ]] calls",
+    name: "[[ call ]]",
     renderer: "area",
     min: 0.0
 });
@@ -100,7 +100,7 @@ new PromConsole.Graph({
     node: document.querySelector("#cliFailuresGraph"),
     colorScheme: "cool",
     expr: 'rate(lightningd_cli_failures_total[30m])',
-    name: "Rate of lightning-cli [[ call ]] failures",
+    name: "[[ call ]]",
     renderer: "area",
     min: 0.0
 });
