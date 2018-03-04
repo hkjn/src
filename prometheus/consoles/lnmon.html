@@ -8,7 +8,7 @@ table.breakdown {
 
 table.breakdown td, table.breakdown th {
 	border: 1px solid #ddd;
-	padding: 8px;
+	padding: 1em;
 }
 
 table.breakdown tr:nth-child(even) {
@@ -19,6 +19,22 @@ table.breakdown th {
 	padding-top: 12px;
 	padding-bottom: 12px;
 	text-align: left;
+}
+.formwrapper {
+	border: 1px solid #ddd;
+	padding: 1em;
+	width: 45em;
+	height: 10em;
+}
+form#lndonate {
+	width: 100%;
+	text-align: right;
+}
+form#lndonate > input {
+	width: 20em;
+}
+.hidden {
+	display: none;
 }
 </style>
 
@@ -34,13 +50,23 @@ table.breakdown th {
 <a href="https://github.com/ElementsProject/lightning">c-lightning</a>, to make it
 easier to see what's going on with the node and learn about the technology.</p>
 
-<p>Donate using LN:
+<p>You might also be interested in the <a href="https://github.com/hkjn/src/tree/master/lnmon">source code</a>
+for this tool, or the <a href="/lnmon/">/lnmon</a> endpoint serving up the actual metrics and
+data graphed here.</p>
+
+<h2>Donate</h2>
+
+<p>You can generate test invoices to this LN node or donate to support this work:</p>
+
+<div class="formwrapper">
 <form id="lndonate" action="/lnmon/cmd/invoice" method="POST">
-	Amount: <input type="number" class="amount" name="amount">
-	<input type="submit" value="Submit">
+	Amount in msatoshi: <input type="number" class="amount" name="amount" value="10000"><br/>
+	Label: <input type="text" class="donate_label" name="label" value="Invoice generated at time .."><br/>
+	Description: <input type="text" class="desc" name="desc" value="Test invoice"><br/>
+	<input type="submit" value="Get invoice">
 </form>
-<textarea id="donate_info"></textarea>
-</p>
+<textarea id="donate_info" class="hidden" cols=60 rows=4></textarea>
+</div>
 
 {{ with .Params.node_id }}
 <h2>Viewing only node
@@ -320,18 +346,23 @@ new PromConsole.Graph({
 <script src="https://static.hkjn.me/jquery-3.3.1.min.js" defer></script>
 <script>
 $(document).ready(function() {
-	$("#donate_info").hide();
+	var label = "Invoice generated at timestamp " + Date.now();
+	$("#lndonate > input.donate_label").val(label);
 	$("#lndonate").submit(function(event) {
 		event.preventDefault();
 		var amount=parseInt($("#lndonate > input.amount").val(), 10);
+		var label=$("#lndonate > input.donate_label").val();
+		var desc=$("#lndonate > input.desc").val();
 		var action=$("#lndonate").attr("action");
-		console.log("Should submit request to with amount=" + amount + " to " + action);
+		console.log("Should submit request to with amount=" + amount + ", label=" + label + ", description=" + desc + " to " + action);
+		$("#lndonate").hide();
+		$("#donate_info").removeClass("hidden").text("Generating invoice..");
 		$.ajax({
 			contentType: 'application/json',
 			data: JSON.stringify({
 				"msatoshi": amount,
-				"label": "donation_" + Date.now(),
-				"description": "Test tx / donation"
+				"label": label,
+				"description": desc
 			}),
 			dataType: 'text',
 			complete: function(xhr, desc) {
@@ -339,11 +370,10 @@ $(document).ready(function() {
 				if (xhr.status == 200 && desc === 'success') {
 					console.log("invoice created: " + xhr);
 					var bolt11 = xhr.responseText;
-					$("#lndonate").hide();
-					$("#donate_info").show().text(bolt11);
+					$("#donate_info").text(bolt11);
 				} else {
 					console.log("Failed to generate invoice.");
-					$("#donate_info").show().text("Failed to generate invoice; got status " + xhr.status + ": " + desc)
+					$("#donate_info").text("Failed to generate invoice; got status " + xhr.status + ": " + desc)
 				}
 			},
 			processData: false,

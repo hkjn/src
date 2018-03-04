@@ -42,8 +42,8 @@ table th {
 	Network metrics.</p>
 
 	<p>You may also be interested in the
-	<a href="https://ln.hkjn.me/">Prometheus dashboard</a>
-	scraping data from this tool.</p>
+	<a href="/">Prometheus dashboard</a> scraping data from this
+	tool.</p>
 
 	<table>
 		<tr>
@@ -111,6 +111,26 @@ table th {
 			<td>{{ .Channels.BalanceToThem }}</td>
 		</tr>
 		{{- end }}
+	</table>
+
+	<h3 id="invoices"><a href="#invoices">Invoices</a></h3>
+	<table>
+		<tr>
+			<th>Label</th>
+			<th>Msatoshi</th>
+			<th>Status</th>
+			<th>Expiry time</th>
+			<th>Msatoshi received</th>
+		</tr>
+	{{ range .Invoices -}}
+		<tr>
+			<td>{{ .Label }}</td>
+			<td>{{ .Msatoshi.String }}</td>
+			<td>{{ .Status }}</td>
+			<td>{{ .ExpiryTime.Time }}</td>
+			<td>{{ .MsatoshiReceived.String }}</td>
+		</tr>
+	{{- end }}
 	</table>
 
 	<h3 id="payments"><a href="#payments">Payments</a></h3>
