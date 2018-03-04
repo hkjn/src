@@ -3,16 +3,19 @@ include ../make/Makefile
 NAME=lnmon
 VERSION=$(shell git log -1 --pretty=format:'%h')
 GOOS ?= linux
-GOARCH ?= arm
+GOARCH ?= amd64
 DEPLOYUSER ?= $(USER)
 DEPLOYHOST ?= ln.hkjn.me
 DEPLOYPORT ?= 6200
 
-.DEFAULT_GOAL=deploy
+.DEFAULT_GOAL=install-local
 
 build-docker: gen-tmpl-docker
 	@echo "Building lnmon in container.."
-	docker build -t lnmon-build --build-arg goarch=$(GOARCH) -f Dockerfile.build .
+	docker build -t lnmon-build \
+	             --build-arg goarch=$(GOARCH) \
+	             --build-arg version=${VERSION} \
+	             -f Dockerfile.build .
 	@echo "Running lnmon-build container.."
 	docker run --name lnmonbuild lnmon-build
 	@echo "Copying out lnmonbuild artifacts.."
@@ -35,6 +38,9 @@ gen-tmpl-docker:
 	           -v $(shell pwd):/home/go/src/hkjn.me/src/lnmon \
 		   -w /home/go/src/hkjn.me/src/lnmon \
 	    hkjn/golang:tip go-bindata *.tmpl
+
+install-local: build-docker
+	sudo install lnmon /etc/bins/
 
 deploy: build-bin
 	@echo "Deploying lnmon.next binary to $(DEPLOYHOST):$(DEPLOYPORT).."

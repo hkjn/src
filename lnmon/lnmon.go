@@ -1378,6 +1378,7 @@ func (s *state) update() error {
 	s.counterVecs["cli_calls"].With(prometheus.Labels{"call": "listinvoices"}).Inc()
 	invoices, err := c.ListInvoices()
 	if err != nil {
+		// TODO: Set gauge with # of invoices (and payments), as well as total value in msats.
 		s.counterVecs["cli_failures"].With(prometheus.Labels{"call": "listinvoices"}).Inc()
 		return err
 	}
