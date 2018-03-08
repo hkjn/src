@@ -30,7 +30,7 @@
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#upGraph"),
-    expr: 'max(up) by (job, group)',
+    expr: 'sum(up) by (instance, job)',
     renderer: "area",
     min: 0.0
 });
