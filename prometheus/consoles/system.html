@@ -25,13 +25,13 @@
 </table>
 
 <h2>System</h2>
-<h3>Node up?</h3>
+<h3>Service up?</h3>
 <div id="upGraph"></div>
 <script>
 new PromConsole.Graph({
     node: document.querySelector("#upGraph"),
     expr: 'sum(up) by (instance, job)',
-    name: "[[ instance ]]: [[ job ]]",
+    name: "[[ job ]] ([[ instance ]])",
     renderer: "area",
     min: 0.0
 });
