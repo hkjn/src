@@ -1,6 +1,6 @@
 include ../make/Makefile
 NAME=lnd
-VERSION=$(shell cat VERSION)
+VERSION=9479b0
 
 pre-build:
 	@echo "Building lnd in container.."
