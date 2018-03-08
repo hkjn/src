@@ -1,8 +1,8 @@
 include ../make/Makefile
 NAME = bitcoin
-VERSION = v0.16.0-2018-03-04
+VERSION = v0.16.0-2018-03-08
 BITCOIN_VERSION ?= v0.16.0
-LIGHTNING_VERSION ?= 9b3e8f
+LIGHTNING_VERSION ?= 3e9e1
 LIGHTNING_REMOTE ?= https://github.com/ElementsProject/lightning
 
 docker-build:
