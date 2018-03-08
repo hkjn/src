@@ -30,7 +30,8 @@ RUN echo "Building bitcoin at: $(git show)" && \
 USER root
 RUN make install
 USER bitcoin
-
+RUN mkdir -p ${HOME}/src/ && \
+    cp -v share/rpcauth/rpcauth.py ${HOME}/src/
 ARG lightning_version
 ARG lightning_remote
 
