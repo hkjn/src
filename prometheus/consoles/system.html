@@ -31,6 +31,7 @@
 new PromConsole.Graph({
     node: document.querySelector("#upGraph"),
     expr: 'sum(up) by (instance, job)',
+    name: "[[ instance ]]: [[ job ]]",
     renderer: "area",
     min: 0.0
 });
