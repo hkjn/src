@@ -52,7 +52,7 @@ scrape_configs:
 
   - job_name: 'bcmon'
     static_configs:
-      - targets: ['ln.hkjn.me:9740', 'ln0.decenter.world:8380']
+      - targets: ['ln.hkjn.me:9740', 'ln0.decenter.world:9740']
         labels:
           group: 'production'
           kind: 'monitoring'
