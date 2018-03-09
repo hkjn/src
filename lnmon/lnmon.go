@@ -1269,7 +1269,7 @@ func (s *state) update() error {
 			prometheus.Labels{
 				"lnmon_version":      s.MonVersion,
 				"lightningd_version": s.Info.Version,
-				"lightningd_args":    strings.Join("  ", s.args),
+				"lightningd_args":    strings.Join(s.args, " "),
 				"network":            s.Info.Network,
 			},
 		).Set(1.0)
