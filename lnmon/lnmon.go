@@ -1705,7 +1705,7 @@ func newState() *state {
 					Name:      "info",
 					Help:      "Info of lightningd and lnmon version.",
 				},
-				[]string{"lnmon_version", "lightningd_version"},
+				[]string{"lnmon_version", "lightningd_version", "network"},
 			),
 			"http_calls": prometheus.NewCounterVec(
 				prometheus.CounterOpts{
