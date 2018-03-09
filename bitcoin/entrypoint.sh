@@ -3,7 +3,7 @@
 set -euo pipefail
 
 declare IP_ADDR=${IP_ADDR:-"163.172.162.18"}
-declare LOG_LEVEL=${LOG_LEVEL:-"info"}
+declare LOG_LEVEL=${LOG_LEVEL:-"debug"}
 declare ALIAS=${ALIAS:-"ln.hkjn.me"}
 
 if [ ! "${IP_ADDR}" ]; then
