@@ -184,6 +184,7 @@ type (
 		Address     address `json:"address"`
 		Version     string  `json:"version"`
 		Blockheight int     `json:"blockheight"`
+		Network     string  `json:"network"`
 	}
 	// allNodes is a map from node id to that node.
 	allNodes map[nodeId]node
@@ -1264,6 +1265,7 @@ func (s *state) update() error {
 			prometheus.Labels{
 				"lnmon_version":      s.MonVersion,
 				"lightningd_version": s.Info.Version,
+				"network":            s.Info.Network,
 			},
 		).Set(1.0)
 		s.gauges["blockheight"].Set(float64(s.Info.Blockheight))
