@@ -1701,14 +1701,14 @@ func newState() *state {
 			"lightningd_update_failures": prometheus.NewCounter(
 				prometheus.CounterOpts{
 					Namespace: counterPrefix,
-					Name:      "lightningd_update_failures_total",
+					Name:      "update_failures_total",
 					Help:      "Number of failures in trying to read lightningd state.",
 				},
 			),
 			"lightningd_update_successes": prometheus.NewCounter(
 				prometheus.CounterOpts{
 					Namespace: counterPrefix,
-					Name:      "lightningd_update_successes_total",
+					Name:      "update_successes_total",
 					Help:      "Number of successes in trying to read lightningd state.",
 				},
 			),
