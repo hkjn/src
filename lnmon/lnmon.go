@@ -538,10 +538,8 @@ func (msat msatoshi) String() string {
 
 // updateNodes updates the nodes with new node information.
 //
-// TODO: Add test case; when we saw node that was peer with one cnannel in OPENINGD, subsequent listpeers results with CHANNELD_AWAITING_LOCKIN
-// did not affect the presented state.
-//
-// TODO: might want to forget nodes that no longer are included in listnodes output..
+// TODO: If we get an error from lightningd we do s.reset(), but we might want to
+// forget nodes that disappear are from listnodes output too.
 func (s state) updateNodes(newNodes nodes) {
 	for _, nn := range newNodes {
 		on, exists := s.Nodes[nn.NodeId]
@@ -609,14 +607,6 @@ func (s state) updateChannels(cls channelListings) {
 
 		s.Nodes[sn.NodeId] = sn
 		s.Nodes[dn.NodeId] = dn
-		// fmt.Printf("%s last seen %v\n", cl.ShortChannelId, time.Since(cl.LastUpdate.Time()))
-		// cl.ShortChannelId
-		// cl.LastUpdate.Time().Since()
-		// cl.BaseFeeMillisatoshis
-		// cl.FeePerMillionth
-		//}
-		//return fmt.Sprintf("number of online and active channels: %d", online)
-
 	}
 }
 
@@ -1232,10 +1222,11 @@ func (cfl channelFundListing) Equal(other channelFundListing) bool {
 	return true
 }
 
-// update refreshes the state.
+// update brings the state in sync with the lightning-cli responses.
+//
+// Note that we reset all state between lightning-cli calls, to make sure we're not presenting stale data from earlier.
+// This means that any failure to fetch new state from cli will result in empty state.
 func (s *state) update() error {
-	// Note that we reset all state between lightning-cli calls, to make sure we're not presenting stale data from earlier.
-	// This means that any failure to fetch new state from cli will result in empty state.
 	s.MonVersion = lnmonVersion
 	s.Nodes = allNodes{}
 	// TODO: grab mutex here to avoid data race when we write and ServeHTTP may read.
@@ -1252,11 +1243,11 @@ func (s *state) update() error {
 	if err != nil {
 		return err
 	}
-
 	s.pid = pid
 	for _, arg := range parts[1:] {
 		s.args = append(s.args, arg)
 	}
+	s.gauges["running"].Set(1)
 
 	c := &cli{}
 	s.counterVecs["cli_calls"].With(prometheus.Labels{"call": "getinfo"}).Inc()
@@ -1421,12 +1412,14 @@ func (s *state) reset() {
 	s.gauges["blockheight"].Set(0.0)
 	s.gauges["num_channels"].Set(0.0)
 	s.gauges["total_funds"].Set(0.0)
+	s.gauges["running"].Set(0)
 	s.gaugeVecs["num_peers"].Reset()
 	s.gaugeVecs["our_channels"].Reset()
 	s.gaugeVecs["channel_capacities_msatoshi"].Reset()
 	s.gaugeVecs["channel_balances_msatoshi"].Reset()
 }
 
+// refresh updates the state.
 func refresh(s *state) {
 	// TODO: Maybe don't assume that lightningd always is in "pid" namespace..
 	namespace := "pid"
@@ -1434,23 +1427,21 @@ func refresh(s *state) {
 	for {
 		if err := s.update(); err != nil {
 			// TODO: increment counter here, so we can alert on possible lightningd crashes.
-			log.Printf("Failed to get state: %v\n", err)
+			log.Printf("Failed to update state: %v\n", err)
 			s.reset()
 		}
 		if s.IsRunning() {
 			if !registeredLn {
 				// TODO: Need to handle case where we registered collector to pid #1, then
-				// lightningd crashed and restarted with pid #2.
+				// lightningd crashed and restarted with pid #2. Since we use --pid=ln
+				// when operating inside container, our process will die if lightningd dies anyway
+				// currently, so this is less of an issue in practice.
 				lc := prometheus.NewProcessCollector(s.pid, namespace)
 				prometheus.MustRegister(lc)
 				registeredLn = true
 				log.Printf("Registered ProcessCollector for lightningd pid %d in namespace %s\n", s.pid, namespace)
 			}
-			s.gauges["running"].Set(1)
-		} else {
-			s.gauges["running"].Set(0)
 		}
-
 		time.Sleep(time.Minute)
 	}
 }
