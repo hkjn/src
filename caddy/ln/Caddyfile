@@ -4,11 +4,7 @@ ln.hkjn.me {
     if {path} is /
     / /consoles/lnmon.html
   }
-  proxy  /      127.0.0.1:9090
   log    /var/log/ln.hkjn.me.access.log
-}
-lnmon.hkjn.me {
-  push
-  proxy  /    127.0.0.1:8380
-  log    /var/log/lnmon.hkjn.me.access.log
+  proxy  /      127.0.0.1:9090
+  proxy  /lnmon 127.0.0.1:8380
 }
