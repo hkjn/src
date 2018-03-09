@@ -106,6 +106,32 @@ new PromConsole.Graph({
 });
 </script>
 
+<h2>Rate of <code>lightning-cli</code> successes</h2>
+<div id="lightningdSuccessesGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#lightningdSuccessesGraph"),
+    colorScheme: "cool",
+    expr: 'rate(lightningd_update_successes_total[30m])',
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
+
+<h2>Rate of <code>lightning-cli</code> failures</h2>
+<p>I.e. due to <code>lightningd</code> not running.</p>
+<div id="lightningdFailuresGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#lightningdFailuresGraph"),
+    colorScheme: "cool",
+    expr: 'rate(lightningd_update_failures_total[30m])',
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
 {{ template "prom_content_tail" . }}
 
 {{ template "tail" }}
