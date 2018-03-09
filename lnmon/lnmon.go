@@ -254,7 +254,11 @@ var (
 	debugging    = os.Getenv("LNMON_DEBUGGING") == "1"
 	addr         = os.Getenv("LNMON_ADDR")
 	hostname     = os.Getenv("LNMON_HOSTNAME")
-	httpPrefix   = os.Getenv("LNMON_HTTP_PREFIX")
+	// httpPrefix specifies a prefix to use when serving http requests.
+	//
+	// If the LNMON_HTTP_PREFIX environment variable is set to /lnmon,
+	// the /node/abc123 resource will be served under /lnmon/node/abc123.
+	httpPrefix = os.Getenv("LNMON_HTTP_PREFIX")
 )
 
 // getFile returns the contents of the specified file.
