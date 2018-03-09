@@ -191,20 +191,20 @@ type (
 	// state describes the last known state.
 	state struct {
 		// MonVersion is the version of lnmon.
-		MonVersion   string
-		pid          int
-		args         []string
-		Alias        alias
-		Info         getInfoResponse
-		Nodes        allNodes
-		Channels     channelListings
-		Payments     payments
-		Outputs      fundListing
-		Invoices     invoiceListings
-		gauges       map[string]prometheus.Gauge
-		counterVecs  map[string]*prometheus.CounterVec
-		gaugeVecs    map[string]*prometheus.GaugeVec
-		callCounters map[string]*prometheus.CounterVec
+		MonVersion  string
+		pid         int
+		args        []string
+		Alias       alias
+		Info        getInfoResponse
+		Nodes       allNodes
+		Channels    channelListings
+		Payments    payments
+		Outputs     fundListing
+		Invoices    invoiceListings
+		gauges      map[string]prometheus.Gauge
+		counters    map[string]prometheus.Counter
+		counterVecs map[string]*prometheus.CounterVec
+		gaugeVecs   map[string]*prometheus.GaugeVec
 	}
 	channelStateNum int
 	channelState    string
@@ -1433,9 +1433,11 @@ func refresh(s *state) {
 	registeredLn := false
 	for {
 		if err := s.update(); err != nil {
-			// TODO: increment counter here, so we can alert on possible lightningd crashes.
 			log.Printf("Failed to update state: %v\n", err)
+			s.counters["lightningd_update_failures"].Inc()
 			s.reset()
+		} else {
+			s.counters["lightningd_update_successes"].Inc()
 		}
 		if s.IsRunning() {
 			if !registeredLn {
@@ -1481,17 +1483,17 @@ func newNodeHandler(s *state) (*nodeHandler, error) {
 
 // registerMetrics registers the Prometheus monitoring metrics.
 func (h indexHandler) registerMetrics() {
-	for _, m := range h.s.gauges {
-		prometheus.MustRegister(m)
+	for _, g := range h.s.gauges {
+		prometheus.MustRegister(g)
 	}
-	for _, c := range h.s.callCounters {
+	for _, c := range h.s.counters {
 		prometheus.MustRegister(c)
 	}
-	for _, m := range h.s.counterVecs {
-		prometheus.MustRegister(m)
+	for _, c := range h.s.counterVecs {
+		prometheus.MustRegister(c)
 	}
-	for _, m := range h.s.gaugeVecs {
-		prometheus.MustRegister(m)
+	for _, g := range h.s.gaugeVecs {
+		prometheus.MustRegister(g)
 	}
 }
 
@@ -1692,6 +1694,22 @@ func newState() *state {
 					Namespace: counterPrefix,
 					Name:      "total_funds",
 					Help:      "Sum of all funds available for opening channels.",
+				},
+			),
+		},
+		counters: map[string]prometheus.Counter{
+			"lightningd_update_failures": prometheus.NewCounter(
+				prometheus.CounterOpts{
+					Namespace: counterPrefix,
+					Name:      "lightningd_update_failures_total",
+					Help:      "Number of failures in trying to read lightningd state.",
+				},
+			),
+			"lightningd_update_successes": prometheus.NewCounter(
+				prometheus.CounterOpts{
+					Namespace: counterPrefix,
+					Name:      "lightningd_update_successes_total",
+					Help:      "Number of successes in trying to read lightningd state.",
 				},
 			),
 		},
