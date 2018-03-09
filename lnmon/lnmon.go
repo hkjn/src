@@ -1269,6 +1269,7 @@ func (s *state) update() error {
 			prometheus.Labels{
 				"lnmon_version":      s.MonVersion,
 				"lightningd_version": s.Info.Version,
+				"lightningd_args":    s.args,
 				"network":            s.Info.Network,
 			},
 		).Set(1.0)
@@ -1709,7 +1710,7 @@ func newState() *state {
 					Name:      "info",
 					Help:      "Info of lightningd and lnmon version.",
 				},
-				[]string{"lnmon_version", "lightningd_version", "network"},
+				[]string{"lnmon_version", "lightningd_version", "lightningd_args", "network"},
 			),
 			"http_calls": prometheus.NewCounterVec(
 				prometheus.CounterOpts{
