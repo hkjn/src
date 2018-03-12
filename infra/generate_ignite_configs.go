@@ -1,4 +1,4 @@
-// ignite.go generates Ignite JSON configs.
+// generate_ignite_config.go generates Ignite JSON configs.
 //
 // TODO: could version the systemd units as well.
 package main

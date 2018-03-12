@@ -1,0 +1,9 @@
+# Test config with custom name.
+twitter:
+  custom: yes
+# Some environment info, not read in the tests. Maybe for non-Go environments.
+env:
+  live:
+    instance: fakeInstance1
+    address: 1.2.3.4
+    password: yup4realthisisANactualPWnoWaitItIsntPSYCH

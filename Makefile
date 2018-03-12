@@ -1,6 +1,6 @@
-.PHONY : all blocksci bitcoin btcd clightning fileserver gcloud golang gpg lnd proto s3cmd workspace
+.PHONY : all blocksci bitcoin btcd clightning config fileserver gcloud golang googleauth gpg lnd openvpn prober probes proto s3cmd workspace
 
-all: blocksci bitcoin btcd clightning fileserver gcloud golang gpg lnd proto s3cmd workspace
+all: blocksci bitcoin btcd clightning config fileserver gcloud golang googleauth gpg lnd openvpn prober probes proto s3cmd workspace
 
 blocksci:
 	@echo "Making blocksci.."
@@ -18,6 +18,10 @@ clightning:
 	@echo "Making clightning.."
 	$(MAKE) -C clightning
 
+config:
+	@echo "Making config.."
+	$(MAKE) -C config
+
 fileserver:
 	@echo "Making fileserver.."
 	$(MAKE) -C fileserver
@@ -30,6 +34,10 @@ golang:
 	@echo "Making golang.."
 	$(MAKE) -C golang
 
+googleauth:
+	@echo "Making googleauth.."
+	$(MAKE) -C googleauth
+
 gpg:
 	@echo "Making gpg.."
 	$(MAKE) -C gpg
@@ -37,6 +45,18 @@ gpg:
 lnd:
 	@echo "Making lnd.."
 	$(MAKE) -C lnd
+
+openvpn:
+	@echo "Making openvpn.."
+	$(MAKE) -C openvpn
+
+prober:
+	@echo "Making prober.."
+	$(MAKE) -C prober
+
+probes:
+	@echo "Making probes.."
+	$(MAKE) -C probes
 
 proto:
 	@echo "Making proto.."

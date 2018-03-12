@@ -2,10 +2,6 @@ variable "gcloud_credentials" {
   default = ".gcp/tf-dns-editor.json"
 }
 
-variable "hkjnprod_enabled" {
-  default = true
-}
-
 variable "scaleway_organization_file" {
   default = ".scaleway/scaleway0_organization"
 }
@@ -108,8 +104,8 @@ variable "vpn_ip" {
   default = "163.172.184.153"
 }
 
-variable "cities_ip" {
-  default = "163.172.184.153"
+variable "ln0_decenter_world_ip" {
+  default = "174.138.11.8"
 }
 
 variable "builder_enabled" {

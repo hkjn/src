@@ -1,0 +1,70 @@
+#!/bin/bash
+#
+# Runs OpenVPN server on 1199/udp.
+#
+set -euo pipefail
+
+die() {
+  echo "[FATAL] $@" >&2
+  exit 1
+}
+
+[[ "$SERVER_IP" ]] || die "No SERVER_IP specified."
+[[ "$IP_MASK" ]] || die "No IP_MASK specified."
+
+# Check if all files exist before creating them, so we're idempotent
+# when run repeatedly.
+[ -d /dev/net ] || mkdir -p /dev/net
+[ -c /dev/net/tun ] || mknod /dev/net/tun c 10 200
+
+[ -d /certs ] || die "No /certs directory."
+cd /certs
+
+[ -e ca.pem ] || die "No CA certificate present; checked '$(pwd)/ca.pem'."
+[ -e $HOST-key.pem ] || die "No server key present; checked '$(pwd)/$HOST-key.pem'."
+[ -e $HOST.pem ] || die "No server certificate present; checked '$(pwd)/$HOST.pem'."
+[ -e dh.pem ] || die "No Diffie-Hellman params present; checked '$(pwd)/dh.pem'."
+
+if [ ! -f /etc/udp1199.conf ]; then
+		echo "Creating /etc/udp1199.conf.."
+		cat > /etc/udp1199.conf <<EOF
+mode server
+server $SERVER_IP $IP_MASK
+verb 3
+# Note: There might be some advantages to "p2p" topology, but OpenVPN connect
+# on iOS doesn't support it; only "subnet" and "net30" is supported.
+topology subnet
+
+key $HOST-key.pem
+ca ca.pem
+cert $HOST.pem
+dh dh.pem
+keepalive 10 60
+persist-key
+persist-tun
+push "dhcp-option DNS 8.8.8.8"
+push "dhcp-option DNS 8.8.4.4"
+
+# Avoid log spam due to clients on WiFi connections or other unreliable
+# connections sending duplicated UDP packets.
+mute-replay-warnings
+
+# Only support TLS ciphers below.
+tls-cipher TLS-DHE-RSA-WITH-AES-256-CBC-SHA:TLS-DHE-RSA-WITH-CAMELLIA-256-CBC-SHA:TLS-DHE-RSA-WITH-3DES-EDE-CBC-SHA
+
+# Explicitly set server-side cipher.
+cipher AES-256-CBC
+
+client-to-client
+
+proto udp
+port 1199
+dev tun1199
+status openvpn-status-1199.log
+EOF
+fi
+
+
+echo "[INFO] Starting openvpn.."
+touch udp1199.log
+exec openvpn /etc/udp1199.conf

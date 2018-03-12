@@ -1,0 +1,12 @@
+{{/* index.tmpl: simple monitoring dashboard */}}
+{{define "main"}}
+
+<h1>Gomon</h1>
+<p id="version"><strong>Version {{.Version}}</strong></p>
+{{template "links" .Links}}
+{{with .ProberDisabled}}
+  <h1 class="bad">Prober disabled</h1>
+{{else}}
+  {{template "prober" .Probes}}
+{{end}}
+{{end}}

@@ -1,0 +1,25 @@
+{{ template "head" . }}
+
+{{ template "prom_right_table_head" }}
+{{ template "prom_right_table_tail" }}
+
+{{ template "prom_content_head" . }}
+
+<h1>Overview</h1>
+
+<p>Welcome to a monitoring tool developed by <a href="https://hkjn.me">hkjn</a>.</p>
+
+<p>The purpose is to learn more about the inner workings of Bitcoin and Lightning Network by making it easier to
+operate these nodes, and easier to observe what they're doing.</p>
+
+<p>Available consoles:</p>
+<ul>
+	<li><a href="system.html">System</a>: System-level metrics</li>
+	<li><a href="lnmon.html">lnmon</a>: Monitoring of Lightning Network nodes</li>
+	<li><a href="lnmon_process.html">lnmon_process</a>: Detailed process information for LN nodes</li>
+	<li><a href="bcmon.html">bcmon</a>: Monitoring of Bitcoin nodes</li>
+</ul>
+
+{{ template "prom_content_tail" . }}
+
+{{ template "tail" }}

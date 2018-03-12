@@ -30,6 +30,10 @@ output "elentari_world_ip" {
 #
 # *.hkjn.me
 #
+output "hkjn_addr_builder" {
+  value = "${google_dns_record_set.hkjn_builder.name}"
+}
+
 output "hkjn_addr_dropcore" {
   value = "${google_dns_record_set.hkjn_dropcore.name}"
 }
@@ -44,10 +48,6 @@ output "hkjn_addr_admin1" {
 
 output "hkjn_addr_admin2" {
   value = "${google_dns_record_set.hkjn_admin2.name}"
-}
-
-output "hkjn_addr_cities" {
-  value = "${google_dns_record_set.hkjn_cities.name}"
 }
 
 output "hkjn_addr_guac" {
@@ -74,8 +74,12 @@ output "dropcore_ip" {
   value = "${digitalocean_droplet.dropcore.ipv4_address}"
 }
 
-output "hkjn_prod_ip" {
+output "hkjn_ln_old_ip" {
   value = "${module.scaleway.public_ip}"
+}
+
+output "hkjn_ln_ip" {
+  value = "${module.ln_scaleway.public_ip}"
 }
 
 output "hkjn_ip_gz0" {

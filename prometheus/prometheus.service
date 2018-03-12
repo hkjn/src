@@ -1,0 +1,14 @@
+[Unit]
+Description=Prometheus monitoring service
+After=network-online.target
+
+[Service]
+WorkingDirectory=/etc/prometheus
+EnvironmentFile=/etc/prometheus/prometheus.env
+ExecStart=/bin/bash -c "/etc/prometheus/prometheus ${PROMETHEUS_ARGS}"
+Restart=always
+
+[Install]
+WantedBy=network-online.target
+
+

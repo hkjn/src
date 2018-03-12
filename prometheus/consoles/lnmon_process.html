@@ -1,0 +1,137 @@
+{{ template "head" . }}
+
+<style>
+
+table.breakdown {
+	margin-top: 1em;
+}
+
+table.breakdown td, table.breakdown th {
+	border: 1px solid #ddd;
+	padding: 8px;
+}
+
+table.breakdown tr:nth-child(even) {
+	background-color: #eee;
+}
+
+table.breakdown th {
+	padding-top: 12px;
+	padding-bottom: 12px;
+	text-align: left;
+}
+</style>
+
+{{ template "prom_right_table_head" }}
+{{ template "prom_right_table_tail" }}
+{{ template "prom_content_head" . }}
+
+<h1>lnmon process details</h1>
+
+<h2>Virtual memory usage</h2>
+<div id="virtualMemoryGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#virtualMemoryGraph"),
+    colorScheme: "cool",
+    expr: 'pid_process_virtual_memory_bytes{job="lnmon"}',
+    name: "Virtual memory (bytes)",
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
+<h2>Resident memory</h2>
+<div id="residentMemoryGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#residentMemoryGraph"),
+    colorScheme: "cool",
+    expr: 'pid_process_resident_memory_bytes{job="lnmon"}',
+    name: "Resident memory (bytes)",
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
+<h2>Rate of CPU usage</h2>
+<div id="cpuUsageRateGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#cpuUsageRateGraph"),
+    expr: 'rate(pid_process_cpu_seconds_total{job="lnmon"}[5m])',
+    colorScheme: "cool",
+    name: "CPU usage rate",
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
+<h2>Number of open file descriptors</h2>
+<div id="openFdsGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#openFdsGraph"),
+    colorScheme: "cool",
+    expr: 'pid_process_open_fds{job="lnmon"}',
+    name: "Number of file descriptors",
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
+<h2>Rate of <code>lightning-cli</code> calls</h2>
+<div id="cliCallsGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#cliCallsGraph"),
+    colorScheme: "cool",
+    expr: 'rate(lightningd_cli_calls_total[30m])',
+    name: "[[ call ]]",
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
+<h2>Rate of <code>lightning-cli</code> failures</h2>
+<div id="cliFailuresGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#cliFailuresGraph"),
+    colorScheme: "cool",
+    expr: 'rate(lightningd_cli_failures_total[30m])',
+    name: "[[ call ]]",
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
+<h2>Rate of <code>lightning-cli</code> successes</h2>
+<div id="lightningdSuccessesGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#lightningdSuccessesGraph"),
+    colorScheme: "cool",
+    expr: 'rate(lightningd_update_successes_total[30m])',
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
+
+<h2>Rate of <code>lightning-cli</code> failures</h2>
+<p>I.e. due to <code>lightningd</code> not running.</p>
+<div id="lightningdFailuresGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#lightningdFailuresGraph"),
+    colorScheme: "cool",
+    expr: 'rate(lightningd_update_failures_total[30m])',
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
+{{ template "prom_content_tail" . }}
+
+{{ template "tail" }}

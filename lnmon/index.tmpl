@@ -1,0 +1,181 @@
+<html>
+<head>
+<style>
+body {
+	font-family: Arial;
+}
+
+a, a:visited {
+	text-decoration: none;
+	font-weight: bold;
+	color: black;
+}
+table {
+	margin-top: 1em;
+}
+
+table td, table th {
+	border: 1px solid #ddd;
+	padding: 8px;
+}
+
+table tr:nth-child(even) {
+	background-color: #eee;
+}
+
+table th {
+	padding-top: 12px;
+	padding-bottom: 12px;
+	text-align: left;
+}
+</style>
+</head>
+<body>
+	<h1><a href="#"><code>lnmon</code></a></h1>
+
+	<p>This is a monitoring dashboard for the Lightning Network running
+	at <code>ln.hkjn.me</code> by <a href="https://hkjn.me">hkjn</a>.</p>
+
+	<p>This web server exists mainly to serve
+	the <a href="/metrics">/metrics</a> endpoint for Prometheus
+	to collect data for queries and graphs for Lightning
+	Network metrics.</p>
+
+	<p>You may also be interested in the
+	<a href="/">Prometheus dashboard</a> scraping data from this
+	tool.</p>
+
+	<table>
+		<tr>
+			<th>lnmon version</th>
+			<td><code>{{ .MonVersion }}</code></td>
+		</tr>
+		<tr>
+			<th>lightningd running?</th>
+			<td><code>{{ .IsRunning }}</code></td>
+		</tr>
+		<tr>
+			<th>lightningd version</th>
+			<td><code>{{ .Info.Version }}</code></td>
+		</tr>
+		<tr>
+			<th>Network</th>
+			<td><code>{{ .Info.Network }}</code></td>
+		</tr>
+		<tr>
+			<th>Node id</th>
+			<td><code><a href="node/{{ .Info.NodeId }}">{{ .Info.NodeId }} {{ .Info.Address }}</a></code></td>
+		</tr>
+		<tr>
+			<th>Alias</th>
+			<td>{{ with .Alias -}}<code>{{ . }}</code>{{ else }}Unknown alias{{- end }}</td>
+		</tr>
+		<tr>
+			<th>Blockheight</th>
+			<td>{{ .Info.Blockheight }}</td>
+		</tr>
+		<tr>
+			<th>Total nodes</th>
+			<td>{{ .NumNodes }}</td>
+		</tr>
+		<tr>
+			<th>Total channels</th>
+			<td>{{ .NumChannels }}</td>
+		</tr>
+		<tr>
+			<th>Number of peers</th>
+			<td>{{ len .Peers }}</td>
+		</tr>
+		<tr>
+			<th>Number of normal channels with peers</th>
+			<td>{{ .Peers.NumNormalChannels }}</td>
+		</tr>
+	</table>
+
+	<h2 id="peers"><a href="#peers">Peers</a></h2>
+
+	<table>
+		<tr>
+			<th>Id</th>
+			<th>Alias</th>
+			<th>Last seen</th>
+			<th># channels</th>
+			<th>Channel states</th>
+			<th>Our balance</th>
+			<th>Their balance</th>
+		</tr>
+		{{ range .Peers -}}
+		<tr>
+			<td><code><a href="node/{{ .NodeId }}">{{ .NodeId.Short }}</a></code></td>
+			<td>{{ .Alias }}</td>
+			<td>{{ .LastTimestamp.Since }}</td>
+			<td>{{ len .Channels }}</td>
+			<td>{{ .Channels.DescState }}</td>
+			<td>{{ .Channels.BalanceToUs }}</td>
+			<td>{{ .Channels.BalanceToThem }}</td>
+		</tr>
+		{{- end }}
+	</table>
+
+	<h3 id="invoices"><a href="#invoices">Invoices</a></h3>
+	<table>
+		<tr>
+			<th>Label</th>
+			<th>Msatoshi</th>
+			<th>Status</th>
+			<th>Expiry time</th>
+			<th>Msatoshi received</th>
+		</tr>
+	{{ range .Invoices -}}
+		<tr>
+			<td>{{ .Label }}</td>
+			<td>{{ .Msatoshi.String }}</td>
+			<td>{{ .Status }}</td>
+			<td>{{ .ExpiryTime.Time }}</td>
+			<td>{{ .MsatoshiReceived.String }}</td>
+		</tr>
+	{{- end }}
+	</table>
+
+	<h3 id="payments"><a href="#payments">Payments</a></h3>
+	<table>
+		<tr>
+			<th>Id</th>
+			<th>Amount</th>
+			<th>Destination</th>
+			<th>Timestamp</th>
+			<th>Status</th>
+		</tr>
+	{{ range .Payments -}}
+		<tr>
+			<td>{{ .PaymentId }}</td>
+			<td>{{ .Msatoshi.String }}</td>
+			<td><code><a href="node/{{ .Destination }}">{{ .Destination.Short }}</a></code></td>
+			<td>{{ .Timestamp.Time }}</td>
+			<td>{{ .Status }}</td>
+		</tr>
+	{{- end }}
+	</table>
+
+	<h2 id="channelCandidates"><a href="#channelCandidates">Candidate nodes for new channels</a></h2>
+	<p>This section shows nodes that we might want to open new channels towards.</p>
+	<table>
+		<tr>
+			<th>Alias</th>
+			<th>Node</th>
+			<th>Last seen</th>
+			<th>Number of channels</th>
+			<th>Channel state</th>
+		</tr>
+	{{ range .ChannelCandidates -}}
+		<tr>
+			<td>{{ .Alias }}</td>
+			<td><code><a href="node/{{ .NodeId }}">{{ .NodeId.Short }} {{ .Addresses.String}}</a></code></td>
+			<td>{{ .LastTimestamp.Since }}</td>
+			<td>{{ len .Channels }}</td>
+			<td>{{ .Channels.DescState }}</td>
+		</tr>
+	{{- end }}
+	</table>
+</body>
+</html>

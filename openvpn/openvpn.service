@@ -1,0 +1,29 @@
+#
+# This is a systemd service for OpenVPN, which should be copied
+# to /lib/systemd/system/ to run the openvpn service under systemd.
+#
+# After that, we can use systemctl commands like
+# "systemctl status openvpn" and "systemctl start openvpn" to interact
+# with systemd.
+#
+[Unit]
+Description=OpenVPN server
+After=network-online.target
+
+[Service]
+ExecStartPre=-/usr/bin/bash -c "docker pull hkjn/openvpn:$(uname -m)"
+ExecStartPre=-/usr/bin/docker stop openvpn
+ExecStartPre=-/usr/bin/docker rm openvpn
+ExecStart=/bin/bash -c " \
+  docker run --privileged --net=host --name openvpn \
+    -p 1199:1199/udp \
+    -e HOST=vpn.hkjn.me \
+    -e SERVER_IP=10.0.47.0 \
+    -e IP_MASK=255.255.255.128 \
+    -v /etc/vpn:/certs \
+    hkjn/openvpn:$(uname -m)"
+Restart=always
+
+[Install]
+WantedBy=network-online.target
+

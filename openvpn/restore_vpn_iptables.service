@@ -1,0 +1,11 @@
+[Unit]
+Description=Restore OpenVPN iptables rules
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/iptables-restore /etc/vpn/iptables.conf
+
+[Install]
+WantedBy=network-online.target
+

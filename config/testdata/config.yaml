@@ -1,0 +1,14 @@
+# Test config.
+twitter:
+  token: "YEAHaTOKEN"
+  secret: "NAHNOTREALLY"
+  # Twitter test accounts.
+  testaccounts:
+    - notarealaccount1
+    - notarealaccount2
+# Some environment info, not read in the tests. Maybe for non-Go environments.
+env:
+  live:
+    instance: fakeInstance1
+    address: 1.2.3.4
+    password: yup4realthisisANactualPWnoWaitItIsntPSYCH

@@ -1,0 +1,104 @@
+{{ template "head" . }}
+
+<style>
+
+table.breakdown {
+	margin-top: 1em;
+}
+
+table.breakdown td, table.breakdown th {
+	border: 1px solid #ddd;
+	padding: 8px;
+}
+
+table.breakdown tr:nth-child(even) {
+	background-color: #eee;
+}
+
+table.breakdown th {
+	padding-top: 12px;
+	padding-bottom: 12px;
+	text-align: left;
+}
+</style>
+
+{{ template "prom_right_table_head" }}
+{{ template "prom_right_table_tail" }}
+{{ template "prom_content_head" . }}
+
+<h1>lnmon</h1>
+
+<p>Experimental <code>lnmon</code> consoles go here.</p>
+
+<p>Donate using LN:
+<form id="lndonate" action="/lnmon/cmd/invoice" method="POST">
+	Amount: <input type="number" class="amount" name="amount">
+	<input type="submit" value="Submit">
+</form>
+<textarea id="donate_info"></textarea>
+</p>
+
+{{ with .Params.node_id }}
+<h2>Viewing only node
+{{ with printf "job_lightningd:aliases:sum{node_id='%s'}" . | query }}
+	{{ range . }}
+	<code>{{ .Labels.alias }}</code>
+	{{ end }}
+{{ end }}
+</h2>
+
+<p>Viewing node with id <code>{{ . }}</code>.</p>
+
+<p>View all nodes <a href="?">here</a>.</p>
+
+{{ end }}
+
+
+<h3>Time since nodes were last seen</h3>
+<div id="nodesLastSeenGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#nodesLastSeenGraph"),
+    colorScheme: "spectrum14",
+    expr: 'bottomk(50, sort(time() - lightningd_aliases{{ with .Params.node_id }}{node_id="{{ . }}"}{{end }}))',
+    name: "[[ alias ]]",
+    renderer: "area",
+    yUnits: "sec",
+    min: 0.0
+});
+</script>
+
+<script src="https://static.hkjn.me/jquery-3.3.1.min.js" defer></script>
+<script>
+$(document).ready(function() {
+	$("#donate_info").hide();
+	$("#lndonate").submit(function(event) {
+		event.preventDefault();
+		var amount=parseInt($("#lndonate > input.amount").val(), 10);
+		var action=$("#lndonate").attr("action");
+		console.log("Should submit request to with amount=" + amount + " to " + action);
+		$.ajax({
+			contentType: 'application/json',
+			data: JSON.stringify({ "msatoshi": amount, "label": "test tx " + Date.now(), "description": "test tx" }),
+			dataType: 'text',
+			complete: function(xhr, desc) {
+				console.log("/cmd/invoice request complete with status " + xhr.status, ", desc " + desc);
+				if (xhr.status == 200 && desc === 'success') {
+					console.log("invoice created: " + xhr);
+					var bolt11 = xhr.responseText;
+					$("#lndonate").hide();
+					$("#donate_info").show().text(bolt11);
+				} else {
+					console.log("TODO: handle failure to generate invoice");
+				}
+			},
+			processData: false,
+			type: 'POST',
+			url: action
+		});
+	});
+});
+</script>
+{{ template "prom_content_tail" . }}
+
+{{ template "tail" }}

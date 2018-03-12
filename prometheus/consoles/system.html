@@ -1,0 +1,97 @@
+{{ template "head" . }}
+
+{{ template "prom_right_table_head" }}
+{{ template "prom_right_table_tail" }}
+{{ template "prom_content_head" . }}
+
+<h1>System</h1>
+
+<p>This console shows some system metrics.</p>
+
+<p>Monitored targets:</p>
+<table>
+	<tr>
+		<th>Instance</th>
+		<th>Up?</th>
+	</tr>
+	{{ range query "up" }}
+	<tr>
+		<td>
+			<code><a href="http://{{ .Labels.instance }}/metrics">{{ .Labels.instance }}</a></code>
+		</td>
+		<td>{{ .Value }}</td>
+	</tr>
+	{{ end }}
+</table>
+
+<h2>System</h2>
+<h3>Service up?</h3>
+<div id="upGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#upGraph"),
+    expr: 'sum(up) by (instance, job)',
+    name: "[[ job ]] ([[ instance ]])",
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
+<h3>Free memory</h3>
+<div id="freeMemoryGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#freeMemoryGraph"),
+    expr: 'sum(node_memory_MemAvailable) by (group, kind, instance)',
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
+<h3>Disk reads</h3>
+<div id="diskReadsGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#diskReadsGraph"),
+    expr: 'instance_system:node_disk_bytes_read:sum_rate5m',
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
+<h3>Disk writes</h3>
+<div id="diskWritesGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#diskWritesGraph"),
+    expr: 'instance_system:node_disk_bytes_written:sum_rate5m',
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
+<h3>Network bytes transmitted</h3>
+<div id="networkTransmittedGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#networkTransmittedGraph"),
+    expr: 'instance_system:node_network_transmit_bytes:sum_rate5m',
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
+<h3>Network bytes received</h3>
+<div id="networkReceivedGraph"></div>
+<script>
+new PromConsole.Graph({
+    node: document.querySelector("#networkReceivedGraph"),
+    expr: 'instance_system:node_network_receive_bytes:sum_rate5m',
+    renderer: "area",
+    min: 0.0
+});
+</script>
+
+{{ template "prom_content_tail" . }}
+
+{{ template "tail" }}

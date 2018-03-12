@@ -1,15 +1,13 @@
 include ../make/Makefile
-NAME=bitcoin
-VERSION=f4c942e3-lightning
-BITCOIN_VERSION=f4c942e3
-LIGHTNING_VERSION=ced486
+NAME = bitcoin
+VERSION = v0.16.0-2018-03-08
+BITCOIN_VERSION ?= v0.16.0
+LIGHTNING_VERSION ?= 3e9e1
+LIGHTNING_REMOTE ?= https://github.com/ElementsProject/lightning
 
-pre-build:
-	@echo "Building bitcoin in container.."
-	docker build --build-arg bitcoin_version=$(BITCOIN_VERSION) --build-arg lightning_version=${LIGHTNING_VERSION} -t bitcoin-build -f Dockerfile.build .
-	@echo "Running build container.."
-	docker run --name bbuild bitcoin-build
-	@echo "Copying out build artifacts.."
-	docker cp bbuild:/build/bin .
-	docker cp bbuild:/build/lib .
-	docker rm bbuild
+docker-build:
+	@echo "Building image $(IMAGE):$(VERSION)-$(DOCKER_ARCH).."
+	docker build --build-arg bitcoin_version=${BITCOIN_VERSION} \
+	             --build-arg lightning_version=${LIGHTNING_VERSION} \
+	             --build-arg lightning_remote=${LIGHTNING_REMOTE} \
+	             -t $(IMAGE):$(VERSION)-$(DOCKER_ARCH) .

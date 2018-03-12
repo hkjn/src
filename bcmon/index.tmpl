@@ -1,0 +1,23 @@
+<html>
+<body>
+	<h1>Hello from <code>bcmon</code>!</h1>
+
+	<p>This is a monitoring dashboard for Bitcoin running <a href="https://hkjn.me/lnmon"><code>lnmon</code></a>.</p>
+
+	<p>This web server exists mainly to serve the <a href="/metrics">/metrics</a> endpoint for Prometheus to collect data
+	for queries and graphs for Bitcoin metrics.</p>
+
+	{{ with .DashboardLink }}
+		<p>You may also be interested in the <a href="{{ . }}">Prometheus dashboard</a> scraping data
+		from this tool.</p>
+	{{ end }}
+
+	<h2><code>bitcoind</code> info</h2>
+	{{ if .IsRunning -}}
+	<p><code>bitcoind</code> is <strong>running</strong></p>
+	{{ else }}
+	<p><code>bitcoind</code> is <strong>not running</strong>.</p>
+	{{- end }}
+
+</body>
+</html>

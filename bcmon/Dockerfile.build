@@ -1,0 +1,17 @@
+FROM hkjn/golang:tip
+
+ENV CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=arm
+
+WORKDIR /home/go/src/hkjn.me/src/bcmon/
+COPY bcmon.go ./
+COPY ["vendor", "./vendor"]
+USER root
+RUN chown -R go:go /home/go/bin
+USER go
+
+RUN go vet && \
+    go install
+
+CMD echo "Binary available in ${GOPATH}/bin: $(ls -hsal ${GOPATH}/bin)"
