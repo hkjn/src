@@ -1,3 +1,3 @@
 include ../make/Makefile
 NAME=gcloud
-VERSION=$(shell cat VERSION)
+VERSION=192.0.0
