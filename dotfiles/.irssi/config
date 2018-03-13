@@ -114,6 +114,7 @@ channels = (
   # Freenode
   { name = "#archlinux"; chatnet = "freenode"; autojoin = "Yes"; },
   { name = "#bitcoin"; chatnet = "freenode"; autojoin = "Yes"; },
+  { name = "#bitcoin-build"; chatnet = "freenode"; autojoin = "Yes"; },
   { name = "#bitcoin-commits"; chatnet = "freenode"; autojoin = "Yes"; },
   { name = "#bitcoin-core-dev"; chatnet = "freenode"; autojoin = "Yes"; },
   { name = "#bitcoin-dev"; chatnet = "freenode"; autojoin = "Yes"; },
@@ -321,6 +322,7 @@ ignores = (
       "#archlinux",
       "#coreos",
       "#bitcoin",
+      "#bitcoin-build",
       "#bitcoin-commits",
       "#bitcoin-core-dev",
       "#bitcoin-dev",
