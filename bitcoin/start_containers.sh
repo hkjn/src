@@ -1,3 +1,11 @@
+#
+# todo: rewrite to have one bitcoin and one ln container; entrypoint
+# which act as tiny init system (handles signals etc.) and keeps bitcoind
+# + bcmon processes alive, restarting them as necessary (supervisord)?
+#
+# todo: set up log forwarding (ideally distributed log aggregation / searching, oklog?) so historical
+# logs for ln and other services can be viewed.
+#
 set -eu
 
 IMAGE=${IMAGE:-"hkjn/bitcoin:lightning-2018-02-21-amd64"}
@@ -54,11 +62,10 @@ if ! docker container inspect bitcoin 1>/dev/null; then
 	           --name bitcoin \
 	           -p 8333:8333 \
 	           --network bitcoin-net \
-	           --entrypoint bash \
+	           --entrypoint bitcoind \
 	           -v /crypt/bitcoin:/home/bitcoin/.bitcoin \
 	           -v /etc/bins:/etc/bins \
-	           ${IMAGE} \
-	           -c "bitcoind -dbcache=1200 -onlynet=ipv4 -printtoconsole"
+	           ${IMAGE}
 fi
 
 if ! docker container inspect ln 1>/dev/null; then
