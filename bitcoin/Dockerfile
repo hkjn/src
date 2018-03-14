@@ -9,8 +9,7 @@ ENV BITCOIN_VERSION=${bitcoin_version}
 
 # Install dependencies.
 RUN pacman -Syyu --noconfirm
-RUN pacman -S --noconfirm git base-devel boost libevent jq python
-
+RUN pacman -S --noconfirm git base-devel boost libevent libunwind jq python
 
 WORKDIR /usr/local/src/bitcoin/
 RUN useradd -m bitcoin && \
@@ -22,16 +21,28 @@ USER bitcoin
 RUN git clone https://github.com/bitcoin/bitcoin .
 RUN git checkout ${BITCOIN_VERSION}
 
-RUN ./autogen.sh && \
-    ./configure --disable-wallet
+
+RUN echo "Generating Makefile and configure script.." && \
+    ./autogen.sh
+
+RUN echo "Building dependencies.." && \
+    cd depends && \
+    make
+
+# TODO: x86.
+RUN echo "Running configure script.." && \
+    ./configure --prefix=$(pwd)/depends/armv7l-unknown-linux-gnueabihf
 
 RUN echo "Building bitcoin at: $(git show)" && \
     make
+
 USER root
-RUN make install
+RUN echo "Installing bitcoin binaries.." && \
+    make install
 USER bitcoin
 RUN mkdir -p ${HOME}/src/ && \
     cp -v share/rpcauth/rpcauth.py ${HOME}/src/
+
 ARG lightning_version
 ARG lightning_remote
 
