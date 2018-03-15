@@ -2,6 +2,10 @@
 //
 // TODO: If we were to track state between CLI polls, we could detect e.g. channel state transitions,
 // new channels, etc., to create an event stream.
+//
+// TODO: include capacity for all channels, not just our own, as cdecker points out "you're
+// supposed to look for the txout on-chain to verify the channel's existence so you can as well just
+// remember the capacity". We can if nothing else look up the funding txid via bitcoind.
 package main
 
 import (
@@ -29,6 +33,7 @@ import (
 )
 
 type (
+	// TODO: add lightning-cli dev-setfees, shows fee rates for onchain txes.
 	cli         struct{}
 	addressInfo struct {
 		AddressType string `json:"type"`
@@ -45,6 +50,10 @@ type (
 		FundingTxId     string  `json:"funding_tx_id"`
 	}
 	// channelListing describes one channel from listchannels output.
+	//
+	// TODO: Via cdecker at https://github.com/ElementsProject/lightning/issues/1211#issuecomment-373007380,
+	// listchannels lists all channels twice; both as 'source' and as 'destination'. Should probably present results
+	// in graph and combine both entries to represent as one dual-sided channel.
 	channelListing struct {
 		Source          nodeId `json:"source"`
 		Destination     nodeId `json:"destination"`
