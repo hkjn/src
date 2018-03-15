@@ -52,6 +52,8 @@ CHECKSUM_BEFORE=""
 if [[ -e "$CRYPT" ]] && [[ ! -p /dev/stdin ]]; then
 	info "Decrypting $CRYPT -> $CLEAR"
 	debug "Cleartext file: $(ls -hsal ${CLEAR})"
+	# TODO: may want to check that we can write to this file here, or the encryption
+	# won't work.
 	gpg --yes --output ${CLEAR} --decrypt /crypt/${PASSWORD_SUB}/$(basename ${CRYPT})
 	if [[ $? -ne 0 ]]; then
 		fatal "Error decrypting file."
@@ -78,11 +80,13 @@ debug "Using recipients ${RECIPIENTS}"
 if [[ $CHECKSUM_BEFORE != $CHECKSUM_AFTER ]]; then
 	info "Contents changed, re-encrypting ${CLEAR} -> $CRYPT"
 	set +e
-	st=$(gpg --yes --output /crypt/${PASSWORD_SUB}/$(basename ${CRYPT}) --encrypt --armor ${RECIPIENTS} ${CLEAR})
+	$(gpg --yes --output /crypt/${PASSWORD_SUB}/$(basename ${CRYPT}) --encrypt --armor ${RECIPIENTS} ${CLEAR})
+	STATUS=$?
 	set -e
-	if [[ ${st} -ne 0 ]]; then
+	if [[ ${STATUS} -ne 0 ]]; then
 		fatal "Error encrypting file."
 	fi
+	debug "gpg --encrypt command exited with status '${STATUS}'"
 fi
 
 info "All done."
