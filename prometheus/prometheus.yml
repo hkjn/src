@@ -1,6 +1,10 @@
 #
 # Config for local prometheus.
 #
+# Note: Using localhost makes it possible to use the same config for all nodes, but ends up with timeseries
+# with labels like 'instance=localhost:8380'.. might be better to generate this .yml config during setup
+# with an addr that could be like ln0.hkjn.me.
+#
 global:
   scrape_interval: 1m     # Set the scrape interval to every 15 seconds. Default is every 1 minute.
   evaluation_interval: 1m # Evaluate rules every 15 seconds. The default is every 1 minute.
