@@ -6,7 +6,8 @@ with open('nodes.json') as json_file:
     d = json.loads(json_file.read())
 
 for n in d['nodes']:
-    if 'addresses' not in n or not n['addresses']:
+    if 'addresses' not in n or not n['addresses'] or '::ffff' in n['addresses']:
+        logfile.write('Skipping node {}\n'.format(n))
         continue
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
