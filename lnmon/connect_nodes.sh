@@ -1,7 +1,11 @@
-set -euo pipefail
+#
+# Print LN nodes that are responsive on specified addr / port.
+#
+# Usage:
+# $ sh connect_nodes.sh > connect.sh # generate list of lightning-cli connect commands
+# $ sh connect.sh                    # run the lightning-cli connect commands
+#
+set -eu
 
 lightning-cli listnodes > nodes.json
-while read -r line; do
-	echo "$line"
-	$line
-done <<< "$(python .lightning/parse_nodes.py)"
+python parse_nodes.py
