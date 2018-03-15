@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-declare GPG_IMAGE_VERSION=${GPG_IMAGE_VERSION:-"1.0.7"}
+declare GPG_IMAGE_VERSION=${GPG_IMAGE_VERSION:-"1.0.8"}
 
 if [[ ! "${PASSWORD_MAIN_KEY}" ]]; then
 	echo "FATAL: No PASSWORD_MAIN_KEY specified." >&2
