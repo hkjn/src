@@ -797,11 +797,12 @@ func (cs channels) BalanceToThem() msatoshi {
 	return total
 }
 
+// DescBalance returns a string describing the channels' balances.
 func (cs channels) DescBalance() string {
 	us := cs.BalanceToUs()
 	them := cs.BalanceToThem()
 	if us == 0 && them == 0 {
-		return "no balance in channel!?"
+		return "no balance in channels!?"
 	}
 	usDesc := us.String()
 	themDesc := them.String()
@@ -1393,6 +1394,7 @@ func (s *state) update() error {
 						"state":     string(c.State),
 						"direction": "to_us",
 					}).Set(float64(c.MsatsToUs))
+				// TODO: add up sum to_us for c.State == "CHANNELD_NORMAL" channels and expose counter (also in n.Channels.BalanceToUs()
 			}
 			if c.MsatsTotal-c.MsatsToUs > msatoshi(0) {
 				s.gaugeVecs["channel_balances_msatoshi"].With(
@@ -1415,11 +1417,11 @@ func (s *state) update() error {
 	if !s.Invoices.Equal(*invoices) {
 		s.Invoices = *invoices
 		log.Printf("We learned of new invoices: %v\n", s.Invoices)
-		s.gauges["total_invoices_received_msatoshi"].Set(float64(s.Invoices.SumPaid()))
-		for status, count := range s.Invoices.ByStatusCount() {
-			s.gaugeVecs["num_invoices"].With(prometheus.Labels{"status": status}).Set(float64(count))
-		}
 	}
+	for status, count := range s.Invoices.ByStatusCount() {
+		s.gaugeVecs["num_invoices"].With(prometheus.Labels{"status": status}).Set(float64(count))
+	}
+	s.gauges["total_invoices_received_msatoshi"].Set(float64(s.Invoices.SumPaid()))
 
 	s.counterVecs["cli_calls"].With(prometheus.Labels{"call": "listpayments"}).Inc()
 	payments, err := c.ListPayments()
