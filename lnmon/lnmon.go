@@ -41,33 +41,6 @@ type (
 		Port        int    `json:"port"`
 	}
 	address []addressInfo
-	// channeFundlListing describes one channel from listfunds output.
-	channelFundListing struct {
-		PeerId          nodeId  `json:"peer_id"`
-		ShortChannelId  string  `json:"short_channel_id"`
-		ChannelSat      satoshi `json:"channel_sat"`
-		ChannelTotalSat satoshi `json:"channel_total_sat"`
-		FundingTxId     string  `json:"funding_tx_id"`
-	}
-	// channelListing describes one channel from listchannels output.
-	//
-	// TODO: Via cdecker at https://github.com/ElementsProject/lightning/issues/1211#issuecomment-373007380,
-	// listchannels lists all channels twice; both as 'source' and as 'destination'. Should probably present results
-	// in graph and combine both entries to represent as one dual-sided channel.
-	channelListing struct {
-		Source          nodeId `json:"source"`
-		Destination     nodeId `json:"destination"`
-		ShortChannelId  string `json:"short_channel_id"`
-		Flags           int64  `json:"flags"`
-		Active          bool   `json:"active"`
-		Public          bool   `json:"public"`
-		LastUpdate      unixTs `json:"last_update"`
-		BaseFeeMsats    int64  `json:"base_fee_millisatoshi"`
-		FeePerMillionth int64  `json:"fee_per_millionth"`
-		Delay           int64  `json:"delay"`
-	}
-	// channelListings describes several channels from listchannels output.
-	channelListings []channelListing
 
 	// msatoshi is number of millisatoshis, the main unit used in the LN protocol.
 	msatoshi int64
@@ -146,12 +119,12 @@ type (
 		PaymentHash      string   `json:"payment_hash"`
 		Msatoshi         msatoshi `json:"msatoshi"`
 		Status           string   `json:"status"`
-		ExpiryTime       unixTs   `json:"expiry_time"`
-		ExpiresAt        unixTs   `json:"expires_at"`
-		PaidTimestamp    unixTs   `json:"paid_timestamp"`
-		PaidAt           unixTs   `json:"paid_at"`
 		PayIndex         int      `json:"pay_index"`
 		MsatoshiReceived msatoshi `json:"msatoshi_received"`
+		PaidTimestamp    unixTs   `json:"paid_timestamp"`
+		PaidAt           unixTs   `json:"paid_at"`
+		ExpiryTime       unixTs   `json:"expiry_time"`
+		ExpiresAt        unixTs   `json:"expires_at"`
 	}
 	// invoiceListings describes several results from listinvoices.
 	invoiceListings []invoiceListing
@@ -159,6 +132,33 @@ type (
 	nodes []node
 	// candidates describes candidate nodes to open channels with.
 	candidates nodes
+	// channeFundlListing describes one channel from listfunds output.
+	channelFundListing struct {
+		PeerId          nodeId  `json:"peer_id"`
+		ShortChannelId  string  `json:"short_channel_id"`
+		ChannelSat      satoshi `json:"channel_sat"`
+		ChannelTotalSat satoshi `json:"channel_total_sat"`
+		FundingTxId     string  `json:"funding_tx_id"`
+	}
+	// channelListing describes one channel from listchannels output.
+	//
+	// TODO: Via cdecker at https://github.com/ElementsProject/lightning/issues/1211#issuecomment-373007380,
+	// listchannels lists all channels twice; both as 'source' and as 'destination'. Should probably present results
+	// in graph and combine both entries to represent as one dual-sided channel.
+	channelListing struct {
+		Source          nodeId `json:"source"`
+		Destination     nodeId `json:"destination"`
+		ShortChannelId  string `json:"short_channel_id"`
+		Flags           int64  `json:"flags"`
+		Active          bool   `json:"active"`
+		Public          bool   `json:"public"`
+		LastUpdate      unixTs `json:"last_update"`
+		BaseFeeMsats    int64  `json:"base_fee_millisatoshi"`
+		FeePerMillionth int64  `json:"fee_per_millionth"`
+		Delay           int64  `json:"delay"`
+	}
+	// channelListings describes several channels from listchannels output.
+	channelListings []channelListing
 	// output describes an individual output.
 	output struct {
 		TxId string `json:"txid"`
@@ -166,10 +166,12 @@ type (
 		Output int64 `json:"output"`
 		Value  int64 `json:"value"`
 	}
-	// outputs describes several outputs.
-	outputs             []output
+	// outputs describes several outputs from listfunds.
+	outputs []output
+	// channelFundListings describes several channel fund listings from listfunds.
 	channelFundListings []channelFundListing
-	fundListing         struct {
+	// fundListing describes the result from listfunds.
+	fundListing struct {
 		Outputs  outputs             `json:"outputs"`
 		Channels channelFundListings `json:"channels"`
 	}
@@ -884,8 +886,28 @@ func (ir invoiceRequest) String() string {
 }
 
 // String returns a human-readable description of the invoice listing.
-func (il invoiceListings) String() string {
-	return fmt.Sprintf("%d invoices", len(il))
+func (ils invoiceListings) String() string {
+	return fmt.Sprintf("%d invoices", len(ils))
+}
+
+// SumPaid returns the sum of the paid invoices to us.
+func (ils invoiceListings) SumPaid() msatoshi {
+	sum := msatoshi(0.0)
+	for _, il := range ils {
+		if il.Status == "paid" {
+			sum += il.MsatoshiReceived
+		}
+	}
+	return sum
+}
+
+// ByStatusCount returns a map from status to number of invoices in that state.
+func (ils invoiceListings) ByStatusCount() map[string]int64 {
+	result := map[string]int64{}
+	for _, il := range ils {
+		result[il.Status] += 1
+	}
+	return result
 }
 
 // String returns a human-readable description of the payments.
@@ -1307,6 +1329,7 @@ func (s *state) update() error {
 		s.Outputs = *outputs
 		log.Printf("We now know of %d %v.\n", len(s.Outputs.Outputs), s.Outputs)
 	}
+	// TODO: also show sum of funds on our side of normal channels.
 	s.gauges["total_funds"].Set(float64(s.Outputs.Sum()))
 
 	s.counterVecs["cli_calls"].With(prometheus.Labels{"call": "listpeers"}).Inc()
@@ -1383,15 +1406,19 @@ func (s *state) update() error {
 	}
 
 	s.counterVecs["cli_calls"].With(prometheus.Labels{"call": "listinvoices"}).Inc()
+	s.gaugeVecs["num_invoices"].Reset()
 	invoices, err := c.ListInvoices()
 	if err != nil {
-		// TODO: Set gauge with # of invoices (and payments), as well as total value in msats.
 		s.counterVecs["cli_failures"].With(prometheus.Labels{"call": "listinvoices"}).Inc()
 		return err
 	}
 	if !s.Invoices.Equal(*invoices) {
 		s.Invoices = *invoices
 		log.Printf("We learned of new invoices: %v\n", s.Invoices)
+		s.gauges["total_invoices_received_msatoshi"].Set(float64(s.Invoices.SumPaid()))
+		for status, count := range s.Invoices.ByStatusCount() {
+			s.gaugeVecs["num_invoices"].With(prometheus.Labels{"status": status}).Set(float64(count))
+		}
 	}
 
 	s.counterVecs["cli_calls"].With(prometheus.Labels{"call": "listpayments"}).Inc()
@@ -1401,6 +1428,7 @@ func (s *state) update() error {
 		return err
 	}
 	if !s.Payments.Equal(*payments) {
+		// TODO: Set gauge with # of payments, as well as total value in msats.
 		s.Payments = *payments
 		log.Printf("We learned of new payments: %v\n", s.Payments)
 	}
@@ -1428,7 +1456,9 @@ func (s *state) reset() {
 	s.gauges["blockheight"].Set(0.0)
 	s.gauges["num_channels"].Set(0.0)
 	s.gauges["total_funds"].Set(0.0)
-	s.gauges["running"].Set(0)
+	s.gauges["running"].Set(0.0)
+	s.gauges["total_invoices_received_msatoshi"].Set(0.0)
+	s.gaugeVecs["num_invoices"].Reset()
 	s.gaugeVecs["num_peers"].Reset()
 	s.gaugeVecs["our_channels"].Reset()
 	s.gaugeVecs["channel_capacities_msatoshi"].Reset()
@@ -1705,6 +1735,13 @@ func newState() *state {
 					Help:      "Sum of all funds available for opening channels.",
 				},
 			),
+			"total_invoices_received_msatoshi": prometheus.NewGauge(
+				prometheus.GaugeOpts{
+					Namespace: counterPrefix,
+					Name:      "total_invoices_received_msatoshi",
+					Help:      "Sum of all funds received from paid invoices.",
+				},
+			),
 		},
 		counters: map[string]prometheus.Counter{
 			"lightningd_update_failures": prometheus.NewCounter(
@@ -1780,6 +1817,14 @@ func newState() *state {
 					Help:      "Number of channels per state to and from our node.",
 				},
 				[]string{"state"},
+			),
+			"num_invoices": prometheus.NewGaugeVec(
+				prometheus.GaugeOpts{
+					Namespace: counterPrefix,
+					Name:      "num_invoices",
+					Help:      "Number of invoices per status generated by our node.",
+				},
+				[]string{"status"},
 			),
 			"channel_capacities_msatoshi": prometheus.NewGaugeVec(
 				prometheus.GaugeOpts{
