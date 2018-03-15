@@ -87,6 +87,14 @@ table th {
 			<td>{{ len .Peers }}</td>
 		</tr>
 		<tr>
+			<th>Sum of our normal channel balances to us</th>
+			<td>{{ .SumNormalChannelBalanceToUs }}</td>
+		</tr>
+		<tr>
+			<th>Sum of our normal channel balances to them</th>
+			<td>{{ .SumNormalChannelBalanceToThem }}</td>
+		</tr>
+		<tr>
 			<th>Number of normal channels with peers</th>
 			<td>{{ .Peers.NumNormalChannels }}</td>
 		</tr>

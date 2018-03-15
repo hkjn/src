@@ -503,6 +503,25 @@ func (ns candidates) Less(i, j int) bool {
 	return ns[i].NodeId < ns[j].NodeId
 }
 
+// SumChannelBalanceToUs returns the sum on of all our channels in normal state.
+//
+// If toUs is true, the sum is on our side of the channel, otherwise it's on theirs.
+func (ns allNodes) SumNormalChannelBalance(toUs bool) msatoshi {
+	sum := msatoshi(0.0)
+	for _, n := range ns {
+		for _, c := range n.Channels.OurChannels() {
+			if c.State == "CHANNELD_NORMAL" {
+				if toUs {
+					sum += c.MsatsToUs
+				} else {
+					sum += (c.MsatsTotal - c.MsatsToUs)
+				}
+			}
+		}
+	}
+	return sum
+}
+
 // ChannelCandidates returns nodes that are good candidates for new channels.
 //
 // The number of nodes returned may be less than the full set of nodes.
@@ -1372,6 +1391,7 @@ func (s *state) update() error {
 	s.counterVecs["aliases"].Reset()
 	s.gaugeVecs["channel_capacities_msatoshi"].Reset()
 	s.gaugeVecs["channel_balances_msatoshi"].Reset()
+
 	for _, n := range s.Nodes {
 		s.counterVecs["aliases"].With(
 			prometheus.Labels{
@@ -1394,7 +1414,6 @@ func (s *state) update() error {
 						"state":     string(c.State),
 						"direction": "to_us",
 					}).Set(float64(c.MsatsToUs))
-				// TODO: add up sum to_us for c.State == "CHANNELD_NORMAL" channels and expose counter (also in n.Channels.BalanceToUs()
 			}
 			if c.MsatsTotal-c.MsatsToUs > msatoshi(0) {
 				s.gaugeVecs["channel_balances_msatoshi"].With(
@@ -1543,16 +1562,18 @@ func (h indexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Printf("[%v] HTTP %s %s\n", r.RemoteAddr, r.Method, r.URL)
 	h.s.counterVecs["http_calls"].With(prometheus.Labels{"call": "index"}).Inc()
 	data := struct {
-		IsRunning         bool
-		MonVersion        string
-		Alias             alias
-		Info              getInfoResponse
-		NumNodes          int
-		NumChannels       int
-		ChannelCandidates candidates
-		Peers             nodes
-		Invoices          []invoiceListing
-		Payments          payments
+		IsRunning                     bool
+		MonVersion                    string
+		Alias                         alias
+		Info                          getInfoResponse
+		NumNodes                      int
+		NumChannels                   int
+		ChannelCandidates             candidates
+		Peers                         nodes
+		SumNormalChannelBalanceToUs   msatoshi
+		SumNormalChannelBalanceToThem msatoshi
+		Invoices                      []invoiceListing
+		Payments                      payments
 	}{
 		IsRunning:         h.s.IsRunning(),
 		MonVersion:        h.s.MonVersion,
@@ -1562,8 +1583,10 @@ func (h indexHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		NumChannels:       len(h.s.Channels),
 		ChannelCandidates: h.s.Nodes.ChannelCandidates(),
 		Peers:             h.s.Nodes.Peers(),
-		Invoices:          h.s.Invoices,
-		Payments:          h.s.Payments,
+		SumNormalChannelBalanceToUs:   h.s.Nodes.SumNormalChannelBalance(true),
+		SumNormalChannelBalanceToThem: h.s.Nodes.SumNormalChannelBalance(false),
+		Invoices:                      h.s.Invoices,
+		Payments:                      h.s.Payments,
 	}
 	if err := h.tmpl.Execute(w, data); err != nil {
 		http.Error(w, "Well, that's embarrassing. Please try again later.", http.StatusInternalServerError)
