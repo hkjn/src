@@ -36,6 +36,12 @@ RUN echo "Running configure script.." && \
 RUN echo "Building bitcoin at: $(git show)" && \
     make
 
+RUN echo "Running tests.." && \
+    make check
+# TODO: enable running .py tests if they can be made to work on 2G machines, or we set up larger
+# build machines:
+#    ./test/functional/test_runner.py
+
 USER root
 RUN echo "Installing bitcoin binaries.." && \
     make install
