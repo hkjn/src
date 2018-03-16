@@ -2,8 +2,10 @@
 # Connect to known LN peers on mainnet.
 #
 set -euo pipefail
-# z.decenter.world
-lightning-cli connect 02d2eabbbacc7c25bbd73b39e65d28237705f7bde76f557e94fb41cb18a9ec0084 ::ffff:174.138.11.8
+# ln0.decenter.world
+lightning-cli connect 02d2eabbbacc7c25bbd73b39e65d28237705f7bde76f557e94fb41cb18a9ec0084 ln0.decenter.world
+# Bitrefill
+lightning-cli connect 024a2e265cd66066b78a788ae615acdc84b5b0dec9efac36d7ac87513015eaf6ed lnd.bitrefill.com
 # TrueVision.club
 lightning-cli connect 0387e3780a4325eb38421fb83000a6f6c0ffa4a69ea0c81db3f00e8e5015c9e8a1 148.251.82.174
 # SLEEPYARK / Blockstream store
