@@ -40,15 +40,23 @@ scrape_configs:
           kind: 'monitoring'
 
   - job_name: 'lnmon'
+    relabel_configs:
+    - source_labels: ['service']
+      target_label: 'instance'
     static_configs:
       - targets: ['localhost:8380']
         labels:
           group: 'production'
           kind: 'monitoring'
+          service: 'lnmon'
 
   - job_name: 'bcmon'
+    relabel_configs:
+    - source_labels: ['service']
+      target_label: 'instance'
     static_configs:
       - targets: ['localhost:9740']
         labels:
           group: 'production'
           kind: 'monitoring'
+          service: 'lnmon'
