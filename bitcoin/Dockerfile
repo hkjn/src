@@ -9,7 +9,7 @@ ENV BITCOIN_VERSION=${bitcoin_version}
 
 # Install dependencies.
 RUN pacman -Syyu --noconfirm
-RUN pacman -S --noconfirm git base-devel boost libevent libunwind jq python
+RUN pacman -S --noconfirm base-devel boost doxygen git libevent libunwind jq python
 
 WORKDIR /usr/local/src/bitcoin/
 RUN useradd -m bitcoin && \
@@ -38,7 +38,9 @@ RUN echo "Building bitcoin at: $(git show)" && \
     make
 
 RUN echo "Running tests.." && \
-    make check
+    make check || \
+    cat src/test-suite.log
+
 # TODO: enable running .py tests if they can be made to work on 2G machines, or we set up larger
 # build machines:
 #    ./test/functional/test_runner.py
