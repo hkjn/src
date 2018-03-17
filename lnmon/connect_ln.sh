@@ -22,18 +22,3 @@ lightning-cli connect 0235447c7485ff2b945bac5fbc366d54a87389bab8cacf1b64b26ec01e
 lightning-cli connect 029113620f929df927a4877ae6727b214418c366bf09ebbd4552eda235f48c00f5 68.129.210.251
 # Cinnober
 lightning-cli connect 027f3ee645c11ef3183cb6f929274baed13990e812d157866b4e41c2bf14e352de 34.240.200.0
-# Unresponsive as of 2018-02-26, disabled:
-# Bitrefill
-# lightning-cli connect 039514e5d704c59a0eba65d25fc5fe559a1641243ccdf80c980b1fc10ca9c30ca2 52.211.235.81
-# CASSANDRA
-# lightning-cli connect 03745b275bed1ab74c6c2f3dc6d1f870c5927397997c99dfaba283f73ccfab0d33 79.136.120.4
-# HectorJ from reddit
-# lightning-cli connect 0207481a19a3f51a48f134e95afa67cfeffdb38a99b5ad3494a320c4918aaaf579 163.172.174.151
-# COINGAMING
-# lightning-cli connect 03b7ca940bc33b882dc1f1bee353a6cf205b1a7472d8ae24d45370a8f510c27d23 18.195.40.124
-#
-# Coco
-# lightning-cli connect 03939ff69d65a13c4bb2585042e7eb7e75a7c77289ab5794d1b973721d86c6839c 213.113.59.152
-#
-# dx/dy
-# lightning-cli connect 03d04b48cb2f277055f765c330de3c3c84f4e7d72129624bdb9b272d1113f13f14 76.10.136.25
