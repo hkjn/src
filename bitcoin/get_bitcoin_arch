@@ -1,0 +1,12 @@
+#
+# Echo the bitcoin depends prefix to use for current platform.
+#
+set -euo pipefail
+ARCH=$(uname -m)
+if [[ "${ARCH}" = "x86_64" ]]; then
+	echo "x86_64-pc-linux-gnu"
+elif [[ "${ARCH}" = "armv7l" ]]; then
+	echo "armv7l-unknown-linux-gnueabihf"
+else
+	echo "FATAL: Unsupported CPU arch '${ARCH}'." >&2
+fi

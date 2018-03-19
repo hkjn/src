@@ -4,12 +4,13 @@
 FROM hkjn/arch
 
 ARG bitcoin_version
+ARG bitcoin_arch
 
 ENV BITCOIN_VERSION=${bitcoin_version}
 
 # Install dependencies.
-RUN pacman -Syyu --noconfirm
-RUN pacman -S --noconfirm base-devel boost doxygen git libevent libunwind jq python
+RUN pacman -Syyu --noconfirm && \
+    pacman -S --noconfirm base-devel boost doxygen git libevent libunwind jq python
 
 WORKDIR /usr/local/src/bitcoin/
 RUN useradd -m bitcoin && \
@@ -32,7 +33,7 @@ RUN echo "Building dependencies.." && \
 # TODO: support x86:
 #     ./configure --prefix=$(pwd)/depends/x86_64-pc-linux-gnu
 RUN echo "Running configure script.." && \
-    ./configure --prefix=$(pwd)/depends/armv7l-unknown-linux-gnueabihf \
+    ./configure --prefix=$(pwd)/depends/${bitcoin_arch} \
                 --exec-prefix=/usr/local
 
 RUN echo "Building bitcoin at: $(git show)" && \
