@@ -20,8 +20,8 @@ RUN useradd -m bitcoin && \
 USER bitcoin
 
 RUN git clone https://github.com/bitcoin/bitcoin .
-RUN git checkout ${BITCOIN_VERSION}
-
+RUN echo "Checking of bitcoin ${BITCOIN_VERSION}.." && \
+    git checkout ${BITCOIN_VERSION}
 
 RUN echo "Generating Makefile and configure script.." && \
     ./autogen.sh
