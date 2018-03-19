@@ -5,6 +5,8 @@ FROM hkjn/arch
 
 ARG bitcoin_version
 ARG bitcoin_arch
+ARG lightning_version
+ARG lightning_remote
 
 ENV BITCOIN_VERSION=${bitcoin_version}
 
@@ -20,7 +22,7 @@ RUN useradd -m bitcoin && \
 USER bitcoin
 
 RUN git clone https://github.com/bitcoin/bitcoin .
-RUN echo "Checking of bitcoin ${BITCOIN_VERSION}.." && \
+RUN echo "Checking of bitcoin version '${BITCOIN_VERSION}'.." && \
     git checkout ${BITCOIN_VERSION}
 
 RUN echo "Generating Makefile and configure script.." && \
@@ -54,9 +56,6 @@ RUN echo "Installing bitcoin binaries.." && \
 USER bitcoin
 RUN mkdir -p ${HOME}/src/ && \
     cp -v share/rpcauth/rpcauth.py ${HOME}/src/
-
-ARG lightning_version
-ARG lightning_remote
 
 ENV LIGHTNING_VERSION=${lightning_version} \
     LIGHTNING_REMOTE=${lightning_remote}
