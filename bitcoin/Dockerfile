@@ -32,7 +32,8 @@ RUN echo "Building dependencies.." && \
 # TODO: support x86:
 #     ./configure --prefix=$(pwd)/depends/x86_64-pc-linux-gnu
 RUN echo "Running configure script.." && \
-    ./configure --prefix=$(pwd)/depends/armv7l-unknown-linux-gnueabihf
+    ./configure --prefix=$(pwd)/depends/armv7l-unknown-linux-gnueabihf \
+                --exec-prefix=/usr/local
 
 RUN echo "Building bitcoin at: $(git show)" && \
     make
@@ -48,12 +49,6 @@ RUN echo "Running tests.." && \
 USER root
 RUN echo "Installing bitcoin binaries.." && \
     make install
-# TODO: Improve this ugly workaround for ./configure --prefix above making 'make install' put the
-# bins and libs in that dir.
-RUN mv -iv depends/armv7l-unknown-linux-gnueabihf/bin/* /usr/local/bin/ && \
-    mv -iv depends/armv7l-unknown-linux-gnueabihf/lib/pkgconfig /usr/local/lib/ && \
-    mv -iv depends/armv7l-unknown-linux-gnueabihf/share/man/man1 /usr/local/man/man1/ && \
-    mv -iv depends/armv7l-unknown-linux-gnueabihf/include /usr/local/include/
 
 USER bitcoin
 RUN mkdir -p ${HOME}/src/ && \
