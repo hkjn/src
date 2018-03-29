@@ -15,7 +15,7 @@ build-docker: gen-tmpl
 	@echo "Running bcmon-build container.."
 	docker run --name bcmonbuild bcmon-build
 	@echo "Copying out bcmonbuild artifacts.."
-	docker cp bcmonbuild:/home/go/bin/linux_arm/bcmon .
+	docker cp bcmonbuild:/home/go/bin/bcmon .
 	docker rm bcmonbuild
 
 build-bin: gen-tmpl
