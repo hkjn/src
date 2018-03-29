@@ -6,6 +6,8 @@
 // TODO: include capacity for all channels, not just our own, as cdecker points out "you're
 // supposed to look for the txout on-chain to verify the channel's existence so you can as well just
 // remember the capacity". We can if nothing else look up the funding txid via bitcoind.
+//
+// todo: move lnmon + bcmon to their own repo (need name, maybe 'nodl'?) and add back as git subtrees under hkjn.me/src.
 package main
 
 import (

@@ -3,6 +3,7 @@ include ../make/Makefile
 NAME=lnmon
 VERSION=$(shell git log -1 --pretty=format:'%h')
 GOOS ?= linux
+# TODO: figure out GOARCH using uname automatically, here and in bcmon
 GOARCH ?= amd64
 DEPLOYUSER ?= $(USER)
 DEPLOYHOST ?= ln.hkjn.me
