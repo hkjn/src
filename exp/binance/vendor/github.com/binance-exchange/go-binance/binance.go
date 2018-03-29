@@ -105,6 +105,11 @@ type (
 	}
 )
 
+// FIXMEH: Seems that OrderBookRequest returns Bids with Price == Quantity, probably bug in parsing.
+func (o Order) String() string {
+	return fmt.Sprintf("Order{Price: %v, Quantity: %v}", o.Price, o.Quantity)
+}
+
 // Error returns formatted error message.
 func (e Error) Error() string {
 	return fmt.Sprintf("%d: %s", e.Code, e.Message)
