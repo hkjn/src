@@ -32,8 +32,6 @@ RUN echo "Building dependencies.." && \
     cd depends && \
     make
 
-# TODO: support x86:
-#     ./configure --prefix=$(pwd)/depends/x86_64-pc-linux-gnu
 RUN echo "Running configure script.." && \
     ./configure --prefix=$(pwd)/depends/${bitcoin_arch} \
                 --exec-prefix=/usr/local
