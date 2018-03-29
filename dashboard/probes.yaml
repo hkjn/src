@@ -24,14 +24,6 @@ webprobes:
     name: DecenterIndex
     want: IrSn3zx2GbM
     wantstatus: 200
-  - target: http://ln.hkjn.me:8380/metrics
-    name: LightningdRunning
-    want: lightningd_running 1
-    wantstatus: 200
-  - target: http://ln.hkjn.me:9740/metrics
-    name: BitcoindRunning
-    want: bitcoind_running 1
-    wantstatus: 200
   - target: https://blockpress.me
     name: BlockpressIndex
     want: 

@@ -9,7 +9,7 @@ DEPLOYPORT ?= 6200
 
 .DEFAULT_GOAL=deploy
 
-build-docker: gen-tmpl bcmon
+build-docker: gen-tmpl
 	@echo "Building bcmon in container.."
 	docker build -t bcmon-build -f Dockerfile.build .
 	@echo "Running bcmon-build container.."
@@ -28,6 +28,9 @@ gen-tmpl:
 	           -v $(shell pwd):/home/go/src/hkjn.me/src/lnmon \
 		   -w /home/go/src/hkjn.me/src/lnmon \
 	    hkjn/golang:tip go-bindata *.tmpl
+
+install-local: build-docker
+	sudo install bcmon /etc/bins/
 
 deploy: build-bin
 	@echo "Deploying bcmon.next binary.."
