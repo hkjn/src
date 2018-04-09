@@ -2,8 +2,11 @@
 # Connect to known LN peers on mainnet.
 #
 set -euo pipefail
-# ln0.decenter.world
+
+# lightning-cli connect 0264089bc3a4afde671b87740d72e03d899b7f0783fbb756786cb7632b2e1db510 ln.hkjn.me
 lightning-cli connect 02d2eabbbacc7c25bbd73b39e65d28237705f7bde76f557e94fb41cb18a9ec0084 ln0.decenter.world
+# Yerevan, i.e. ludvigart.com
+lightning-cli connect 0357712cde38c9e82044ce5070473585e35dcb6069014a7e31a28968f5d839bab4 97.90.42.34
 # Bitrefill
 lightning-cli connect 024a2e265cd66066b78a788ae615acdc84b5b0dec9efac36d7ac87513015eaf6ed lnd.bitrefill.com
 # TrueVision.club
