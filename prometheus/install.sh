@@ -29,3 +29,6 @@ echo "Fetching and installing node_exporter.."
 	sudo cp node_exporter.service /lib/systemd/system/
 	sudo systemctl daemon-reload
 }
+
+# TODO: Also install .service files here?
+# TODO: Add Makefile similar to caddy/
