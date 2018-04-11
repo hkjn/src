@@ -8,7 +8,7 @@
 #
 set -eu
 
-IMAGE=${IMAGE:-"hkjn/bitcoin:lightning-2018-02-21-amd64"}
+IMAGE=${IMAGE:-"hkjn/bitcoin:ln-2018-04-09"}
 
 fatal() {
 	echo "FATAL: $@" >&2

@@ -18,3 +18,4 @@ install: build-docker
 	ulimit -n 8192 caddy
 	@echo "Installing caddy binary.."
 	install caddy /etc/caddy
+	# TODO: also install .service here?
