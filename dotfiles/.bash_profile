@@ -226,7 +226,9 @@ kill_other_mosh_sessions() {
 	fi
 }
 
-if [[ ! "$TMUX" ]]; then
+declare TMUX=${TMUX:-""}
+declare ATTACH_TMUX=${ATTACH_TMUX:-""}
+if [[ ! "${TMUX}" ]] && [[ "${ATTACH_TMUX}" ]]; then
 	# Kill any other mosh sessions that might be lingering.
 	kill_other_mosh_sessions
 	# If not already in tmux session, attach to it.
