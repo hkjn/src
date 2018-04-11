@@ -34,7 +34,8 @@ RUN echo "Building dependencies.." && \
 
 RUN echo "Running configure script.." && \
     ./configure --prefix=$(pwd)/depends/${bitcoin_arch} \
-                --exec-prefix=/usr/local
+                --exec-prefix=/usr/local \
+                --enable-debug
 
 RUN echo "Building bitcoin at: $(git show)" && \
     make
