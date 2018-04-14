@@ -8,7 +8,7 @@
 #
 set -eu
 
-IMAGE=${IMAGE:-"hkjn/bitcoin:ln-2018-04-09"}
+IMAGE=${IMAGE:-"hkjn/bitcoin:ln-2018-04-11"}
 
 fatal() {
 	echo "FATAL: $@" >&2
@@ -61,6 +61,7 @@ if ! docker container inspect bitcoin 1>/dev/null; then
 	docker run -d \
 	           --name bitcoin \
 	           -p 8333:8333 \
+                   --memory 400m \
 	           --network bitcoin-net \
 	           --entrypoint bitcoind \
 	           -v /crypt/bitcoin:/home/bitcoin/.bitcoin \
@@ -73,6 +74,7 @@ if ! docker container inspect ln 1>/dev/null; then
 	docker run -d --name ln \
 	           -p 9735:9735 \
 	           --network bitcoin-net \
+	           --memory 100m \
 	           --entrypoint lightningd \
 	            -v /crypt/bitcoin:/home/bitcoin/.bitcoin:ro \
 	            -v /crypt/lightning:/home/bitcoin/.lightning \
@@ -89,6 +91,7 @@ if ! docker container inspect bcmon 1>/dev/null; then
 	docker run -d --name bcmon \
 	           -e BCMON_HTTP_PREFIX=/bcmon \
 	           -p 9740:9740 \
+	           --memory 50m \
 	           --network bitcoin-net \
 	           --pid container:bitcoin \
 	           --entrypoint /etc/bins/bcmon \
@@ -102,6 +105,7 @@ if ! docker container inspect lnmon 1>/dev/null; then
 	docker run -d --name lnmon \
 	           -e LNMON_HTTP_PREFIX=/lnmon \
 	           -p 8380:8380 \
+	           --memory 75m \
 	           --network bitcoin-net \
 	           --pid container:ln \
 	           --entrypoint /etc/bins/lnmon \
