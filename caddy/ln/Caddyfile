@@ -2,7 +2,7 @@ ln.hkjn.me {
   push
   redir 302 {
     if {path} is /
-    / /lnmon
+    / /lnmon/
   }
   log    /var/log/ln.hkjn.me.access.log
   proxy  /lnmon 127.0.0.1:8380
