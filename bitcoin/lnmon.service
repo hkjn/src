@@ -1,0 +1,19 @@
+[Unit]
+Description=lnmon monitoring service
+After=ln.service
+Wants=ln.service
+
+[Service]
+ExecStart=/usr/bin/docker run --rm \
+    --name lnmon \
+    -p 8380:8380 \
+    --memory=75m \
+    --network bitcoin-net \
+    --entrypoint /etc/bins/lnmon \
+    -v /etc/bins:/etc/bins:ro \
+    -v /crypt/lightning:/home/bitcoin/.lightning:ro \
+    hkjn/bitcoin:ln-2018-04-11-arm
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
