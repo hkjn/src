@@ -1,18 +1,25 @@
 [Unit]
-Description=bitcoind
-After=network-online.target
+Description=Bitcoin Core service
+After=docker.service
+Requires=docker.service
 
 [Service]
-ExecStartPre=-/usr/bin/docker pull hkjn/bitcoin:v0.15.1
+EnvironmentFile=/etc/bitcoin/bitcoin.env
+ExecStartPre=-/bin/bash -c "docker pull $IMAGE"
 ExecStartPre=-/usr/bin/docker stop bitcoin
 ExecStartPre=-/usr/bin/docker rm bitcoin
-TimeoutStartSec=10000
-ExecStart=/bin/bash -c " \
-  docker run --name bitcoin \
-             -p 8332-8333:8332-8333 \
-             -v /crypt/bitcoin:/home/bitcoin/.bitcoin \
-             hkjn/bitcoin:v0.15.1 -dbcache=800 -onlynet=ipv4 -printtoconsole"
+TimeoutStartSec=1000
+ExecStart=/bin/bash -c "docker run --rm \
+    --name bitcoin \
+    --memory 400m \
+    --network bitcoin-net \
+    --entrypoint bitcoind \
+    -p 8332-8333:8332-8333 \
+    -v /crypt/bitcoin:/home/bitcoin/.bitcoin \
+    $IMAGE"
+ExecStop=-/usr/bin/docker rm -f bitcoin
 TimeoutStopSec=1000
+RestartSec=30s
 Restart=always
 
 [Install]

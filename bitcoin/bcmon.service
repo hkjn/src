@@ -1,0 +1,25 @@
+[Unit]
+Description=bcmon monitoring service
+After=bitcoin.service
+Wants=bitcoin.service
+
+[Service]
+EnvironmentFile=/etc/bitcoin/bitcoin.env
+ExecStartPre=-/usr/bin/docker stop bcmon
+ExecStartPre=-/usr/bin/docker rm bcmon
+ExecStart=/bin/bash -c "docker run --rm \
+    --name bcmon \
+    --pid container:bitcoin \
+    -p 9740:9740 \
+    --memory=75m \
+    --network bitcoin-net \
+    --entrypoint /etc/bins/bcmon \
+    -v /etc/bins:/etc/bins:ro \
+    -v /crypt/bitcoin:/home/bitcoin/.bitcoin:ro \
+    ${IMAGE}"
+ExecStop=-/usr/bin/docker rm -f bcmon
+RestartSec=30s
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
