@@ -1,0 +1,6 @@
+# CDD tool
+
+Coin days destroyed is a measure taking `[ age of utxo ] * [ amount of utxo ]`, which is
+Sybil resistant and has been suggested as a good measure for coin voting. It might be
+useful to build a monitoring tool taking xpub (and optionally additional individual public
+keys) and returning the total amount of satoshis and coin days for those addresses.
