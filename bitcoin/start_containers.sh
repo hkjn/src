@@ -65,7 +65,6 @@ if ! docker container inspect bitcoin 1>/dev/null; then
 	           --network bitcoin-net \
 	           --entrypoint bitcoind \
 	           -v /crypt/bitcoin:/home/bitcoin/.bitcoin \
-	           -v /etc/bins:/etc/bins \
 	           ${IMAGE}
 fi
 
@@ -80,7 +79,6 @@ if ! docker container inspect ln 1>/dev/null; then
 	            -v /crypt/lightning:/home/bitcoin/.lightning \
 	            ${IMAGE} \
 	              --network=bitcoin \
-	              --ipaddr=${LNMON_IP_ADDR} \
 	              --log-level=${LNMON_LOG_LEVEL} \
 	              --alias=${LNMON_ALIAS} \
 	              --rgb=${LNMON_RGB}
