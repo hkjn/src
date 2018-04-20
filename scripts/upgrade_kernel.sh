@@ -38,7 +38,7 @@ echo 'Upgrading system..'
 sudo pacman -Syyu
 
 echo "Rotating back old ${LIBS}-stable to ${LIBS}.."
-sudo mv ${LIBS}-stable ${LIBS}
+sudo mv ${LIBS}-stable ${LIBS}/
 
 # TODO: Make default mkinitcpio preset linux directly put the files
 # where we want them, rather than this hack.
