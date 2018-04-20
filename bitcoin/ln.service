@@ -11,7 +11,7 @@ ExecStartPre=-/usr/bin/docker rm ln
 ExecStart=/bin/bash -c "docker run --rm \
     --name ln \
     -p 9735:9735 \
-    --memory=225m \
+    --memory=250m \
     --network bitcoin-net \
     --entrypoint lightningd \
     -v /crypt/bitcoin:/home/bitcoin/.bitcoin:ro \
