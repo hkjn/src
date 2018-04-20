@@ -9,6 +9,10 @@ if [[ ! "${PASSWORD_MAIN_KEY}" ]]; then
 	echo "No PASSWORD_MAIN_KEY specified." >&2
 	exit 1
 fi
+if [[ ! "${PASSWORD_RECIPIENTS}" ]]; then
+	echo "No PASSWORD_RECIPIENTS specified." >&2
+	exit 1
+fi
 
 echo "Importing public keys.."
 for key in /etc/keys/*.asc;
