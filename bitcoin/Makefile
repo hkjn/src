@@ -1,9 +1,9 @@
 include ../make/Makefile
 NAME = bitcoin
-VERSION = ln-2018-04-13
-BITCOIN_VERSION ?= 94deb0
+VERSION = ln-2018-04-25
+BITCOIN_VERSION ?= 89ff46
 BITCOIN_ARCH=$(shell bash $(MAKE_DIR)/../bitcoin/get_bitcoin_arch)
-LIGHTNING_VERSION ?= f27cd3
+LIGHTNING_VERSION ?= 25ad2f
 LIGHTNING_REMOTE ?= https://github.com/ElementsProject/lightning
 
 docker-build:
