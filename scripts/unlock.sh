@@ -39,11 +39,12 @@ declare CRYPT=${BASE}/${TARGET}
 declare PASSWORD_RECIPIENTS=${PASSWORD_RECIPIENTS:-""}
 declare CLEAR=$(mktemp)
 
+if [[ ! "${PASSWORD_RECIPIENTS}" ]]; then
+  fatal "No PASSWORD_RECIPIENTS specified for subdirectory '${PASSWORD_SUBS}'."
+fi
+
 if [[ "${PASSWORD_SUB}" ]]; then
   CRYPT=${BASE}/${PASSWORD_SUB}/${TARGET}
-  if [[ ! "${PASSWORD_RECIPIENTS}" ]]; then
-    fatal "No PASSWORD_RECIPIENTS specified for subdirectory '${PASSWORD_SUBS}'."
-  fi
   debug "Using subdirectory ${PASSWORD_SUB} and recipients ${PASSWORD_RECIPIENTS}.."
 fi
 
@@ -82,7 +83,7 @@ fi
 CHECKSUM_AFTER=$(sha256sum $CLEAR)
 declare RECIPIENTS=""
 for RECIPIENT in ${PASSWORD_RECIPIENTS}; do
-	RECIPIENTS="${RECIPIENTS} --recipient ${RECIPIENT}"
+  RECIPIENTS="${RECIPIENTS} --recipient ${RECIPIENT}"
 done
 debug "Using recipients ${RECIPIENTS}"
 
