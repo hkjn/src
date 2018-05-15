@@ -133,7 +133,6 @@ channels = (
   { name = "##mtgox-talk"; chatnet = "freenode"; autojoin = "Yes"; },
   { name = "#slatestarcodex"; chatnet = "freenode"; autojoin = "Yes"; },
   { name = "#lesswrong"; chatnet = "freenode"; autojoin = "Yes"; },
-  { name = "#tezos"; chatnet = "freenode"; autojoin = "Yes"; },
 
   # OFTC
   { name = "#tor"; chatnet = "OFTC"; autojoin = "Yes"; },
@@ -344,7 +343,6 @@ ignores = (
       "#slatestarcodex",
       "#tor",
       "#tails",
-      "#tezos",
     );
   },
   { mask = "Birgirnn"; level = "ALL"; },
