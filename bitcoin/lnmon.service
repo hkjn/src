@@ -10,7 +10,6 @@ ExecStartPre=-/usr/bin/docker rm lnmon
 ExecStart=/bin/bash -c "docker run --rm \
     --name lnmon \
     --pid container:ln \
-    -e LNMON_HTTP_PREFIX=/lnmon \
     -p 8380:8380 \
     --memory=75m \
     --network bitcoin-net \

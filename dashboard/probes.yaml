@@ -52,6 +52,11 @@ webprobes:
     name: WhereAPI
     want: me@hkjn.me was last seen
     wantstatus: 200
+  - target: http://ln.hkjn.me:8380/metrics
+    name: LightningdRunning
+    want: lightningd_running 1
+    wantstatus: 200
+
 # DNS probe settings.
 dnsprobes:
   - target: hkjn.me
