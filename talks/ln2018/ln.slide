@@ -24,44 +24,62 @@ https://hkjn.me
 
 * Intro / disclaimer
 
+.image ln-may.jpg 500 800
+
 : Henrik used to work for Google, also fintech and Bitcoin startups
-: small contributions to Bitcoin Core / c-lightning, ran LN node since jan '18
+: small contributions to Bitcoin Core / c-lightning
+: ran LN node since jan '18, some LN-related projects
 : focus is on the tech, I'm just some guy
 : think I understand something about Bitcoin
 : but don't take my word for it, used to think that too..
 : many other people, some in this room, understand different aspects much better
 : think critically and make up your own mind; don't get scammed
-: Lightning Network is a promising technological development that might address Bitcoin's scalability problems without compromising on its decentralization
-: demo or description of Eclair wallet here?
+: Lightning Network is a promising technological development that might address Bitcoin's scalability problems without
+: compromising on its decentralization
 : some complexity ahead, but payoff should be worth it
-: tcp/ip, bgp etc also very complex, but using internet seems simple; detailed knowledge of protocols not necessary
+: network protocols (tcp/ip, bgp etc) also very complex, but using internet seems simple
+: detailed knowledge of protocols not necessary
 
-# fixme: shiny graph of LN or similar below?
-# .image flying.png
+* Teaser (1/3)
+
+.image eclair1.jpg 500 300
+
+[[https://play.google.com/store/apps/details?id=fr.acinq.eclair.wallet][— Eclair Android app]]
+
+* Teaser (2/3)
+
+.image eclair2.jpg 500 300
+
+[[https://play.google.com/store/apps/details?id=fr.acinq.eclair.wallet][— Eclair Android app]]
+
+* Teaser (3/3)
+
+.image eclair3.jpg 500 300
+
+[[https://play.google.com/store/apps/details?id=fr.acinq.eclair.wallet][— Eclair Android app]]
 
 * Agenda
 
-# (What does LN get us?)
 - Bitcoin review
-- Lightning Network / LN  background
+- Lightning Network / LN background
 - LN basics
 - Using LN
 - LN status
 - Summary
 - Questions / discussion
 
-* Bitcoin review
+* Bitcoin review (1/2)
 
 : let's review bitcoin to see why LN is needed and how it can work
 
 Bitcoin is …
 
 - aspiring currency
-: 21M BTC ever, 1 BTC = 10**8 satoshi
-: censorship resistant, permissionless, radically neutral system
+: ~21M BTC ever, 1 BTC = 10**8 satoshi
+: decentralized, censorship resistant, permissionless, radically neutral system
 : nobody to ask for permission to send money
 : transactions are either valid or not
-: still young and small, but social and economical impacts already significant
+: still young and small, but social and economic impacts already significant
 
 - incentive system
 : mining new blocks is rewarded by subsidies and fees
@@ -75,7 +93,7 @@ Bitcoin is …
 - protocol (network)
 : protocols describe how computers talk to each other
 : network protocol describes how Bitcoin nodes talk to each other
-: bits now can carry value
+: bits now can carry value; Internet's native currency
 
 - protocol (consensus)
 : rules enforced by full nodes describes how to agree on history in hostile environment
@@ -87,16 +105,19 @@ Bitcoin is …
 : running code compatible with consensus protocol and verifying all blocks from genesis: you have a full node
 : earlier "Satoshi client", now "Bitcoin Core"
 : renamed to avoid confusion with protocol / currency
+: one of several
 : C++ program w/ 102 contributors to v0.16 release
 : not a unified group
 : some devs work for companies, some independent, many unpaid
 : anyone can propose changes, no one outside of other developers notice or care about most of them
-: contentious changes would need wide community support, e.g raising 21M limit won't ever happen, even though it theoretically could
-: developers do not control Bitcoin; if we merged changes users didn't want, users can stay on old version of software or switch software
+: contentious changes would need wide community support, e.g raising 21M limit won't ever happen, even though it
+: theoretically could
+: developers do not control Bitcoin; if we merged changes users didn't want, users can stay on old version of
+: software or switch software
 
 - etc.
 
-* Lightning Network / LN background
+* Bitcoin review (2/2)
 
 Bitcoin has …
 
@@ -105,11 +126,18 @@ Bitcoin has …
 : if more transactions than can fit are waiting, miners prioritize higher fee ones
 : each block is processed by each full node; very inefficient design chosen to achieve decentralization
 : whole system can handle handful of transactions / sec
+
+- transactions with inputs and outputs
 : transaction has inputs and outputs
 : inputs are unlocked (e.g via signature), sets new lock conditions for outputs
 
-- limited throughput, speed, privacy/fungibility
+- limited throughput
+- slow speed
+- little to no privacy
+- weak fungibility
 : i.e why we need LN
+
+* Lightning Network / LN background
 
 - on-chain and off-chain scaling
 : not binary: large amounts of work to improve IBD times
@@ -119,7 +147,7 @@ Bitcoin has …
 
 - offchain transactions
 : e.g exchanges updating their databases, only hit chain when entering or exiting
-: or Opendime, "physical LN" on USB stick that can be handed over
+: or Opendime, USB stick that can be handed over
 : or physicalcoins, with private keys inside
 
 - multisig
@@ -131,32 +159,45 @@ Bitcoin has …
 : pass large number of offchain transactions between two participants with only one or two onchain transactions
 : earlier proposals had flaws, LN uses trustless, bidirectional Poon-Dryja channels used in LN introduced in 2016
 
-* LN basics
+* LN basics (1/2)
 
 Lightning Network is …
 
 - second layer network and protocol(s)
+
 : second layer as in protocol architecture
 : LN nodes talk to each other and process lightning payments
 : not all LN nodes need to process all payments; just need path of liquidity to recipient
 : nodes can route payments that they are not sender or receiver of, in exchange for fees
-: https://1ml.com/ explorer
 
 - BOLT specifications
 
-- three implementations: lnd, c-lightning, Eclair
+- three main implementations: lnd, c-lightning, Eclair
+
+* LN basics (2/2)
 
 - network of payment channels
 
 - onchain tx for creating / destroying channel
-: like bar tab that's updated repeatedly and settled once at end of night; don't need to pay Visa 3.5% for each transaction
-: but better, since in this analogy bartender knows you have the funds, no need to trust you
+
+: like bar tab that's updated repeatedly and settled once at end of night; don't need to pay
+: Visa 3.5% for each transaction
+: but better, since in LN bartender knows you have the funds, no need to trust you
 : another analogy: Bitcoin blockchain is like judge that can arbitrate any conflicts, not needed as
 : long as we both cooperate and play by the rules
 : channel can persist indefinitely
 : but if counterparty disappears, need a way to recover funds
 : and if counterparty tries to cheat you and broadcast an old state, need to be able to punish them
-: closing collaboratively is easy, disappearing partner leads to timelocked funds, cheating partner leads to loss of all funds in channel
+: closing collaboratively is easy, disappearing partner leads to timelocked funds, cheating partner leads to
+: loss of all funds in channel
+
+# in more details...
+# channel is created by 2/2 multisig locking funds, gets broadcast and mined just like any other tx
+# another tx is created, spending from opening tx, this is "commitment tx", which is not broadcast
+# commitment tx could be signed by recipient and broadcast any time; it is a valid Bitcoin tx
+# commitment tx can be repeatedly replaced when payments are made over channel
+# commitment tx uses relative timelocks (CSV) to handle other party to disappear while allowing funds to be recovered,
+# and to punish cheating partner committing old state
 
 - arbitrary number of payments through channels
 : can send payments directly to other party of channel
@@ -167,14 +208,6 @@ Lightning Network is …
 : nodes only see what they need to see to process payments
 : sending node computes path via intermediate nodes
 
-: in more details...
-: channel is created by 2/2 multisig locking funds, gets broadcast and mined just like any other tx
-: another tx is created, spending from opening tx, this is "commitment tx", which is not broadcast
-: commitment tx could be signed by recipient and broadcast any time; it is a valid Bitcoin tx
-: commitment tx can be repeatedly replaced when payments are made over channel
-: commitment tx uses relative timelocks (CSV) to handle other party to disappear while allowing funds to be recovered,
-: and to punish cheating partner committing old state
-
 * Using LN
 
 Practically speaking, you deal with …
@@ -183,6 +216,7 @@ Practically speaking, you deal with …
 : autopilot and other tools can hide channel mgmnt from ux
 
 - lightweight Neutrino clients
+
 : better privacy than SPV bloom filters
 : Eclair Android app is a node using this
 : has onchain and offchain funds
@@ -197,24 +231,50 @@ Practically speaking, you deal with …
 : microtransactions, fees measured in msats
 
 - monitoring for cheaters
+: need to stay online all times
 : nodes that can receive payments need to monitor for cheating by counterparties
-: broadcast old commitment tx -> lose all funds
+: broadcast old commitment tx (??) -> lose all funds
 : LN node implementations do this automatically
 : transmitting old commitments can lead to counterparty taking funds
 : eclair avoids this by only allowing sends; all cheating would benefit you
 : Lighthouse proposes way for users to outsource monitoring
 
-* LN status
+* LN status (1/3)
 
-- NN nodes, CC channels, YY businesses accepting payments
+- 2300+ nodes, 8800+ channels, small number businesses accepting payments
+- +95% growth nodes / month
+- businesses starting to experiment
+: e.g bitrefill, refill phone with LN payments
+: e.g exchange https://bitcoinmagazine.com/articles/vaultoros-bitcoin-gold-exchange-implements-lightning-network-payments/
+
+.video botanist_kitchen_brisbane_ln_demo.mp4 video/mp4 346 525
+
+[[https://mobile.twitter.com/danielalexiuc/status/993667149238435840][— @TravelBybit @roomofsatoshi]]
+
+* LN status (2/3)
+
+.image ln-eclair-strike.gif 400 800
+
+[[https://medium.com/@ACINQ/introducing-strike-a-stripe-like-api-for-lightning-c84762f4f634][— Strike API by ACINQ]]
+
+* LN status (3/3)
+
+: where are we with LN right now? are people using it?
+: what was it like to run LN nodes for five months?
+
+- pending protocol changes
+- bugs and compat issues everywhere!
+: interop issues
 - more complicated than Bitcoin
 : but complexity can be hidden from users, as in network protocols; Eclaire wallet + autopilot
 : LN-powered atomic swaps, cross-chain
-: to come: better routing, channel factories, AMP, eltoo avoiding punishment branch
-- exchanges
-: https://bitcoinmagazine.com/articles/vaultoros-bitcoin-gold-exchange-implements-lightning-network-payments/
+: to come: better / more local routing, channel factories creating several channels with one tx, AMP, eltoo avoiding punishment branch
 
 * Summary
+
+- Bitcoin is native money for the Internet
+- Lightning Network is second layer tech
+- LN can help let Bitcoin scale to everyone in the world
 
 * Questions / discussion
 
