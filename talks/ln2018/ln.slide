@@ -276,9 +276,12 @@ Practically speaking, you deal with …
 - more complicated than Bitcoin
 : but complexity can be hidden from users, as in network protocols; Eclaire wallet + autopilot
 : LN-powered atomic swaps, cross-chain
-: to come: better / more local routing, channel factories creating several channels with one tx, AMP, eltoo avoiding punishment branch
+: to come: better / more local routing, channel factories creating several channels with one tx,
+: AMP, eltoo avoiding punishment branch
 
 * Summary
+
+We talked about how …
 
 - Bitcoin is native money for the Internet
 - Lightning Network is second layer tech
