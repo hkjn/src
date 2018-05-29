@@ -1,6 +1,6 @@
-# hkjninfra
+# infra
 
-Repo hkjninfra holds infrastructure configs for hkjn.me and other projects.
+This directory holds infrastructure configs and tools for the hkjn.me site and other projects.
 
 ## Dockerized Terraform
 
@@ -30,12 +30,8 @@ The `user-data` field for CoreOS machines is in Ignition format:
 
 * https://coreos.com/os/docs/latest/booting-on-google-compute-engine.html
 
-The `ignite.py` script generates the Ignition `.json` configs, which
-tells the instances what tasks should be done on first boot:
-
-```
-python ignite.py
-```
+The `generate_ignite_configs.go` tool generates Ignition `.json` configs for
+nodes that make use of Ignition to know what tasks should be done on first boot.
 
 ## Tests
 
@@ -46,4 +42,3 @@ pre-push and pre-commit hooks by doing:
 cd .git/hooks
 ln -s ../../run_tests pre-commit
 ln -s ../../run_tests pre-push
-```
