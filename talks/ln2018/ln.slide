@@ -1,6 +1,6 @@
 What's up with the Lightning Network?
 What is it? Does it work? What's the current status?
-09:51 24 May 2018
+19:00 30 May 2018
 
 Henrik Jonsson
 Rōnin Coder
@@ -9,7 +9,11 @@ https://hkjn.me
 
 # Meetup event description:
 #
-# The Lightning Network is an exciting ongoing development for the Bitcoin space. A promising protocol to improve the scalability and speed of Bitcoin, the LN will be presented in this talk by a developer familiar with the technology. The talk will briefly review the Bitcoin protocol and summarize the basic ideas behind the LN, followed by space for questions and a discussion.
+# The Lightning Network is an exciting ongoing development for the Bitcoin space.
+# A promising protocol to improve the scalability and speed of Bitcoin, the LN
+# will be presented in this talk by a developer familiar with the technology.
+# The talk will briefly review the Bitcoin protocol and summarize the basic
+# ideas behind the LN, followed by space for questions and a discussion.
 #
 # Some questions that we'll attempt to answer:
 #
@@ -259,8 +263,12 @@ Practically speaking, you deal with …
 
 * LN status (3/3)
 
-: where are we with LN right now? are people using it?
+: where are we with LN right now? are people using it? for what?
 : what was it like to run LN nodes for five months?
+
+# faster and cheaper trades, no need to have coins sitting on exchange
+# channels to exchanges loaded with funds means that counterparty risk is zero,
+# but you can instantly trade
 
 - pending protocol changes
 - bugs and compat issues everywhere!
@@ -280,15 +288,14 @@ Practically speaking, you deal with …
 
 Learn more from reading …
 
-# fixme: make sure slides are served at below URL
 - these slides: [[https://talks.hkjn.me/ln2018/ln.slide]]
 - [[https://hkjn.me][info about Henrik]]
 - [[https://dev.lightning.community/][community resources]]
 - [[https://github.com/lightningnetwork/lightning-rfc][BOLT protocol(s)]]
 - [[https://lightning.network/lightning-network-paper.pdf][original paper]]
+- [[https://bitcoinmagazine.com/articles/understanding-the-lightning-network-part-building-a-bidirectional-payment-channel-1464710791/][explainer articles by Aaron van Wirdum]]
 - [[https://blog.lightning.engineering/posts/2018/05/02/lightning-ux.html][ux thoughts]]
 - [[https://1ml.com/][LN explorer]]
-- [[https://bitcoinmagazine.com/articles/understanding-the-lightning-network-part-building-a-bidirectional-payment-channel-1464710791/][explainer articles by Aaron van Wirdum]]
 - [[https://medium.com/@thecryptoconomy/dont-count-your-fud-before-the-lightning-strikes-15-claims-against-lightning-answered-9671d4a663a9][debunking fud]]
 - [[https://medium.com/crypto-punks/lightning-network-ux-centralization-b517037b92ec][identifying ux issues]]
 
