@@ -16,6 +16,8 @@ https://hkjn.me
 
 .image ln-may.jpg 500 800
 
+[[https://bl.ocks.org/tyzbit/e41587d241b0ab0f38273dc4b8dd571e][— by github.com/tyzbit]]
+
 : picture of LN; looks like a hairball, should become clear what represents
 : focus is on the tech, not on me or my projects
 : followed Bitcoin since 2010, think I understand something about Bitcoin / LN
@@ -59,11 +61,12 @@ https://hkjn.me
 * Bitcoin review (1/2)
 
 : let's review bitcoin to see why LN is needed and how it can work
-: high level, bitcoin allows for decentralized digital scarcity:
-:  if I have something physical, you don't
 
 Bitcoin is …
 
+- solution to decentralized digital scarcity
+: high level, bitcoin allows for decentralized digital scarcity:
+:  if I have something physical, you no longer have it
 - aspiring currency
 : ~21M BTC ever, 1 BTC = 10**8 satoshi
 : decentralized, censorship resistant, permissionless, radically neutral system
