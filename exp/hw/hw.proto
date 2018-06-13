@@ -1,0 +1,64 @@
+//
+// Early draft of protocol messages for a hardware wallet.
+//
+messsage GenerateKeyRequest {
+	// If specified, keypair_id identifies a keypair to use as parent uniquely.
+	string keypair_id = 1;
+}
+
+message ExtendedPubKeyResponse {
+	// A unique identifier for a key pair.
+	string keypair_id = 1;
+	// The extended public key encoded in XX format (TODO).
+	string pubkey = 2;
+}
+
+message SignRequest {
+	// A unique identifier for a key pair to sign with.
+	string keypair_id = 1;
+	// The data to sign.
+	string data = 2;
+}
+
+message SignResponse {
+	// True if we signed the data successfully.
+	bool success = 1;
+	// The signed data.
+	string signed_data = 2;
+}
+
+service Secp256kWallet {
+	// Generate a new secp256k keypair.
+	rpc GenerateKey(GenerateKeyRequest) returns (ExtendedPubKeyResponse) {}
+	// Sign a message.
+	rpc Sign(SignRequest) returns (SignResponse) {}
+}
+
+messsage StoreRequest {
+	// The data to store.
+	string data = 1;
+}
+
+message StoreResponse {
+	// True if we stored the data successfully.
+	bool success = 1;
+	// A unique identifier of the data stored.
+	string id = 2;
+}
+
+messsage FetchRequest {
+	// A unique identifier for the data to fetch.
+	string id = 1;
+}
+
+message FetchResponse {
+	// True if we fetched the data successfully.
+	bool success = 1;
+	// The data that was requested.
+	string data = 1;
+}
+
+service DataStore {
+	rpc Store(StoreRequest) returns (StoreResponse) {}
+	rpc Fetch(FetchRequest) returns (FetchResponse) {}
+}
