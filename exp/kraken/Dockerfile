@@ -5,6 +5,7 @@ ENV CGO_ENABLED=0
 
 WORKDIR /home/go/src/hkjn.me/src/exp/kraken/
 COPY ["*.go", "./"]
+COPY ["vendor/", "./vendor/"]
 
 RUN go test ./... && \
     go vet ./...
