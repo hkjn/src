@@ -130,7 +130,7 @@ func query(api *krakenapi.KrakenApi) (resp *response, err error) {
 			prefix = fmt.Sprintf("[retry %d] ", i)
 		}
 		fmt.Printf("%sFetching tickers..\n", prefix)
-		ticker, err = api.Ticker(krakenapi.XXBTZEUR, krakenapi.XETHXXBT, krakenapi.BCHXBT, krakenapi.XLTCXXBT)
+		ticker, err = api.Ticker(krakenapi.XXBTZEUR, krakenapi.XXMRXXBT, krakenapi.XETHXXBT, krakenapi.BCHXBT, krakenapi.XLTCXXBT)
 		if err == nil {
 			resp.ticker = ticker
 			break
@@ -215,6 +215,7 @@ func main() {
 		log.Fatalf("Failed to query Kraken: %v\n", err)
 	}
 	fmt.Printf("Opening BTC/EUR price: %+v\n", resp.ticker.XXBTZEUR.OpeningPrice)
+	fmt.Printf("Opening XMR/BTC price: %+v\n", resp.ticker.XXMRXXBT.OpeningPrice)
 	fmt.Printf("Opening ETH/BTC price: %+v\n", resp.ticker.XETHXXBT.OpeningPrice)
 	fmt.Printf("Opening BCH/BTC price: %+v\n", resp.ticker.BCHXBT.OpeningPrice)
 	fmt.Printf("Opening LTC/BTC price: %+v\n", resp.ticker.XLTCXXBT.OpeningPrice)
