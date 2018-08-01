@@ -11,7 +11,7 @@ Description=OpenVPN server
 After=network-online.target
 
 [Service]
-ExecStartPre=-/usr/bin/bash -c "docker pull hkjn/openvpn:$(uname -m)"
+ExecStartPre=-/usr/bin/bash -c "docker pull hkjn/openvpn:0.1.1"
 ExecStartPre=-/usr/bin/docker stop openvpn
 ExecStartPre=-/usr/bin/docker rm openvpn
 ExecStart=/bin/bash -c " \
@@ -21,7 +21,7 @@ ExecStart=/bin/bash -c " \
     -e SERVER_IP=10.0.47.0 \
     -e IP_MASK=255.255.255.128 \
     -v /etc/vpn:/certs \
-    hkjn/openvpn:$(uname -m)"
+    hkjn/openvpn:0.1.1"
 Restart=always
 
 [Install]
