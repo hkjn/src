@@ -47,6 +47,9 @@ persist-key
 # connections where TCP packets often are retransmitted (i.e. any WiFi).
 mute-replay-warnings
 
+# Send probe packets this often to check if connection is still healthy.
+ping 10
+
 # Attempt to restart connection after stalling out for this amount of time.
 ping-restart 180
 
