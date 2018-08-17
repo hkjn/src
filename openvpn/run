@@ -21,13 +21,17 @@ die() {
 cd /certs
 
 [ -e ca.pem ] || die "No CA certificate present; checked '$(pwd)/ca.pem'."
-[ -e $HOST-key.pem ] || die "No server key present; checked '$(pwd)/$HOST-key.pem'."
-[ -e $HOST.pem ] || die "No server certificate present; checked '$(pwd)/$HOST.pem'."
+[ -e ${HOST}-key.pem ] || die "No server key present; checked '$(pwd)/$HOST-key.pem'."
+[ -e ${HOST}.pem ] || die "No server certificate present; checked '$(pwd)/$HOST.pem'."
 [ -e dh.pem ] || die "No Diffie-Hellman params present; checked '$(pwd)/dh.pem'."
+echo "Expiry date of certificate authority cert:"
+openssl x509 -enddate -noout -in ca.pem
+echo "Expiry date of client certificate ${HOST}.pem:"
+openssl x509 -enddate -noout -in ${HOST}.pem
 
 if [ ! -f /etc/udp1199.conf ]; then
-		echo "Creating /etc/udp1199.conf.."
-		cat > /etc/udp1199.conf <<EOF
+	echo "Creating /etc/udp1199.conf.."
+	cat > /etc/udp1199.conf <<EOF
 mode server
 server $SERVER_IP $IP_MASK
 verb 3
