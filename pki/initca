@@ -1,0 +1,9 @@
+#!/bin/sh
+#
+# Generates CA cert/key.
+#
+echo "Generating CA key/cert in /certs.."
+mkdir -p /certs/
+cfssl gencert \
+  -initca /etc/configs/ca-csr.json | cfssljson -bare /certs/ca
+rm /certs/*.csr

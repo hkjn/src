@@ -1,0 +1,22 @@
+#!/bin/sh
+#
+# Generates key/cert for specified host.
+#
+[ "$#" -eq 1 ] || {
+  echo "Usage: $0 host" >&2
+  exit 1
+}
+
+HOST="$1"
+echo "Generating key/cert for $HOST in /certs.."
+mkdir -p /certs/
+
+TMP="$(mktemp -d)"
+sed "s/mycn/$HOST/" /etc/configs/req-csr.json > "$TMP/req.json"
+cfssl gencert \
+  -hostname $HOST \
+  -ca /certs/ca.pem \
+  -ca-key /certs/ca-key.pem \
+  -config /etc/configs/ca-config.json \
+   "$TMP/req.json" | cfssljson -bare /certs/$HOST
+rm /certs/*.csr
