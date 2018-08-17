@@ -35,7 +35,10 @@ redirect-gateway def1
 remote-cert-tls server
 
 # Explicitly set client-side cipher.
-cipher AES-256-CBC AES-192-CBC BF-CBC
+cipher AES-256-CBC
+
+# Drop auth credentials from cache as soon as possible.
+auth-nocache
 
 # Keep the tun device and key around through SIGUSR1 restarts (also
 # via ping-restart).
