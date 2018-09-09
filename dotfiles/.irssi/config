@@ -50,7 +50,7 @@ chatnets = {
     max_whois = "4";
     max_query_chans = "5";
   };
-  EFNet = { 
+  EFNet = {
     type = "IRC";
     nick = "hkjn0";
     max_kicks = "4";
@@ -115,12 +115,24 @@ channels = (
   { name = "#archlinux"; chatnet = "freenode"; autojoin = "Yes"; },
   { name = "#bitcoin"; chatnet = "freenode"; autojoin = "Yes"; },
   { name = "#bitcoin-build"; chatnet = "freenode"; autojoin = "Yes"; },
-  { name = "#bitcoin-commits"; chatnet = "freenode"; autojoin = "Yes"; },
-  { name = "#bitcoin-core-dev"; chatnet = "freenode"; autojoin = "Yes"; },
+  { 
+    name = "#bitcoin-commits";
+    chatnet = "freenode";
+    autojoin = "Yes";
+  },
+  { 
+    name = "#bitcoin-core-dev";
+    chatnet = "freenode";
+    autojoin = "Yes";
+  },
   { name = "#bitcoin-dev"; chatnet = "freenode"; autojoin = "Yes"; },
   { name = "#bitcoin-forks"; chatnet = "freenode"; autojoin = "Yes"; },
   { name = "#bitcoin-mining"; chatnet = "freenode"; autojoin = "Yes"; },
-  { name = "#bitcoin-wizards"; chatnet = "freenode"; autojoin = "Yes"; },
+  { 
+    name = "#bitcoin-wizards";
+    chatnet = "freenode";
+    autojoin = "Yes";
+  },
   { name = "#btcd"; chatnet = "freenode"; autojoin = "Yes"; },
   { name = "#bisq"; chatnet = "freenode"; autojoin = "Yes"; },
   { name = "#braidpool"; chatnet = "freenode"; autojoin = "Yes"; },
@@ -128,10 +140,18 @@ channels = (
   { name = "#go-nuts"; chatnet = "freenode"; autojoin = "Yes"; },
   { name = "#greenaddress"; chatnet = "freenode"; autojoin = "Yes"; },
   { name = "#lnd"; chatnet = "freenode"; autojoin = "Yes"; },
-  { name = "#lightning-charge"; chatnet = "freenode"; autojoin = "Yes"; },
+  { 
+    name = "#lightning-charge";
+    chatnet = "freenode";
+    autojoin = "Yes";
+  },
   { name = "#lightning-dev"; chatnet = "freenode"; autojoin = "Yes"; },
   { name = "#monero-dev"; chatnet = "freenode"; autojoin = "Yes"; },
-  { name = "#monero-research-lab"; chatnet = "freenode"; autojoin = "Yes"; },
+  {
+    name = "#monero-research-lab";
+    chatnet = "freenode";
+    autojoin = "Yes";
+  },
   { name = "##mtgox-talk"; chatnet = "freenode"; autojoin = "Yes"; },
   { name = "#slatestarcodex"; chatnet = "freenode"; autojoin = "Yes"; },
   { name = "#lesswrong"; chatnet = "freenode"; autojoin = "Yes"; },
@@ -348,14 +368,28 @@ ignores = (
       "#slatestarcodex",
       "#subgraph",
       "#tor",
-      "#tails",
+      "#tails"
     );
   },
   { mask = "Birgirnn"; level = "ALL"; },
   { mask = "Entimeu"; level = "ALL"; },
   { mask = "hREFNINg"; level = "ALL"; },
   { mask = "Artehea"; level = "ALL"; },
-  { mask = "Penysman"; level = "ALL"; }
+  { mask = "Penysman"; level = "ALL"; },
+  { mask = "Kagee9"; level = "ALL"; },
+  { mask = "sponix21"; level = "ALL"; },
+  { mask = "DirkS29"; level = "ALL"; },
+  { mask = "brynet7"; level = "ALL"; },
+  { mask = "eggie"; level = "ALL"; },
+  { mask = "ReneP"; level = "ALL"; },
+  { mask = "jackjones"; level = "ALL"; },
+  { mask = "xer0x_"; level = "ALL"; },
+  { mask = "edr20"; level = "ALL"; },
+  { mask = "OliverMT28"; level = "ALL"; },
+  { mask = "tvenhola2"; level = "ALL"; },
+  { mask = "drmessano1"; level = "ALL"; },
+  { mask = "hugge1"; level = "ALL"; },
+  { mask = "Baggypants120002"; level = "ALL"; }
 );
 windows = {
   1 = { immortal = "yes"; name = "(status)"; level = "ALL"; };
