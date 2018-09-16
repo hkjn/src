@@ -20,6 +20,7 @@ docker-build:
 	docker build -t $(IMAGE):$(VERSION)-$(DOCKER_ARCH) .
 
 post-build:
+	# TODO: look into 'docker build --squash' instead: https://docs.docker.com/engine/reference/commandline/image_build/#related-commands
 	@if [ "$(PUSH_ENABLED)" = "1" ]; then \
 		docker run --rm \
 		           -v /var/run/docker.sock:/var/run/docker.sock \
