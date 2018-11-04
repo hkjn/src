@@ -5,6 +5,7 @@ package main
 
 import (
 	"log"
+	"os/user"
 
 	"hkjn.me/src/infra/ignite"
 	"hkjn.me/src/infra/secretservice"
@@ -25,7 +26,11 @@ func main() {
 		log.Printf("Writing Ignition config for %v..\n", n)
 		err := n.Write()
 		if err != nil {
-			log.Fatalf("Failed to write node config: %v\n", err)
+			u, uerr := user.Current()
+			if uerr != nil {
+				log.Fatalf("Failed to write node config, also failed to find current user (%v): %v\n", uerr, err)
+			}
+			log.Fatalf("Failed to write node config as user %v:%v: %v\n", u.Uid, u.Gid, err)
 		}
 	}
 }
