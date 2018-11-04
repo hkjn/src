@@ -33,12 +33,20 @@ run_tf() {
 	local action
 	action=$1
 	if [[ "${action}" = plan ]]; then
+		if [[ ! -e /etc/secrets/secretservice/seed ]]; then
+			echo "FATAL: Missing /etc/secrets/secretservice/seed." >&2
+			return 1
+		fi
+		if [[ ! -e /etc/secrets/secretservice/salt ]]; then
+			echo "FATAL: Missing /etc/secrets/secretservice/salt." >&2
+			return 1
+		fi
 		local sshash
 		sshash=$(echo $(cat /etc/secrets/secretservice/seed)'|'$(cat /etc/secrets/secretservice/salt) | sha512sum | cut -d ' ' -f1)
 		SECRETSERVICE_HASH=${sshash} generate_ignite_configs
 		if [[ $? -ne 0 ]]; then
 			echo "FATAL: ignite.go failed." >&2
-			return
+			return 1
 		fi
 	fi
 	echo "Running 'terraform $@'.."
