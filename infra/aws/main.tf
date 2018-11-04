@@ -26,6 +26,12 @@ resource "aws_security_group" "allow_ssh" {
 	vpc_id      = "${var.vpc_id}"
 }
 
+resource "aws_security_group" "allow_https" {
+	name        = "allow_https"
+	description = "Allow inbound https traffic"
+	vpc_id      = "${var.vpc_id}"
+}
+
 resource "aws_security_group" "allow_outbound" {
 	name        = "allow_outbound"
 	description = "Allow all outbound traffic"
@@ -39,6 +45,24 @@ resource "aws_security_group_rule" "allow_ssh" {
 	protocol        = "tcp"
 	cidr_blocks = ["77.56.54.251/32"]
 	security_group_id = "${aws_security_group.allow_ssh.id}"
+}
+
+resource "aws_security_group_rule" "allow_http" {
+	type            = "ingress"
+	from_port       = 80
+	to_port         = 80
+	protocol        = "tcp"
+	cidr_blocks = ["0.0.0.0/0"]
+	security_group_id = "${aws_security_group.allow_https.id}"
+}
+
+resource "aws_security_group_rule" "allow_https" {
+	type            = "ingress"
+	from_port       = 443
+	to_port         = 443
+	protocol        = "tcp"
+	cidr_blocks = ["0.0.0.0/0"]
+	security_group_id = "${aws_security_group.allow_https.id}"
 }
 
 resource "aws_security_group_rule" "allow_outbound" {
@@ -59,7 +83,11 @@ resource "aws_instance" "lab" {
 	ami             = "${data.aws_ami.ubuntu.id}"
 	instance_type   = "t2.small"
 	key_name        = "zaws_key0"
-	security_groups = ["${aws_security_group.allow_ssh.name}", "${aws_security_group.allow_outbound.name}"]
+	security_groups = [
+		"${aws_security_group.allow_ssh.name}",
+		"${aws_security_group.allow_https.name}",
+		"${aws_security_group.allow_outbound.name}"
+	]
 	root_block_device = {
 		volume_size = 50
 	}
