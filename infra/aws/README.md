@@ -15,8 +15,16 @@ variables "aws_secret_key" {
 }
 ```
 
+The credentials for the backend storage for the Terraform state file also needs to
+be set:
+```
+[default]
+aws_access_key_id = <ACTUAL AWS ACCESS KEY GOES HERE>
+aws_secret_access_key = <ACTUAL AWS SECRET KEY GOES HERE>
+```
+
 It might also be necessary to change the ownership of the directory to match
-the user inside the `hkjn/terraform` image:
+the user/group id used inside the `hkjn/terraform` image:
 
 ```
 $ sudo chown -R 1000:1000 .

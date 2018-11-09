@@ -43,7 +43,10 @@ resource "aws_security_group_rule" "allow_ssh" {
 	from_port       = 22
 	to_port         = 22
 	protocol        = "tcp"
-	cidr_blocks = ["77.56.54.251/32"]
+	cidr_blocks = [
+		"77.56.54.251/32",
+		"178.197.228.188/32"
+	]
 	security_group_id = "${aws_security_group.allow_ssh.id}"
 }
 
@@ -81,7 +84,7 @@ resource "aws_eip" "eip" {
 
 resource "aws_instance" "lab" {
 	ami             = "${data.aws_ami.ubuntu.id}"
-	instance_type   = "t2.small"
+	instance_type   = "t2.medium"
 	key_name        = "zaws_key0"
 	security_groups = [
 		"${aws_security_group.allow_ssh.name}",
@@ -89,7 +92,7 @@ resource "aws_instance" "lab" {
 		"${aws_security_group.allow_outbound.name}"
 	]
 	root_block_device = {
-		volume_size = 50
+		volume_size = 25
 	}
 
 	tags {
