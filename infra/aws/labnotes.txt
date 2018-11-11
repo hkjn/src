@@ -1,0 +1,22 @@
+# labnotes
+
+After creating the VM:
+
+- tmux
+- install caddy
+- install gitlab, following https://about.gitlab.com/install/#ubuntu
+  - sudo apt-get -y update && sudo apt-get -y install curl openssh-server ca-certificates postfix
+    - select default ("Internet Site") during postfix install
+    - change hostname to lab.hkjn.me during postfix install
+  - curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.deb.sh | sudo bash
+  - sudo EXTERNAL_URL="https://lab.hkjn.me" apt-get install gitlab-ee
+  - visit in browser and set up password immediately, then log in as root with that pw
+  - view logs:
+    - sudo tail -n 2000 -f /var/log/gitlab/gitlab-rails/production_json.log
+   - turn off open signups: https://lab.hkjn.me/admin/application_settings -> Sign-up restrictions -> uncheck Sign-up enabled
+  - check monitoring:
+    - https://lab.hkjn.me/admin/health_check
+  - todo: dockerize
+  - todo: use caddy for https termination: https://github.com/caddyserver/examples/tree/master/gitlab
+  - todo: try out mattermost (slack alternative) integration
+- install rocket.chat
