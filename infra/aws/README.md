@@ -16,7 +16,7 @@ variables "aws_secret_key" {
 ```
 
 The credentials for the backend storage for the Terraform state file also needs to
-be set:
+be set in the `.backend_credentials` file:
 ```
 [default]
 aws_access_key_id = <ACTUAL AWS ACCESS KEY GOES HERE>
