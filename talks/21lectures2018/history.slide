@@ -1,0 +1,126 @@
+History of Bitcoin
+08:00 12 Nov 2018
+
+Henrik Jonsson
+Team Lead
+me@hkjn.me
+hkjn@shiftcrypto.ch
+https://hkjn.me
+
+: Henrik Jonsson / hkjn @ { hkjn.me, shiftcrypto.ch, twitter.com, github.com }
+: thanks to Lucas for inviting me and all of you for coming
+: Henrik used to work for Google, also fintech and Bitcoin startups
+
+* Intro / disclaimer
+
+: not particularly qualified, but neither is anyone
+:   one person's view, not my company's or anything official (there is no one official)
+:   we are all still learning what Bitcoin is, if I am wrong on major points look forward to learning together
+:   been aware of Bitcoin since 2010 v0.3 release hit Slashdot
+:   was on cryptography list where Satoshi announced whitepaper and v0.1 but it ended up in spam filter
+:   left Google 2014 partly to focus more on learning about and contributing to Bitcoin project
+:   my main project most of the time since 2015
+: shift crypto
+:   joined Shift ~2 months ago
+:   jonas schnelli co-founder
+:   hardware wallet called bitbox, new hw wallet coming Soon (tm)
+:   working on node-in-a-box
+:   privacy / security: rights, should be accessible to everyone, not sacrificed for convenience
+:   equip people to keep their valuable information secure
+:   simple + safe
+: looking at the history of the system from a few different angles like
+:   mythos
+:   mining
+:   protocol
+:   bugs
+:   adoption
+
+* Outline
+
+* Pre-history
+
+: pre-history of digital decentralized currencies
+: work by Dai, Finney, Szabo, Back
+: Bitcoin was first workable system for decentralized digital scarcity
+
+* Problem solved by bitcoin
+
+: decentralized digital scarcity
+: physical objects are in one place
+: digital data by default is copied
+: hard money where supply can't be manipulated without central issuer
+
+* Eras of mining
+
+: CPU
+: GPU
+: ASIC
+:   Pros and cons?
+:   should we be ASIC resistant?
+
+* Major protocol upgrades
+
+: P2SH
+: CSV/CLTV
+:   https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki
+: SegWit
+
+* Major bugs/special behavior
+
+: Multisig off by one, need to have extra stack item
+: No finite supply until 2014
+: recent potential inflation bug
+: no evaluate, hardcoding of P2SH
+
+* Mythos
+
+: we are story-telling apes, c.f Sapiens
+: Satoshi is the perfect creation myth: anonymous entity that disappeared as mysteriously as they appeared
+:   not known that Satoshi has ~1m BTC!
+: why is censorship-resistant money needed?
+:   because we need separation of money and state: it's too tempting and too much power to control the monetary supply, and say who gets to send money or store it
+:   won't bad people use it for bad things?
+:   yes, and bricks can also be used to hit people over the head as well as to build a bridge
+: sound and hard money
+:   backed by physics:
+:     hashes are as far as we know one-way functions, easy to go one way but unfeasible to reverse
+:     as mining efficiency improves, moves towards thermodynamic limit of energy -> hash rate
+:     unwinding history means >50% hash rate of network, and still can't take money from others
+:     hash rate to secure network acts as storage tech, hydro / solar  plants otherwise have wasted energy
+:     price floor / energy buyer of last resort
+:   longest chain standing
+:     Lindy effect
+:     10 years since genesis block Jan 3rd 2019
+
+* Major adoption / use cases
+
+: cypherpunk tinkertoy
+:   hal finney's CPU fan was too loud
+:   greg maxwell ran v0.1 under wine, then deleted VM with private keys
+: collectibles, szabo
+:   lunatic fringe / collectible phase
+:   lazslo's pizza
+:   $1 USD price
+: wave of altcoins
+:   2013/2014
+: early adopters / store of value phase
+:   you are here
+:   aspiring digital gold
+:   scarce just like tulips, but also divisible, fungibleish, transmittable, ..
+: future
+:   medium of exchange, maybe, eventually
+:   but merchants need to want BTC first
+:   20% likely to succeed, via bluematt?
+:   ~1.5% market cap of gold currently, does that reflect market belief in success?
+:   unit of account
+
+* Questions / discussion
+
+Learn more from reading …
+
+- these slides: [[https://talks.hkjn.me/21lectures2018/history.slide]]
+- [[https://hkjn.me][info about me]]
+- [[https://shiftcrypto.ch][Shift Crypto]]
+- we are hiring: [[mailto:jobs@shiftcrypto.ch]]
+
+Thanks!
