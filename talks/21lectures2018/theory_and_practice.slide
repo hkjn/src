@@ -1,0 +1,83 @@
+Bitcoin: theory and practice
+08:00 13 Nov 2018
+
+Henrik Jonsson
+Shift Crypto
+me@hkjn.me
+hkjn@shiftcrypto.ch
+https://hkjn.me
+
+* Bitcoin: theory and practice
+
+: bitcoin is decentralized digital scarcity used for application of money
+:   money should be scarce, verifiable, divisible, fungible, transmittable, (more)
+:   value of money is set by supply and demand for that money
+:   pirate chest of gold coins >> USD
+: monetary history currently in early SoV phase
+:   growing from cypherpunk tinkertoy ->
+:   collectible ->
+:   SoV ->
+:   MoE? ->
+:   UoA?
+
+* What is Bitcoin anyway?
+: Satoshi liked using "Bitcoin" for everything:
+- protocol
+:    not defined by Satoshi Client -> Bitcoin Core!
+:    not "longest chain" as in whitepaper
+:    not "heaviest chain", also needs to follow all the rules
+:    not defined by implementation, if code inflates coin supply we say that's a bug and fix it
+:    not "was never hard forked", although avoiding hard forks is preferable..
+- currency
+:    BTC is not in the protocol, just satoshi!
+- blockchain
+:    logical structure of data of blocks and transactions
+:    vastly inefficient data structure, used for censorship resistance
+:  codebase/reference implementation
+:    controlling it doesn't "take over Bitcoin"!
+:    if there's a bad update or shadowy group takes control, we just won't upgrade
+:    full nodes matter, you choose what to run
+:      alternative implementations are risky?
+:      but there's multiple versions / OS
+:      five different implementations and they should all agree before accepting UTXO?
+- network
+: what's a full node and why does it matter?
+: fully validating the blockchain from the genesis block means you can independently check how much energy was used in the chain and that every single transaction in every single block was valid
+: a full node is like having a personal goldsmith that can verify that the metal you received was gold
+- social agreement / coalitions
+: what identifies the "correct rules" in the phrase "heaviest chain with the correct rules"?
+: money is a shared hallucination / social consensus
+- system
+: total sum of mining activity, economic use cases, politics, ..
+- scriptable machine payment system
+: blocks have ordered lists of tx, tx have inputs and outputs
+: coinbase tx creates new coins from null input
+: outputs have lock scripts specifying under which conditions those outputs can be spent
+: unspent transaction outputs (UTXO) plus unlock script allows new tx to be created, with that UTXO as input and new outputs with new lock scripts
+: lock and unlock scripts can be anything, like "2 + 2 = ?" for lock script and "4!" as unlock script
+
+* Challenges of sovereignty
+
+- nobody can take your BTC
+- if you get hacked, now you're poor
+: lots of people have a steep learning curve in applied cryptography
+- do most people want custodians?
+: better custodians?
+: social circle recovery
+: hybrid models with some keys
+- resistance to $5 wrench attack
+- succession planning
+: want to have $5 wrench attack resistance and succession plan
+: what happens if you forget your setup? passphrase? get hit by a truck?
+: risk of losing access yourself >> risk of attacker taking it
+- Shamir's
+- dead man's switch
+- key rotation
+: Shamir secret sharing scheme
+: Trezor proposed standard https://github.com/satoshilabs/slips/blob/master/slip-0039.md
+: SMPC stuff
+: Dead man's switches
+: chris allen has on-chain timelocks for 365d, then lawyers access to them
+: moves at least every 364d
+: Pamela Morgan + Andreas Antonopoulos https://thirdkey.solutions/ can help
+
