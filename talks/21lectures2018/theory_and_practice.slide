@@ -56,6 +56,19 @@ https://hkjn.me
 : unspent transaction outputs (UTXO) plus unlock script allows new tx to be created, with that UTXO as input and new outputs with new lock scripts
 : lock and unlock scripts can be anything, like "2 + 2 = ?" for lock script and "4!" as unlock script
 
+- Internet-native money
+
+* Digital gold milestone
+
+- how can you help Bitcoin?
+- key management
+- usability
+- tools and infrastructure
+
+- Lightning Network
+
+: not Bitcoin protocol but noteworthy
+
 * Challenges of sovereignty
 
 - nobody can take your BTC
@@ -81,3 +94,6 @@ https://hkjn.me
 : moves at least every 364d
 : Pamela Morgan + Andreas Antonopoulos https://thirdkey.solutions/ can help
 
+* Computer security is bad and we should feel bad
+
+- Bitcoin as immune system
