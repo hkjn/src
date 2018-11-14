@@ -88,11 +88,13 @@ https://hkjn.me
 : digital data by default is copied
 - used for hard censorship-resistant money
 : a hard money is one where supply can't be manipulated
+: censorship-resistant means nobody can disallow you from making a tx
 
 * Eras of mining (1/2)
 
 : miners who find a valid block receives the tx fees in the block, as well as a subsidy
 : every 4y, block subsidy halves, starting at 50BTC
+: next one in ~80k blocks or 555d: http://www.thehalvening.com/
 
 .image speed-ever.png 500 800
 
@@ -110,21 +112,23 @@ https://hkjn.me
 
 * Major protocol upgrades
 
+- softfork vs hardfork: restrict vs expand valid txns/blocks
 : softfork upgrades: restrict set of valid txns/blocks
 : hardfork upgrade: expand set of valid txns/blocks
-
-- P2SH: [[https://github.com/bitcoin/bips/blob/master/bip-0016.mediawiki][BIP16]]
+- 2012: P2SH: [[https://github.com/bitcoin/bips/blob/master/bip-0016.mediawiki][BIP16]]
 :   add special-case validation to do an extra things when P2SH pattern is seen
 :   when creating output, provide hash of a script
 :   evaluation to pop embedded script and run it
-- CSV/CLTV: [[https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki][BIP65]] / [[https://github.com/bitcoin/bips/blob/master/bip-0112.mediawiki][BIP112]]
-: script to be restricted until certain time / age of output
-: allows HTLCs, used in LN, as well as escrow, freezing funds and other contracts
-- SegWit: [[https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki][BIP141]], [[https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki][BIP143]], [[https://github.com/bitcoin/bips/blob/master/bip-0144.mediawiki][BIP144]], [[https://github.com/bitcoin/bips/blob/master/bip-0145.mediawiki][BIP145]], [[https://github.com/bitcoin/bips/blob/master/bip-0147.mediawiki][BIP147]], [[https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki][BIP173]]
+:   advantages: cost shifted to spender, more privacy
+- 2014 — 2015: CSV/CLTV: [[https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki][BIP65]] / [[https://github.com/bitcoin/bips/blob/master/bip-0112.mediawiki][BIP112]]
+:   script to be restricted until certain time / age of output
+:   allows HTLCs, used in LN, as well as escrow, freezing funds and other contracts
+- 2015 — 2017: SegWit: [[https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki][BIP141]], [[https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki][BIP143]], [[https://github.com/bitcoin/bips/blob/master/bip-0144.mediawiki][BIP144]], [[https://github.com/bitcoin/bips/blob/master/bip-0145.mediawiki][BIP145]], [[https://github.com/bitcoin/bips/blob/master/bip-0147.mediawiki][BIP147]], [[https://github.com/bitcoin/bips/blob/master/bip-0148.mediawiki][BIP148]], [[https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki][BIP173]]
 :   add special-case that if 0 [data] is on unlock script, data is
 :   pubkey and signature, seen as anyone-can-spend by old nodes
 :   capacity upgrade, fixes transaction malleability
 :   also allows for versioning updates to script
+- not that many, and takes a while!
 
 * Major bugs (1/2)
 
@@ -136,19 +140,19 @@ https://hkjn.me
 - Jan 2009: `OP_CHECKMULTISIG` eats extra value from stack
 : Multisig off by one, need to have extra stack item
 - Aug 2010: ~184 billion BTC accidentally created: [[https://en.bitcoin.it/wiki/Value_overflow_incident][CVE-2010-5139]]
-- Mar 2013: 24 block chainsplit and hardfork: [[https://github.com/bitcoin/bips/blob/master/bip-0050.mediawiki][BIP50]], [[https://nvd.nist.gov/vuln/detail/CVE-2013-3220][CVE-2013-3220]]
-: hardfork when blocks requiring more fds than < 0.8 could handle crashed those nodes
-- Apr 2014: made monetary supply finite in [[https://github.com/bitcoin/bips/blob/master/bip-0042.mediawiki][BIP42]]
-- Sep 2018: potential coin inflation in [[https://bitcoincore.org/en/2018/09/20/notice/][CVE-2018-17144]]
+- Mar 2013: 24 block chainsplit and hardfork in levelDB upgrade: [[https://github.com/bitcoin/bips/blob/master/bip-0050.mediawiki][BIP50]], [[https://nvd.nist.gov/vuln/detail/CVE-2013-3220][CVE-2013-3220]]
+: hardfork when blocks requiring more fds than < 0.8 could handle was accepted by upgraded but not old nodes
+- Apr 2014: monetary supply was unbounded before [[https://github.com/bitcoin/bips/blob/master/bip-0042.mediawiki][BIP42]]
+- Sep 2018: potential coin inflation fixed: [[https://bitcoincore.org/en/2018/09/20/notice/][CVE-2018-17144]]
 : certain type of block could double spend outputs in the same block, creating coins out of thin air
 
-* State of adoption
+* State of adoption (1/2)
 
 - 2008 — 2010: cypherpunk tinkertoy
 :   hal finney's CPU fan was too loud
 :   greg maxwell ran v0.1 under wine, then deleted VM with private keys
-- 2010+: collectible
-:   via szabo's history of money
+- 2010+: [[https://nakamotoinstitute.org/shelling-out/][collectible]]
+:   via szabo's "shelling out", history of money
 :   lunatic fringe
 :   lazslo's pizza
 :   $1 USD price
@@ -164,7 +168,15 @@ https://hkjn.me
 
 :   medium of exchange, maybe, eventually
 :   but merchants need to want BTC first
-:   unit of account: prices in satoshi came down recently, zoom out and consider the long term
+:   unit of account, even further off
+: think of prices in satoshi, it came down recently, zoom out and consider the long term
+
+* State of adoption (2/2)
+
+.image adoption.png 450 800
+[[https://medium.com/@nic__carter/visions-of-bitcoin-4b7b7cbcd24c][— Visions of Bitcoin by Nic Carter]]
+
+
 
 * Mythos (1/2)
 
@@ -185,7 +197,6 @@ https://hkjn.me
 :   hashes are as far as we know one-way functions, easy to go one way but infeasible to reverse
 :   as mining efficiency improves, moves towards thermodynamic limit of energy -> hash rate
 :   unwinding history means >50% hash rate of network, and still can't take money from others
-
 
 * Mythos (2/2)
 
