@@ -50,6 +50,7 @@ https://hkjn.me
 - major protocol upgrades
 - major bugs
 - state of adoption
+- mythos
 
 * Pre-history
 
@@ -58,15 +59,21 @@ https://hkjn.me
 : Bitcoin was first workable system for decentralized digital scarcity
 : aaron van wirdum's articles linked from presentation
 
-- [[https://bitcoinmagazine.com/articles/genesis-files-hashcash-or-how-adam-back-designed-bitcoins-motor-block/][Back 1997: Hashcash]]
+- [[https://bitcoinmagazine.com/articles/genesis-files-hashcash-or-how-adam-back-designed-bitcoins-motor-block/][Back 1997: Hashcash]]*
 : hashcash is used in Bitcoin for the proof-of-work
 : invented as anti-spam mechanism for email
 
-- [[https://bitcoinmagazine.com/articles/genesis-files-if-bitcoin-had-first-draft-wei-dais-b-money-was-it/][Dai 1998: B-Money]]
+- [[https://bitcoinmagazine.com/articles/genesis-files-if-bitcoin-had-first-draft-wei-dais-b-money-was-it/][Dai 1998: B-Money]]*
+: wei disagreed with hard monetary policy of Bitcoin
+: wanted B-Money to be coupled to basket of goods
+: never implemented
+: satoshi sent wei early draft and asked for feedback!
+
 - [[https://nakamotoinstitute.org/finney/rpow/][Finney 2004: RPOW]]
 
 : first person to receive BTC
-: centralized server
+: centralized server in the design, using IBM crypto coprocessor to supposedly securely attest to
+: state of the software on the server to its clients
 
 - [[https://bitcoinmagazine.com/articles/genesis-files-bit-gold-szabo-was-inches-away-inventing-bitcoin/][Szabo 2005: Bit Gold]]
 : first mentioned in 1998, fully described in 2005
@@ -107,13 +114,13 @@ https://hkjn.me
 : hardfork upgrade: expand set of valid txns/blocks
 
 - P2SH: [[https://github.com/bitcoin/bips/blob/master/bip-0016.mediawiki][BIP16]]
-:   add special-case validation to do an extra thing to detect P2SH
+:   add special-case validation to do an extra things when P2SH pattern is seen
 :   when creating output, provide hash of a script
 :   evaluation to pop embedded script and run it
 - CSV/CLTV: [[https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki][BIP65]] / [[https://github.com/bitcoin/bips/blob/master/bip-0112.mediawiki][BIP112]]
-: delayed scripts
-: allows HTLCs, used in LN
-- SegWit: tbd BIP links
+: script to be restricted until certain time / age of output
+: allows HTLCs, used in LN, as well as escrow, freezing funds and other contracts
+- SegWit: [[https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki][BIP141]], [[https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki][BIP143]], [[https://github.com/bitcoin/bips/blob/master/bip-0144.mediawiki][BIP144]], [[https://github.com/bitcoin/bips/blob/master/bip-0145.mediawiki][BIP145]], [[https://github.com/bitcoin/bips/blob/master/bip-0147.mediawiki][BIP147]], [[https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki][BIP173]]
 :   add special-case that if 0 [data] is on unlock script, data is
 :   pubkey and signature, seen as anyone-can-spend by old nodes
 :   capacity upgrade, fixes transaction malleability
@@ -159,7 +166,7 @@ https://hkjn.me
 :   but merchants need to want BTC first
 :   unit of account: prices in satoshi came down recently, zoom out and consider the long term
 
-* Mythos
+* Mythos (1/2)
 
 - still an experiment
 :   20% likely to succeed, via bluematt?
@@ -175,9 +182,13 @@ https://hkjn.me
 :   won't bad people use it for bad things?
 :   yes, and bricks can also be used to hit people over the head as well as to build a building
 - hard money, backed by physics
-:     hashes are as far as we know one-way functions, easy to go one way but infeasible to reverse
-:     as mining efficiency improves, moves towards thermodynamic limit of energy -> hash rate
-:     unwinding history means >50% hash rate of network, and still can't take money from others
+:   hashes are as far as we know one-way functions, easy to go one way but infeasible to reverse
+:   as mining efficiency improves, moves towards thermodynamic limit of energy -> hash rate
+:   unwinding history means >50% hash rate of network, and still can't take money from others
+
+
+* Mythos (2/2)
+
 - energy storage tech
 :     hash rate to secure network acts as storage tech, hydro / solar plants otherwise have wasted energy
 :     price floor / energy buyer of last resort
