@@ -44,19 +44,6 @@ resource "aws_security_group_rule" "allow_ssh" {
 	to_port         = 22
 	protocol        = "tcp"
 	cidr_blocks = [
-		"35.198.109.207/32",
-		"77.56.54.251/32",
-		"178.197.228.188/32",
-	]
-	security_group_id = "${aws_security_group.allow_ssh.id}"
-}
-
-resource "aws_security_group_rule" "allow_dev" {
-	type            = "ingress"
-	from_port       = 8888
-	to_port         = 8888
-	protocol        = "tcp"
-	cidr_blocks = [
 		"77.56.54.251/32",
 	]
 	security_group_id = "${aws_security_group.allow_ssh.id}"
@@ -104,7 +91,7 @@ resource "aws_instance" "lab" {
 		"${aws_security_group.allow_outbound.name}"
 	]
 	root_block_device = {
-		volume_size = 25
+		volume_size = 20
 	}
 
 	tags {
