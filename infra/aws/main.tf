@@ -45,6 +45,8 @@ resource "aws_security_group_rule" "allow_ssh" {
 	protocol        = "tcp"
 	cidr_blocks = [
 		"77.56.54.251/32",
+		"178.197.226.52/32",
+		"163.172.184.153/32",
 	]
 	security_group_id = "${aws_security_group.allow_ssh.id}"
 }
