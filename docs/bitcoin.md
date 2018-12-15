@@ -16,3 +16,19 @@ Study the new output descriptor DSL added in Bitcoin Core v0.17.0:
 - https://github.com/bitcoin/bitcoin/blob/master/doc/descriptors.md
 
 This is a more general way to specify what types of output scripts are used for certain keys.
+
+## hardware wallet clients
+
+- Coldcard: https://github.com/Coldcard/ckcc-protocol
+- Keepkey: https://github.com/keepkey/python-keepkey
+
+Via achow101's HWI:
+
+```
+pip3 install hidapi # HID API needed in general
+pip3 install trezor[hidapi] # Trezor One
+pip3 install btchip-python # Ledger Nano S
+pip3 install keepkey # KeepKey
+pip3 install ckcc-protocol # Coldcard
+pip3 install pyaes # For digitalbitbox
+```
