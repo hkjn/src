@@ -1,6 +1,10 @@
-.PHONY : all blocksci bitcoin btcd clightning config fileserver gcloud golang googleauth gpg lnd openvpn prober probes proto s3cmd workspace
+.PHONY : all alpine blocksci bitcoin btcd clightning config fileserver gcloud golang googleauth gpg lnd openvpn prober probes proto s3cmd terraform workspace
 
-all: blocksci bitcoin btcd clightning config fileserver gcloud golang googleauth gpg lnd openvpn prober probes proto s3cmd workspace
+all: alpine blocksci bitcoin btcd clightning config fileserver gcloud golang googleauth gpg lnd openvpn prober probes proto s3cmd terraform workspace
+
+alpine:
+	@echo "Making alpine.."
+	$(MAKE) -C alpine
 
 blocksci:
 	@echo "Making blocksci.."
@@ -65,6 +69,10 @@ proto:
 s3cmd:
 	@echo "Making s3cmd.."
 	$(MAKE) -C s3cmd
+
+terraform:
+	@echo "Making terraform.."
+	$(MAKE) -C terraform
 
 workspace:
 	@echo "Making workspace.."
