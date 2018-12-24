@@ -1,0 +1,160 @@
+Bitcoin: theory and practice
+08:00 13 Nov 2018
+
+Henrik Jonsson
+Team Lead
+Shift Crypto
+me@hkjn.me
+hkjn@shiftcrypto.ch
+https://hkjn.me
+
+* Bitcoin: theory and practice
+
+: bitcoin is decentralized digital scarcity used for application of money
+:   money should be scarce, verifiable, divisible, fungible, transmittable, (more)
+:   value of money is set by supply and demand for that money
+:   pirate chest of gold coins >> USD
+: monetary history currently in early SoV phase
+:   growing from cypherpunk tinkertoy ->
+:   collectible ->
+:   SoV ->
+:   MoE? ->
+:   UoA?
+
+* Outline
+
+- what does "Bitcoin" mean?
+- into the fee era
+- digital gold milestone
+- values of sovereignty
+- challenges of sovereignty
+- tools for sovereignty
+- computer security is bad and we should feel bad
+
+* What does "Bitcoin" mean?
+
+: Satoshi liked using "Bitcoin" for everything:
+
+- Internet-native money
+:   scriptable machine-friendly payment system
+:   blocks have ordered lists of tx, tx have inputs and outputs
+:   coinbase tx creates new coins from null input
+:   outputs have lock scripts specifying under which conditions they can be spent
+:   unspent transaction outputs (UTXO) are ones not yet spent
+:   UTXO + plus signed unlock script allows new tx to be created, with that UTXO as input and new outputs with new lock scripts
+:   lock and unlock scripts can be anything, like "2 + 2 = ?" for lock script and "4!" as unlock script
+- protocol
+:    a way for computers to talk to each other
+:    not defined by Satoshi Client -> Bitcoin Core!
+:    not "longest chain" as in whitepaper
+:    not "heaviest chain", also needs to follow all the rules
+:    not defined by implementation, if code inflates coin supply we say that's a bug and fix it
+:    not "was never hard forked", although avoiding hard forks is preferable..
+- network
+:   p2p network of full nodes
+:   what's a full node and why does it matter?
+:   fully validating the blockchain from the genesis block means you can independently check how much energy was used in the chain and that every single transaction in every single block was valid
+:   a full node is like having a personal goldsmith that can verify that the metal you received was gold
+- currency
+:    BTC is not in the protocol, just satoshi!
+- blockchain
+:    logical structure of data of blocks and transactions
+:    vastly inefficient data structure, used for censorship resistance
+- codebase/reference implementation
+:    controlling it doesn't "take over Bitcoin"!
+:    if there's a bad update or shadowy group takes control, we just won't upgrade
+:    full nodes matter, you choose what to run
+:      alternative implementations are risky?
+:      but there's multiple versions / OS
+:      five different implementations and they should all agree before accepting UTXO?
+- social agreement / coalitions
+: what identifies the "correct rules" in the phrase "heaviest chain with the correct rules"?
+: money is a shared hallucination / social consensus
+- system
+: total sum of mining activity, economic use cases, politics, ..
+
+- lack of leaders and authorities: feature, not bug
+: anarchic: "without a leader"
+
+* Into the fee era
+
+- mining subsidy falls towards zero
+  "The best way to make oneself sought after is to be hard to find." —Marcel Proust
+:  scarcity is psychologically attractive to us: "max 2 per customer"
+- tx fees need to secure the system
+
+* Digital gold milestone
+
+- how can you help Bitcoin?
+- key management
+- privacy
+- usability
+- tools and infrastructure
+- Lightning Network as prep for method of exchange
+
+* Values of sovereignty
+
+- trust-minimized
+- not your keys, not your BTC
+- use a full node and be your own gold smith
+:   a full node is for you, not for others; no further incentives necessary
+- nobody can take your BTC, if you do it right
+:   don't talk about the amount of BTC you have, ever
+
+* Challenges of sovereignty
+
+- if you get hacked, now you're poor
+: lots of people have a steep learning curve in applied cryptography
+- do most people want to be sovereign?
+: better custodians?
+: social circle recovery
+: hybrid models with some keys
+- resistance to $5 wrench attack
+- succession planning
+- risk of losing access yourself >> risk of attacker taking coins
+: want to have $5 wrench attack resistance and succession plan
+: what happens if you forget your setup? passphrase? get hit by a truck?
+: risk of losing access yourself >> risk of attacker taking it
+
+* Tools for sovereignty
+
+- key management
+- Shamir's
+: Trezor proposed standard https://github.com/satoshilabs/slips/blob/master/slip-0039.md
+: SMPC stuff
+- dead man's switch
+- key rotation
+: Dead man's switches
+: chris allen has on-chain timelocks for 365d, then lawyers access to them
+: moves at least every 364d
+- [[https://medium.com/@pamelawjd/cryptocurrency-inventory-start-here-for-for-inheritance-planning-5fa295fb975][inheritance planning]]
+: Pamela Morgan + Andreas Antonopoulos https://thirdkey.solutions/ can help
+- do people still want custodians?
+
+* Computer security is bad and we should feel bad (1/2)
+
+- have to get our act together one of these decades
+- [[https://googleprojectzero.blogspot.com/2015/03/exploiting-dram-rowhammer-bug-to-gain.html][rowhammer]], [[https://www.usenix.org/conference/usenixsecurity18/presentation/alam][one&done RSA]], [[https://cyber.bgu.ac.il/advanced-cyber/airgap][bridgeware]], [[https://sharps.org/wp-content/uploads/BECKER-CHES.pdf][dopant-level hw trojans]], [[https://meltdownattack.com/][meltdown/spectre]]..
+- dead tree technology _might_ be safe
+
+* Computer security is bad and we should feel bad (2/2)
+
+.image security.webm 300 600
+
+- [[https://www.usenix.org/conference/usenixsecurity18/presentation/mickens][Q: Why Do Keynote Speakers Keep Suggesting That Improving Security Is Possible? A: Because Keynote Speakers Make Bad Life Decisions and Are Poor Role Models]]
+
+* Tiny glimmers of hope
+
+- Bitcoin as immune system for the Internet
+- RISC-V architecture and open hw movement
+- U2F standard
+- let's equip people to keep their information secure & private
+
+* Questions / discussion
+
+- these slides: [[https://talks.hkjn.me/21lectures2018/theory_and_practice.slide]]
+- contact details: [[https://hkjn.me]]
+- my employer: [[https://shiftcrypto.ch]]
+- we are hiring: [[mailto:jobs@shiftcrypto.ch]]
+
+Thanks!

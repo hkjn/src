@@ -1,0 +1,108 @@
+Intro
+08:00 23 Dec 2018
+
+Henrik Jonsson
+Team Lead
+Shift Crypto
+me@hkjn.me
+hkjn@shiftcrypto.ch
+https://hkjn.me
+
+: Henrik Jonsson / hkjn @ { hkjn.me, shiftcrypto.ch, twitter.com, github.com }
+: thanks to Lucas for inviting me and all of you for coming
+: Henrik used to work for Google, also fintech and Bitcoin startups
+
+* Intro / disclaimer
+
+- don't trust, verify
+: not particularly qualified, but neither is anyone
+:   this is one person's view, not my company's or anything official (there is no one official)
+:   we are all still learning what the system is, if I am wrong on major points look forward to learning together
+
+- been around for a while
+:   followed since 2010 v0.3 release hit Slashdot
+:   was on cryptography list where Satoshi announced whitepaper and v0.1 but it ended up in spam filter
+:   left Google 2014 partly to focus more on learning about and contributing to Bitcoin project
+:   my main project most of the time since 2015
+
+- now with [[https://shiftcrypto.ch][Shift Crypto]]
+:   joined ~2 months ago
+:   jonas schnelli co-founder
+:   privacy / security: rights, should be accessible to everyone, not sacrificed for convenience
+:   equip people to keep their valuable information secure
+:   simple + safe
+:   hardware wallet called bitbox, new hw wallet coming Soon (tm)
+:   working on more stuff, come to talk next week
+
+- who are you?
+- what would you like to get from the course?
+
+* Course goals
+
+: At our beginner course you will learn the essential knowledge about Bitcoin. You will learn what nodes are,
+: how mining works, how public / private key cryptography works, how addresses are built and everything else
+: for a solid understanding of Bitcoin from a technical perspective. This course is the perfect introduction
+: to Bitcoin for developers and technologists. It also provides the necessary knowledge for our Advanced Course.
+
+- introduce Bitcoin to technical audience
+- allow understanding of key concepts
+- introduce Bitcoin protocol
+- what are nodes?
+- how does mining work?
+- how does public key cryptography work?
+- what are addresses and wallets?
+- hands-on experience with tools and concepts for advanced course
+
+* Course overview: Day 1
+
+- 09:00 — 09:45 Bitcoin Intro (you are here)
+: i.e "what is the history of Bitcoin and potential future?"
+
+- 09:45 — 10:30 Theory and practice
+: i.e "how did we get here; where might we go?"
+
+- 10:30 — 10:45 Break
+: public key crypto 101?
+
+- 10:45 — 11:30 TBD
+: transactions 101?
+
+- 11:30 — 12:00 TBD
+: mining 101?
+
+- 12:00 — 13:15 Lunch
+
+- 13:15 — 14:00 TBD
+: consensus 101?
+
+- 14:00 — 14:45 TBD
+: forks 101?
+
+- 14:45 — 15:00 Break
+
+- 15:00 — 15:45 TBD
+
+- 15:45 — 16:30 TBD
+
+* Course overview: Day 2
+
+- 09:00 — 09:45 TBD
+- 09:45 — 10:30 TBD
+- 10:30 — 10:45 Break
+- 10:45 — 11:30 TBD
+- 11:30 — 12:00 TBD
+- 12:00 — 13:15 Lunch
+- 13:15 — 14:00 TBD
+- 14:00 — 14:45 TBD
+- 14:45 — 15:00 Break
+- 15:00 — 15:45 TBD
+- 15:45 — 16:30 TBD
+
+
+* Questions / discussion
+
+- these slides: [[https://talks.hkjn.me/21lectures2019/intro.slide]]
+- contact details: [[https://hkjn.me]]
+- my employer: [[https://shiftcrypto.ch]]
+
+Thanks!

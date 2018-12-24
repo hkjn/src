@@ -1,0 +1,227 @@
+History of Bitcoin
+08:00 13 Nov 2018
+
+Henrik Jonsson
+Team Lead
+Shift Crypto
+me@hkjn.me
+hkjn@shiftcrypto.ch
+https://hkjn.me
+
+: Henrik Jonsson / hkjn @ { hkjn.me, shiftcrypto.ch, twitter.com, github.com }
+: thanks to Lucas for inviting me and all of you for coming
+: Henrik used to work for Google, also fintech and Bitcoin startups
+
+* Intro / disclaimer
+
+- don't trust, verify
+: not particularly qualified, but neither is anyone
+:   this is one person's view, not my company's or anything official (there is no one official)
+:   we are all still learning what the system is, if I am wrong on major points look forward to learning together
+
+- been around for a while
+:   followed since 2010 v0.3 release hit Slashdot
+:   was on cryptography list where Satoshi announced whitepaper and v0.1 but it ended up in spam filter
+:   left Google 2014 partly to focus more on learning about and contributing to Bitcoin project
+:   my main project most of the time since 2015
+
+- now with [[https://shiftcrypto.ch][Shift Crypto]]
+:   joined ~2 months ago
+:   jonas schnelli co-founder
+:   privacy / security: rights, should be accessible to everyone, not sacrificed for convenience
+:   equip people to keep their valuable information secure
+:   simple + safe
+:   hardware wallet called bitbox, new hw wallet coming Soon (tm)
+:   working on more stuff, come to talk next week
+
+- let's review history of Bitcoin from different angles
+: looking at the history of the system from a few different angles like
+:   mining
+:   protocol
+:   bugs
+:   adoption
+:   mythos
+
+* Outline
+
+- pre-history
+- problem statement
+- eras of mining
+- major protocol upgrades
+- major bugs
+- state of adoption
+- mythos
+
+* Pre-history
+
+: pre-history of digital decentralized currencies
+: work by Dai, Finney, Szabo, Back
+: Bitcoin was first workable system for decentralized digital scarcity
+: aaron van wirdum's articles linked from presentation
+
+- [[https://bitcoinmagazine.com/articles/genesis-files-hashcash-or-how-adam-back-designed-bitcoins-motor-block/][Back 1997: Hashcash]]*
+: hashcash is used in Bitcoin for the proof-of-work
+: invented as anti-spam mechanism for email
+
+- [[https://bitcoinmagazine.com/articles/genesis-files-if-bitcoin-had-first-draft-wei-dais-b-money-was-it/][Dai 1998: B-Money]]*
+: wei disagreed with hard monetary policy of Bitcoin
+: wanted B-Money to be coupled to basket of goods
+: never implemented
+: satoshi sent wei early draft and asked for feedback!
+
+- [[https://nakamotoinstitute.org/finney/rpow/][Finney 2004: RPOW]]
+
+: first person to receive BTC
+: centralized server in the design, using IBM crypto coprocessor to supposedly securely attest to
+: state of the software on the server to its clients
+
+- [[https://bitcoinmagazine.com/articles/genesis-files-bit-gold-szabo-was-inches-away-inventing-bitcoin/][Szabo 2005: Bit Gold]]
+: first mentioned in 1998, fully described in 2005
+: like Bitcoin, uses PoW for tie with real world resources, needs to start with leading number of zeroes
+: ownership registry maintained by "property club", cryptographic signatures to change ownership
+: not readjusting difficulty, but adjusting PoW solutions value by timestamp
+
+* Problem statement
+
+- decentralized digital scarcity
+: physical objects are in one place
+: digital data by default is copied
+- used for hard censorship-resistant money
+: a hard money is one where supply can't be manipulated
+: censorship-resistant means nobody can disallow you from making a tx
+
+* Eras of mining (1/2)
+
+: miners who find a valid block receives the tx fees in the block, as well as a subsidy
+: every 4y, block subsidy halves, starting at 50BTC
+: next one in ~80k blocks or 555d: http://www.thehalvening.com/
+
+.image speed-ever-2018-12-23.png 500 800
+
+[[http://bitcoin.sipa.be/][— bitcoin.sipa.be]]
+
+* Eras of mining (2/2)
+
+- 2009 — 2010: CPU
+- 2010 — 2013: GPU
+- 2014+: ASIC
+:   moving toward pure energy -> hash rate
+:   mining centralization an issue in practice?
+:   should we try to be ASIC resistant?
+: "bitcoin uses too much energy" = "bitcoin is too secure"
+
+* Major protocol upgrades
+
+- softfork vs hardfork: restrict vs expand valid txns/blocks
+: softfork upgrades: restrict set of valid txns/blocks
+: hardfork upgrade: expand set of valid txns/blocks
+- 2012: P2SH: [[https://github.com/bitcoin/bips/blob/master/bip-0016.mediawiki][BIP16]]
+:   add special-case validation to do an extra things when P2SH pattern is seen
+:   when creating output, provide hash of a script
+:   evaluation to pop embedded script and run it
+:   advantages: cost shifted to spender, more privacy
+- 2014 — 2015: CSV/CLTV: [[https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki][BIP65]] / [[https://github.com/bitcoin/bips/blob/master/bip-0112.mediawiki][BIP112]]
+:   script to be restricted until certain time / age of output
+:   allows HTLCs, used in LN, as well as escrow, freezing funds and other contracts
+- 2015 — 2017: SegWit: [[https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki][BIP141]], [[https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki][BIP143]], [[https://github.com/bitcoin/bips/blob/master/bip-0144.mediawiki][BIP144]], [[https://github.com/bitcoin/bips/blob/master/bip-0145.mediawiki][BIP145]], [[https://github.com/bitcoin/bips/blob/master/bip-0147.mediawiki][BIP147]], [[https://github.com/bitcoin/bips/blob/master/bip-0148.mediawiki][BIP148]], [[https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki][BIP173]]
+:   add special-case that if 0 [data] is on unlock script, data is
+:   pubkey and signature, seen as anyone-can-spend by old nodes
+:   capacity upgrade, fixes transaction malleability
+:   also allows for versioning updates to script
+- not that many, and takes a while!
+
+* Major bugs (1/2)
+
+.image bip42-inflation.png 500 800
+[[https://github.com/bitcoin/bips/blob/master/bip-0042][— BIP42 by sipa]]
+
+* Major bugs (2/2)
+
+- Jan 2009: `OP_CHECKMULTISIG` eats extra value from stack
+: Multisig off by one, need to have extra stack item
+- Aug 2010: ~184 billion BTC accidentally created: [[https://en.bitcoin.it/wiki/Value_overflow_incident][CVE-2010-5139]]
+- Mar 2013: 24 block chainsplit and hardfork in levelDB upgrade: [[https://github.com/bitcoin/bips/blob/master/bip-0050.mediawiki][BIP50]], [[https://nvd.nist.gov/vuln/detail/CVE-2013-3220][CVE-2013-3220]]
+: hardfork when blocks requiring more fds than < 0.8 could handle was accepted by upgraded but not old nodes
+- Apr 2014: monetary supply was unbounded before [[https://github.com/bitcoin/bips/blob/master/bip-0042.mediawiki][BIP42]]
+- Sep 2018: potential coin inflation fixed: [[https://bitcoincore.org/en/2018/09/20/notice/][CVE-2018-17144]]
+: certain type of block could double spend outputs in the same block, creating coins out of thin air
+
+* State of adoption (1/2)
+
+- 2008 — 2010: cypherpunk tinkertoy
+:   hal finney's CPU fan was too loud
+:   greg maxwell ran v0.1 under wine, then deleted VM with private keys
+- 2010+: [[https://nakamotoinstitute.org/shelling-out/][collectible]]
+:   via szabo's "shelling out", history of money
+:   lunatic fringe
+:   lazslo's pizza
+:   $1 USD price
+- 2013 — 2014: first wave of altcoins
+:   2013/2014
+- 2014+: store of value
+:   you are here
+:   lunatic fringe / early adopter
+:   aspiring digital gold
+:   scarce just like tulips, but also divisible, fungibleish, transmittable, ..
+- 2017 — 2018: wave of forkcoins
+- 2018+: future?
+
+:   medium of exchange, maybe, eventually
+:   but merchants need to want BTC first
+:   unit of account, even further off
+: think of prices in satoshi, it came down recently, zoom out and consider the long term
+
+* State of adoption (2/2)
+
+.image adoption.png 450 800
+[[https://medium.com/@nic__carter/visions-of-bitcoin-4b7b7cbcd24c][— Visions of Bitcoin by Nic Carter]]
+
+
+
+* Mythos (1/2)
+
+- still an experiment
+:   20% likely to succeed, via bluematt?
+:   ~1.5% market cap of gold currently, does that reflect market belief in success?
+- we are story-telling apes
+: c.f Sapiens by Harari
+- Satoshi is perfect creation myth
+: Satoshi is the perfect creation myth: anonymous entity that disappeared as mysteriously as they appeared
+:   not known that Satoshi has ~1m BTC!
+- separation of money and state
+: why is censorship-resistant money needed?
+:   it's too tempting and too much power to control the monetary supply, and say who gets to send or receive money
+:   won't bad people use it for bad things?
+:   yes, and bricks can also be used to hit people over the head as well as to build a building
+- hard money, backed by physics
+:   hashes are as far as we know one-way functions, easy to go one way but infeasible to reverse
+:   as mining efficiency improves, moves towards thermodynamic limit of energy -> hash rate
+:   unwinding history means >50% hash rate of network, and still can't take money from others
+
+* Mythos (2/2)
+
+- energy storage tech
+:     hash rate to secure network acts as storage tech, hydro / solar plants otherwise have wasted energy
+:     price floor / energy buyer of last resort
+- longest chain standing
+:     Lindy effect
+:     10 years since genesis block Jan 3rd 2019
+:     1/3 of typical age of person
+:     normal background existence
+:     regularly mentioned in Davos, IMF, US Fed reports
+- p2p digital cash?
+:   blocks became full in Jan 2017
+:   BCH split in 2017, they are trying their experiment
+:   a blockchain is an incredibly inefficient data structure
+:   like having a copy of every email ever sent
+:   blocksize parameter became political, should be like nuclear control rods, boring and decided by engineers
+:   blocksize grows linearly with number of txns, seems better to handle off-chain, when needed
+
+* Questions / discussion
+
+- these slides: [[https://talks.hkjn.me/21lectures2018/history.slide]]
+- contact details: [[https://hkjn.me]]
+- my employer: [[https://shiftcrypto.ch]]
+- we are hiring: [[mailto:jobs@shiftcrypto.ch]]
+
+Thanks!
