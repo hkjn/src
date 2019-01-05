@@ -1,5 +1,5 @@
 Intro
-08:00 23 Dec 2018
+08:00 5 Jan 2019
 
 Henrik Jonsson
 Team Lead
@@ -53,40 +53,38 @@ https://hkjn.me
 - what are addresses and wallets?
 - hands-on experience with tools and concepts for advanced course
 
+* Course structure
+
+- mix of theory and application
+- tools used: go, bx
+
 * Course overview: Day 1
 
-- 09:00 — 09:45 Bitcoin Intro (you are here)
+- 09:00 — 09:45 Course intro (you are here)
+
+- 10:00 - 11:15: Public key crypto basics
+
+- 11:15 — 11:30 Break
+
+- 11:30 — 12:15 Bitcoin history
 : i.e "what is the history of Bitcoin and potential future?"
-
-- 09:45 — 10:30 Theory and practice
-: i.e "how did we get here; where might we go?"
-
-- 10:30 — 10:45 Break
-: public key crypto 101?
-
-- 10:45 — 11:30 TBD
-: transactions 101?
-
-- 11:30 — 12:00 TBD
-: mining 101?
 
 - 12:00 — 13:15 Lunch
 
-- 13:15 — 14:00 TBD
-: consensus 101?
+- 13:15 — 14:00 Theory and practice
+: i.e "how did we get here; where might we go?"
 
-- 14:00 — 14:45 TBD
-: forks 101?
+- 14:00 — 14:45 Transactions basics
 
 - 14:45 — 15:00 Break
 
-- 15:00 — 15:45 TBD
+- 15:00 — 15:45 Mining basics
 
-- 15:45 — 16:30 TBD
+- 15:45 — 16:30 Consensus basics
 
 * Course overview: Day 2
 
-- 09:00 — 09:45 TBD
+- 09:00 — 09:45 Forks basics
 - 09:45 — 10:30 TBD
 - 10:30 — 10:45 Break
 - 10:45 — 11:30 TBD
