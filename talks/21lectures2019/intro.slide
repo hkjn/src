@@ -74,6 +74,7 @@ https://hkjn.me
 : ecdsa, elliptic curves, finite fields
 : discrete log problem, ecdsa signature algorithm
 
+
 - 11:15 — 11:30 Break
 
 - 11:30 — 12:15 Bitcoin history
@@ -81,7 +82,7 @@ https://hkjn.me
 
 - 12:00 — 13:15 Lunch
 
-- 13:15 - 14:00 Bitcoin addresses: they don't exist
+- 13:15 - 14:00 Bitcoin addresses basics
 
 : so what is an addr?
 :   - providing a P2PKH address to someone is to say "here's the hash of my pubkey,
@@ -90,10 +91,15 @@ https://hkjn.me
 :   - P2WPKH: like P2PKH but post-SegWit
 :   - P2WSH: like P2SH but post-SegWit
 
+: cryptographic hashes
+:   - SHA256
+:   - RIPEMD160
+
 : bitcoin address:
 :   - compressed/uncompressed pubkey in SEC format
 :   - a P2PKH bitcoin address is sha256 + ripemd160 of pubkey in SEC format, with checksum,
 :     encoded as base58
+:   - diagram: private key -> public key -> hash
 :   - exercise: generate a testnet addr and get some funds from a faucet
 :   - there's P2PK, P2PKH, P2M (raw multisig), P2SH, P2WSH, P2WPKH, ..
 :   - but these are simplifications to make it easier for people to follow:
