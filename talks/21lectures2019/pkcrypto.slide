@@ -23,40 +23,81 @@ https://hkjn.me
 
 - easy to go from private to public
 - infeasible to go from public to private
-- bitcoin address: a hash of public key
+- bitcoin address: (typically) a hash of public key
+- bitcoin tx: transferring control from one script to another
 
 * Signing
+
 - signing: proving you control private key without sharing it
 - encryption: not used in Bitcoin!
-- ECDSA: elliptic curve digital signature algorithm
-- ECDSA: elliptic curves over finite fields of prime order
+
+* ECDSA
+
 : elliptic curves:
-:   - equations with form y^2 = x^3 + ax + b
 :   - diagram: example curve over reals
 :   - exercise: verify that the point (5, 30) is on the curve y^2 = x^3 + x + 1
-:   - can define arithmetic operations over curve points just like we can for
-:     natural numbers, real, complex, ..
-:   - convention: lower case s is scalar, upper case G is curve point
-: finite fields:
-:   - F_7 has elements {0, 1, 2, 3, 4, 5, 6}, + - * / operations wrap around
-: elliptic curves over finite fields:
-:   - can define addition, etc over curve points so adding two curve points produces another
-:     point on the curve
-:   - generator point: if we have an elliptic curve over a finite field, can pick generator
-:     point G, and keep adding it to itself until it becomes point at infinity: G, G+G, 3*G, 4*G, .., n*G = 0
-:   - this generates all elements in the finite field: {0, G, 2*G, .., (n-1)*G}
-: discrete log problem:
+
+: elliptic curve digital signature algorithm
+- ecdsa: elliptic curves over finite fields of prime order
+- elliptic curve: equations with form y^2 = x^3 + ax + b
+- ec over finite field of prime order
+- addition over curve points
+: we can define operation over curve points just like we can
+: with ordinary natural or real numbers
+: P1 + P2 = P3, also on the curve
+: draw a line between P1 and P2, intersects curve in exactly
+: one place, reflect across x-axis to get P3
+
+- point at infinity: like zero
+: if P1 and P2 have same x value but different y value, tangent
+: line will be exactly vertical, call P3 "point at infinity"
+: if P1 is PaI, P1 + P2 = P2, like zero
+- multiplication: repeated addition
+: kP = P + P + .. + P, k times
+
+
+* finite fields
+
+- finite field: mod p
+: finite field means that the operations "wrap around", using
+: modular / clock arithmetic
+: p is the order of the curve, large prime number for bitcoin curve
+- F_7: {0, 1, 2, 3, 4, 5, 6}
+- 4 + 4 = 1 (mod 7)
+- modular arithmetic
+
+* generator point
+
+- in ecdsa, each curve has generator point G
+: predefined parameter for each curve, along with a and b
+- adding G to itself generates the points
+: keep adding G, G+G, 3*G, ..., n*G until point at infinity is reached
+: this generates all elements in the finite field: {0, G, 2*G, .., (n-1)*G}
+- convention: lower case s is scalar, upper case G is curve point
+- the set of all points has p elements, the order of the curve
+: exercise: for simple curve, generate all points
+
+* secp256k1
+
+- the Bitcoin curve
+- generate private key: pick random k
+: this is how we generate a private and public key in Bitcoin!
+: a private key is a randomly chosen number
+: a public key is a point on the secp256k1 curve
+- public key: K = k*G
+- y^2 = x^3 + 7
+- p = 2^256 - 2^32 - 977
+: p is on order of 10^77, compare visible universe with 10^80 atoms
+- G is (0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798,
+        0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8)
+- discrete log problem: finding k is hard, given K
 :   - P = s*G, finding s is hard given P, but finding P is easy given s
-:   - easy / hard is computational statements
+:   - easy / hard are computational statements
 :   - choosing finite field of large order like 2^256 makes it infeasible to find s
-:   - this is how we generate a private and public key in Bitcoin!
-:   - a private key is a randomly chosen number
-:   - a public key is a point on the secp256k1 curve
-:   - params are y^2 = x^3 + 7, finite field over p = 2^256 - 2^32 - 977
-:   - G is (0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798,
-:           0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8)
 :   - verify that (x, y) of G lie on the curve: (y**2) % p == (x**3 + 7) % p
-: ECDSA signatures:
+
+* ecdsa signatures
+
 :  - calculate (r, s), cryptographically committing to hash of message being signed
 :  - given (r, s), someone who knows your public key P can verify mathematically
 :    that you know s!
