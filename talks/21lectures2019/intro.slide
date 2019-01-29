@@ -1,5 +1,5 @@
 Intro
-08:00 5 Jan 2019
+08:00 22 Jan 2019
 
 Henrik Jonsson
 Team Lead
@@ -10,7 +10,7 @@ https://hkjn.me
 
 : Henrik Jonsson / hkjn @ { hkjn.me, shiftcrypto.ch, twitter.com, github.com }
 : thanks to Lucas for inviting me and all of you for coming
-: Henrik used to work for Google, also fintech and Bitcoin startups
+: used to work for Google, also fintech and Bitcoin startups
 
 * Intro / disclaimer
 
@@ -26,7 +26,7 @@ https://hkjn.me
 :   my main project most of the time since 2015
 
 - now with [[https://shiftcrypto.ch][Shift Crypto]]
-:   joined ~2 months ago
+:   joined ~5 months ago
 :   jonas schnelli co-founder
 :   privacy / security: rights, should be accessible to everyone, not sacrificed for convenience
 :   equip people to keep their valuable information secure
@@ -39,10 +39,11 @@ https://hkjn.me
 
 * Course goals
 
-: At our beginner course you will learn the essential knowledge about Bitcoin. You will learn what nodes are,
+: via Lucas:
+: "At our beginner course you will learn the essential knowledge about Bitcoin. You will learn what nodes are,
 : how mining works, how public / private key cryptography works, how addresses are built and everything else
 : for a solid understanding of Bitcoin from a technical perspective. This course is the perfect introduction
-: to Bitcoin for developers and technologists. It also provides the necessary knowledge for our Advanced Course.
+: to Bitcoin for developers and technologists. It also provides the necessary knowledge for our Advanced Course."
 
 - introduce Bitcoin to technical audience
 - allow understanding of key concepts
@@ -68,40 +69,10 @@ https://hkjn.me
 - 10:00 - 11:15: Public key crypto basics
 
 : private / public keys
-: signing: proving you control private key without sharing it
-: encryption: not used in Bitcoin!
-: ECDSA: elliptic curve digital signature algorithm
-: ECDSA: elliptic curves over finite fields of prime order
-: elliptic curves:
-:   - equations with form y^2 = x^3 + ax + b
-:   - diagram: example curve over reals
-:   - exercise: verify that the point (5, 30) is on the curve y^2 = x^3 + 5
-:   - can define arithmetic operations over curve points just like we can for
-:     natural numbers, real, complex, ..
-:   - convention: lower case s is scalar, upper case G is curve point
-: finite fields:
-:   - F_7 has elements {0, 1, 2, 3, 4, 5, 6}, + - * / operations wrap around
-: elliptic curves over finite fields:
-:   - can define addition, etc over curve points so adding two curve points produces another
-:     point on the curve
-:   - generator point: if we have an elliptic curve over a finite field, can pick generator
-:     point G, and keep adding it to itself until it becomes point at infinity: G, G+G, 3*G, 4*G, .., n*G = 0
-:   - this generates all elements in the finite field: {0, G, 2*G, .., (n-1)*G}
-: discrete log problem:
-:   - P = s*G, finding s is hard given P, but finding P is easy given s
-:   - easy / hard is computational statements
-:   - choosing finite field of large order like 2^256 makes it infeasible to find s
-:   - this is how we generate a private and public key in Bitcoin!
-:   - a private key is a randomly chosen number
-:   - a public key is a point on the secp256k1 curve
-:   - params are y^2 = x^3 + 7, finite field over p = 2^256 - 2^32 - 977
-:   - G is (0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798,
-:           0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8)
-:   - verify that (x, y) of G lie on the curve: (y**2) % p == (x**3 + 7) % p
-: ECDSA signatures:
-:  - calculate (r, s), cryptographically committing to hash of message being signed
-:  - given (r, s), someone who knows your public key P can verify mathematically
-:    that you know s!
+: signing: mathematically proving you control private key, without revealing it!
+: encryption: keeping messages secret; not used in Bitcoin!
+: ecdsa, elliptic curves, finite fields
+: discrete log problem, ecdsa signature algorithm
 
 - 11:15 — 11:30 Break
 
@@ -181,6 +152,6 @@ https://hkjn.me
 
 - these slides: [[https://talks.hkjn.me/21lectures2019/intro.slide]]
 - contact details: [[https://hkjn.me]]
-- my employer: [[https://shiftcrypto.ch]]
+- Shift Crypto: [[https://shiftcrypto.ch]]
 
 Thanks!
