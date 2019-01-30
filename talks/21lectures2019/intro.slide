@@ -74,7 +74,6 @@ https://hkjn.me
 : ecdsa, elliptic curves, finite fields
 : discrete log problem, ecdsa signature algorithm
 
-
 - 11:15 — 11:30 Break
 
 - 11:30 — 12:15 Bitcoin history
@@ -82,7 +81,21 @@ https://hkjn.me
 
 - 12:00 — 13:15 Lunch
 
-- 13:15 - 14:00 Bitcoin addresses basics
+- 13:15 - 14:00 Common encoding formats
+
+: different ways to represent private and public keys and addresses
+: raw binary, hex, Base58Check, Bech32
+: for pubkeys: compressed/uncompressed
+: for privkeys: WIF, WIF-compressed
+: Base58Check prefixes:
+:   0x00 / 1: p2pkh addr
+:   0x05 / 3: p2sh addr
+:   0x6F / m or n: p2pkh testnet addr
+:   0x80 / 5 or K or L: privkey WIF
+:   0x0142 / 6P: BIP38 encrypted privkey
+:   0x0488B21E / xpub: BIP-32 extended public key
+
+- 14:00 - 14:45 Bitcoin addresses basics
 
 : so what is an addr?
 :   - providing a P2PKH address to someone is to say "here's the hash of my pubkey,
@@ -94,6 +107,7 @@ https://hkjn.me
 : cryptographic hashes
 :   - SHA256
 :   - RIPEMD160
+: -> 160 bit hash of public key, encoded as base58
 
 : bitcoin address:
 :   - compressed/uncompressed pubkey in SEC format
@@ -125,26 +139,25 @@ https://hkjn.me
 :     and avoid accidentally donating to miners
 :   - exercise: decode raw tx
 
-- 14:00 — 14:45 Theory and practice
-: i.e "how did we get here; where might we go?"
-
 - 14:45 — 15:00 Break
 
-- 15:00 — 15:45 Transactions basics
+- 15:00 — 15:45 Theory and practice
+: i.e "how did we get here; where might we go?"
+
+- 15:45 — 16:30 Transactions basics
 
 : Bitcoin script: limited stack-based language, not turing complete
 : conceptually lock script and unlock script are concatenated and run together
 : scripts can express anything, lock script "2 + 2 = ?" and unlock script "4"
 
 
-- 15:45 — 16:30 Mining basics
 
 * Course overview: Day 2
 
-- 09:00 — 09:45 Consensus basics
-- 09:45 — 10:30 Forks basics
+- 09:00 — 09:45 Mining basics
+- 09:45 — 10:30 Consensus basics
 - 10:30 — 10:45 Break
-- 10:45 — 11:30 TBD
+- 10:45 — 11:30 Forks basics
 - 11:30 — 12:00 TBD
 - 12:00 — 13:15 Lunch
 - 13:15 — 14:00 TBD
