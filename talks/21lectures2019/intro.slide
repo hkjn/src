@@ -1,5 +1,5 @@
 Intro
-08:00 22 Jan 2019
+08:00 31 Jan 2019
 
 Henrik Jonsson
 Team Lead
@@ -66,8 +66,10 @@ https://hkjn.me
 
 - 09:00 — 09:45 Course intro (you are here)
 
-- 10:00 - 11:15: Public key crypto basics
+- 09:45 - 11:15: Public key crypto basics
 
+: cryptography underlying bitcoin
+: fairly theoretical, some math concepts
 : private / public keys
 : signing: mathematically proving you control private key, without revealing it!
 : encryption: keeping messages secret; not used in Bitcoin!
@@ -79,9 +81,9 @@ https://hkjn.me
 - 11:30 — 12:15 Bitcoin history
 : i.e "what is the history of Bitcoin and potential future?"
 
-- 12:00 — 13:15 Lunch
+- 12:15 — 13:30 Lunch
 
-- 13:15 - 14:00 Common encoding formats
+- 13:30 - 14:15 Common encoding formats
 
 : different ways to represent private and public keys and addresses
 : raw binary, hex, Base58Check, Bech32
@@ -95,7 +97,7 @@ https://hkjn.me
 :   0x0142 / 6P: BIP38 encrypted privkey
 :   0x0488B21E / xpub: BIP-32 extended public key
 
-- 14:00 - 14:45 Bitcoin addresses basics
+- 14:15 - 15:00 Bitcoin addresses basics
 
 : so what is an addr?
 :   - providing a P2PKH address to someone is to say "here's the hash of my pubkey,
@@ -139,32 +141,30 @@ https://hkjn.me
 :     and avoid accidentally donating to miners
 :   - exercise: decode raw tx
 
-- 14:45 — 15:00 Break
+- 15:00 — 15:15 Break
 
-- 15:00 — 15:45 Theory and practice
+- 15:15 — 16:00 Theory and practice
 : i.e "how did we get here; where might we go?"
 
-- 15:45 — 16:30 Transactions basics
+- 16:00 — 16:45 Transactions basics
 
 : Bitcoin script: limited stack-based language, not turing complete
 : conceptually lock script and unlock script are concatenated and run together
 : scripts can express anything, lock script "2 + 2 = ?" and unlock script "4"
 
-
-
 * Course overview: Day 2
 
-- 09:00 — 09:45 Mining basics
-- 09:45 — 10:30 Consensus basics
+- 09:00 — 09:45 HD wallets and seed phrases
+- 09:45 — 10:30 Mining basics
 - 10:30 — 10:45 Break
-- 10:45 — 11:30 Forks basics
-- 11:30 — 12:00 TBD
-- 12:00 — 13:15 Lunch
-- 13:15 — 14:00 TBD
-- 14:00 — 14:45 TBD
-- 14:45 — 15:00 Break
-- 15:00 — 15:45 TBD
-- 15:45 — 16:30 TBD
+- 10:45 — 11:30 Consensus basics
+- 11:30 — 12:15 Forks basics
+- 12:15 — 13:30 Lunch
+- 13:30 — 14:15 TBD
+- 14:15 — 15:00 TBD
+- 15:00 — 15:15 Break
+- 15:15 — 16:00 TBD
+- 16:00 — 16:45 TBD
 
 
 * Questions / discussion
