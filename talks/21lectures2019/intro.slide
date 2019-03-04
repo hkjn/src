@@ -1,5 +1,5 @@
 Intro
-08:00 5 Jan 2019
+08:00 31 Jan 2019
 
 Henrik Jonsson
 Team Lead
@@ -10,7 +10,7 @@ https://hkjn.me
 
 : Henrik Jonsson / hkjn @ { hkjn.me, shiftcrypto.ch, twitter.com, github.com }
 : thanks to Lucas for inviting me and all of you for coming
-: Henrik used to work for Google, also fintech and Bitcoin startups
+: used to work for Google, also fintech and Bitcoin startups
 
 * Intro / disclaimer
 
@@ -26,7 +26,7 @@ https://hkjn.me
 :   my main project most of the time since 2015
 
 - now with [[https://shiftcrypto.ch][Shift Crypto]]
-:   joined ~2 months ago
+:   joined ~5 months ago
 :   jonas schnelli co-founder
 :   privacy / security: rights, should be accessible to everyone, not sacrificed for convenience
 :   equip people to keep their valuable information secure
@@ -39,10 +39,11 @@ https://hkjn.me
 
 * Course goals
 
-: At our beginner course you will learn the essential knowledge about Bitcoin. You will learn what nodes are,
+: via Lucas:
+: "At our beginner course you will learn the essential knowledge about Bitcoin. You will learn what nodes are,
 : how mining works, how public / private key cryptography works, how addresses are built and everything else
 : for a solid understanding of Bitcoin from a technical perspective. This course is the perfect introduction
-: to Bitcoin for developers and technologists. It also provides the necessary knowledge for our Advanced Course.
+: to Bitcoin for developers and technologists. It also provides the necessary knowledge for our Advanced Course."
 
 - introduce Bitcoin to technical audience
 - allow understanding of key concepts
@@ -65,9 +66,12 @@ https://hkjn.me
 
 - 09:00 — 09:45 Course intro (you are here)
 
-- 10:00 - 11:15: Public key crypto basics
+- 09:45 - 11:15: Public key crypto basics
 
+: cryptography underlying bitcoin
+: fairly theoretical, some math concepts
 : private / public keys
+<<<<<<< HEAD
 : signing: proving you control private key without sharing it
 : encryption: not used in Bitcoin!
 : ECDSA: elliptic curve digital signature algorithm
@@ -109,9 +113,23 @@ https://hkjn.me
 - 11:30 — 12:15 Bitcoin history
 : i.e "what is the history of Bitcoin and potential future?"
 
-- 12:00 — 13:15 Lunch
+- 12:15 — 13:30 Lunch
 
-- 13:15 - 14:00 Bitcoin addresses: they don't exist
+- 13:30 - 14:15 Common encoding formats
+
+: different ways to represent private and public keys and addresses
+: raw binary, hex, Base58Check, Bech32
+: for pubkeys: compressed/uncompressed
+: for privkeys: WIF, WIF-compressed
+: Base58Check prefixes:
+:   0x00 / 1: p2pkh addr
+:   0x05 / 3: p2sh addr
+:   0x6F / m or n: p2pkh testnet addr
+:   0x80 / 5 or K or L: privkey WIF
+:   0x0142 / 6P: BIP38 encrypted privkey
+:   0x0488B21E / xpub: BIP-32 extended public key
+
+- 14:15 - 15:00 Bitcoin addresses basics
 
 : so what is an addr?
 :   - providing a P2PKH address to someone is to say "here's the hash of my pubkey,
@@ -120,10 +138,16 @@ https://hkjn.me
 :   - P2WPKH: like P2PKH but post-SegWit
 :   - P2WSH: like P2SH but post-SegWit
 
+: cryptographic hashes
+:   - SHA256
+:   - RIPEMD160
+: -> 160 bit hash of public key, encoded as base58
+
 : bitcoin address:
 :   - compressed/uncompressed pubkey in SEC format
 :   - a P2PKH bitcoin address is sha256 + ripemd160 of pubkey in SEC format, with checksum,
 :     encoded as base58
+:   - diagram: private key -> public key -> hash
 :   - exercise: generate a testnet addr and get some funds from a faucet
 :   - there's P2PK, P2PKH, P2M (raw multisig), P2SH, P2WSH, P2WPKH, ..
 :   - but these are simplifications to make it easier for people to follow:
@@ -149,39 +173,36 @@ https://hkjn.me
 :     and avoid accidentally donating to miners
 :   - exercise: decode raw tx
 
-- 14:00 — 14:45 Theory and practice
+- 15:00 — 15:15 Break
+
+- 15:15 — 16:00 Theory and practice
 : i.e "how did we get here; where might we go?"
 
-- 14:45 — 15:00 Break
-
-- 15:00 — 15:45 Transactions basics
+- 16:00 — 16:45 Transactions basics
 
 : Bitcoin script: limited stack-based language, not turing complete
 : conceptually lock script and unlock script are concatenated and run together
 : scripts can express anything, lock script "2 + 2 = ?" and unlock script "4"
 
-
-- 15:45 — 16:30 Mining basics
-
 * Course overview: Day 2
 
-- 09:00 — 09:45 Consensus basics
-- 09:45 — 10:30 Forks basics
+- 09:00 — 09:45 HD wallets and seed phrases
+- 09:45 — 10:30 Mining basics
 - 10:30 — 10:45 Break
-- 10:45 — 11:30 TBD
-- 11:30 — 12:00 TBD
-- 12:00 — 13:15 Lunch
-- 13:15 — 14:00 TBD
-- 14:00 — 14:45 TBD
-- 14:45 — 15:00 Break
-- 15:00 — 15:45 TBD
-- 15:45 — 16:30 TBD
+- 10:45 — 11:30 Consensus basics
+- 11:30 — 12:15 Forks basics
+- 12:15 — 13:30 Lunch
+- 13:30 — 14:15 TBD
+- 14:15 — 15:00 TBD
+- 15:00 — 15:15 Break
+- 15:15 — 16:00 TBD
+- 16:00 — 16:45 TBD
 
 
 * Questions / discussion
 
 - these slides: [[https://talks.hkjn.me/21lectures2019/intro.slide]]
 - contact details: [[https://hkjn.me]]
-- my employer: [[https://shiftcrypto.ch]]
+- Shift Crypto: [[https://shiftcrypto.ch]]
 
 Thanks!

@@ -1,0 +1,112 @@
+Public Key Cryptography basics
+08:00 22 Jan 2019
+
+Henrik Jonsson
+Team Lead
+Shift Crypto
+me@hkjn.me
+hkjn@shiftcrypto.ch
+https://hkjn.me
+
+* Public Key cryptography basics
+
+- private / public keys
+- signatures
+- encryption
+- ecdsa
+: elliptic curve digital signature algorithm
+
+- secp256k1
+: the bitcoin curve
+
+* Private / public keys
+
+- easy to go from private to public
+- infeasible to go from public to private
+- bitcoin address: (typically) a hash of public key
+- bitcoin tx: transferring control from one script to another
+
+* Signing
+
+- signing: proving you control private key without sharing it
+- encryption: not used in Bitcoin!
+
+* ECDSA
+
+: elliptic curves:
+:   - diagram: example curve over reals
+:   - exercise: verify that the point (5, 30) is on the curve y^2 = x^3 + x + 1
+
+: elliptic curve digital signature algorithm
+- ecdsa: elliptic curves over finite fields of prime order
+- elliptic curve: equations with form y^2 = x^3 + ax + b
+- ec over finite field of prime order
+- addition over curve points
+: we can define operation over curve points just like we can
+: with ordinary natural or real numbers
+: P1 + P2 = P3, also on the curve
+: draw a line between P1 and P2, intersects curve in exactly
+: one place, reflect across x-axis to get P3
+
+- point at infinity: like zero
+: if P1 and P2 have same x value but different y value, tangent
+: line will be exactly vertical, call P3 "point at infinity"
+: if P1 is PaI, P1 + P2 = P2, like zero
+- multiplication: repeated addition
+: kP = P + P + .. + P, k times
+
+
+* finite fields
+
+- finite field: mod p
+: finite field means that the operations "wrap around", using
+: modular / clock arithmetic
+: p is the order of the curve, large prime number for bitcoin curve
+- F_7: {0, 1, 2, 3, 4, 5, 6}
+- 4 + 4 = 1 (mod 7)
+- modular arithmetic
+
+* generator point
+
+- in ecdsa, each curve has generator point G
+: predefined parameter for each curve, along with a and b
+- adding G to itself generates the points
+: keep adding G, G+G, 3*G, ..., n*G until point at infinity is reached
+: this generates all elements in the finite field: {0, G, 2*G, .., (n-1)*G}
+- convention: lower case s is scalar, upper case G is curve point
+- the set of all points has p elements, the order of the curve
+: exercise: for simple curve, generate all points
+
+* secp256k1
+
+- the Bitcoin curve
+- generate private key: pick random k
+: this is how we generate a private and public key in Bitcoin!
+: a private key is a randomly chosen number
+: a public key is a point on the secp256k1 curve
+- public key: K = k*G
+- y^2 = x^3 + 7
+- p = 2^256 - 2^32 - 977
+: p is on order of 10^77, compare visible universe with 10^80 atoms
+- G is (0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798,
+        0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8)
+- discrete log problem: finding k is hard, given K
+:   - P = s*G, finding s is hard given P, but finding P is easy given s
+:   - easy / hard are computational statements
+:   - choosing finite field of large order like 2^256 makes it infeasible to find s
+:   - verify that (x, y) of G lie on the curve: (y**2) % p == (x**3 + 7) % p
+
+* ecdsa signatures
+
+:  - calculate (r, s), cryptographically committing to hash of message being signed
+:  - given (r, s), someone who knows your public key P can verify mathematically
+:    that you know s!
+
+* Questions / discussion
+
+- questions?
+- link to these slides: [[https://talks.hkjn.me/21lectures2019/pkcrypto.slide]]
+- contact details: [[https://hkjn.me]]
+- Shift Crypto: [[https://shiftcrypto.ch]]
+
+Thanks!
