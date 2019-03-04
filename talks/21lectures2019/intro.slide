@@ -71,7 +71,6 @@ https://hkjn.me
 : cryptography underlying bitcoin
 : fairly theoretical, some math concepts
 : private / public keys
-<<<<<<< HEAD
 : signing: proving you control private key without sharing it
 : encryption: not used in Bitcoin!
 : ECDSA: elliptic curve digital signature algorithm
