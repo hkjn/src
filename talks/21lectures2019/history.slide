@@ -94,9 +94,9 @@ https://hkjn.me
 
 : miners who find a valid block receives the tx fees in the block, as well as a subsidy
 : every 4y, block subsidy halves, starting at 50BTC
-: next one in ~80k blocks or 555d: http://www.thehalvening.com/
+: next one will go from 12.5 -> 6.25 BTC/block, in 64k blocks, 447d left (last time 80k blocks)
 
-.image speed-ever-2018-12-23.png 500 800
+.image speed-ever-2019-03-04.png 500 800
 
 [[http://bitcoin.sipa.be/][— bitcoin.sipa.be]]
 
@@ -157,14 +157,13 @@ https://hkjn.me
 :   lazslo's pizza
 :   $1 USD price
 - 2013 — 2014: first wave of altcoins
-:   2013/2014
 - 2014+: store of value
 :   you are here
 :   lunatic fringe / early adopter
 :   aspiring digital gold
 :   scarce just like tulips, but also divisible, fungibleish, transmittable, ..
 - 2017 — 2018: wave of forkcoins
-- 2018+: future?
+- 2019+: future?
 
 :   medium of exchange, maybe, eventually
 :   but merchants need to want BTC first
@@ -176,13 +175,11 @@ https://hkjn.me
 .image adoption.png 450 800
 [[https://medium.com/@nic__carter/visions-of-bitcoin-4b7b7cbcd24c][— Visions of Bitcoin by Nic Carter]]
 
-
-
 * Mythos (1/2)
 
 - still an experiment
 :   20% likely to succeed, via bluematt?
-:   ~1.5% market cap of gold currently, does that reflect market belief in success?
+:   ~0.94% (last time 1.5%) market cap of gold currently, does that reflect market belief in success?
 - we are story-telling apes
 : c.f Sapiens by Harari
 - Satoshi is perfect creation myth
@@ -219,9 +216,8 @@ https://hkjn.me
 
 * Questions / discussion
 
-- these slides: [[https://talks.hkjn.me/21lectures2018/history.slide]]
+- these slides: [[https://talks.hkjn.me/21lectures2019/history.slide]]
 - contact details: [[https://hkjn.me]]
 - my employer: [[https://shiftcrypto.ch]]
-- we are hiring: [[mailto:jobs@shiftcrypto.ch]]
 
 Thanks!
