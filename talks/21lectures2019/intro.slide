@@ -75,7 +75,7 @@ https://hkjn.me
 : elliptic curves:
 :   - equations with form y^2 = x^3 + ax + b
 :   - diagram: example curve over reals
-:   - exercise: verify that the point (5, 30) is on the curve y^2 = x^3 + 5
+:   - exercise: verify that the point (5, 30) is on the curve y^2 = x^3 + 5 (fix)
 :   - can define arithmetic operations over curve points just like we can for
 :     natural numbers, real, complex, ..
 :   - convention: lower case s is scalar, upper case G is curve point
@@ -88,20 +88,21 @@ https://hkjn.me
 :     point G, and keep adding it to itself until it becomes point at infinity: G, G+G, 3*G, 4*G, .., n*G = 0
 :   - this generates all elements in the finite field: {0, G, 2*G, .., (n-1)*G}
 : discrete log problem:
-:   - P = s*G, finding s is hard given P, but finding P is easy given s
+:   - P = p*G, finding p is hard given P, but finding P is easy given p
 :   - easy / hard is computational statements
-:   - choosing finite field of large order like 2^256 makes it infeasible to find s
+:   - choosing finite field of large order like 2^256 makes it infeasible to find p
 :   - this is how we generate a private and public key in Bitcoin!
 :   - a private key is a randomly chosen number
 :   - a public key is a point on the secp256k1 curve
-:   - params are y^2 = x^3 + 7, finite field over p = 2^256 - 2^32 - 977
+:   - params are y^2 = x^3 + 7, finite field over n = 2^256 - 2^32 - 977
 :   - G is (0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798,
 :           0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8)
-:   - verify that (x, y) of G lie on the curve: (y**2) % p == (x**3 + 7) % p
+:   - verify that (x, y) of G lie on the curve: (y**2) % n == (x**3 + 7) % n
+:   - this means a=0 and b=7
 : ECDSA signatures:
 :  - calculate (r, s), cryptographically committing to hash of message being signed
 :  - given (r, s), someone who knows your public key P can verify mathematically
-:    that you know s!
+:    that you know p!
 
 - 11:15 — 11:30 Break
 
