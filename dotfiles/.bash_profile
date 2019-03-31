@@ -194,6 +194,8 @@ export PYTHONDONTWRITEBYTECODE=1
 
 # GPG always wants to know what TTY it's running on. 
 export GPG_TTY=$(tty)
+# Set the authentication socket for ssh-agent to gpg-agent.
+export SSH_AUTH_SOCK="/run/user/$UID/gnupg/S.gpg-agent.ssh"
 
 export CLOUDSDK_PYTHON=python2
 
