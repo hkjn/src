@@ -179,7 +179,7 @@ export LANG="en_US.UTF-8"
 export LC_CTYPE="en_US.UTF-8"
 export EDITOR=nano
 export GOPATH=${HOME}
-export PATH=/usr/local/go/bin:/usr/local/homebrew/opt/gnu-tar/libexec/gnubin:/usr/local/homebrew/opt/curl/bin:/usr/local/homebrew/bin:/usr/local/homebrew/sbin:/usr/local/homebrew/Cellar/coreutils/8.25/libexec/gnubin/:${GOPATH}/src/hkjn.me/src/scripts:${GOPATH}/src/hkjn.me/src/scripts/tools:${GOPATH}/src/hkjn.me/ironkey:${HOME}/Android/Sdk/platform-tools:${HOME}/bin:.:$PATH
+export PATH=/usr/local/go/bin:/usr/local/homebrew/opt/gnu-tar/libexec/gnubin:/usr/local/homebrew/opt/curl/bin:/usr/local/homebrew/bin:/usr/local/homebrew/sbin:/usr/local/homebrew/Cellar/coreutils/8.25/libexec/gnubin/:${GOPATH}/src/hkjn.me/src/scripts:${GOPATH}/src/hkjn.me/src/scripts/tools:${GOPATH}/src/hkjn.me/ironkey:${HOME}/Android/Sdk/platform-tools:~/src/github.com/nanopb/nanopb/generator:${HOME}/bin:.:$PATH
 export PYTHONPATH=.:..
 
 # When running nmon, by default show:
