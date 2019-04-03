@@ -1,0 +1,21 @@
+#!/bin/bash
+set -euo pipefail
+
+declare BASEIMAGE="hkjn/golang:$(uname -m)-tip"
+declare BUILD_DIR="$(mktemp -d)"
+declare BASE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd ${BASE}
+
+sed "s|{{ARG_FROM}}|${BASEIMAGE}|g" Dockerfile.build > ${BUILD_DIR}/Dockerfile
+cp -r *.go cmd pages static tmpl redirector vendor ${BUILD_DIR}
+
+echo "Building in '${BUILD_DIR}'.."
+docker build -t hkjnweb-build ${BUILD_DIR}
+rm -rf bin/
+docker run --name hkjnweb-build hkjnweb-build
+docker cp hkjnweb-build:/home/go/bin/ .
+docker rm hkjnweb-build
+mv -v bin/* .
+echo "Installing binaries to /opt/bin .."
+sudo install hkjnweb_$(uname -m) /opt/bin/hkjnweb
+sudo install hkjnweb_redirector_$(uname -m) /opt/bin/hkjnweb_redirector

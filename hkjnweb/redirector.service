@@ -1,0 +1,12 @@
+[Unit]
+Description=hkjn.me redirector server
+After=network-online.target
+
+[Service]
+Environment=PATH=/usr/bin/:/opt/bin:/bin
+ExecStart=/bin/bash -c "hkjnweb_redirector"
+Restart=always
+
+[Install]
+WantedBy=network-online.target
+

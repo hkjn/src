@@ -1,0 +1,15 @@
+{{/* blog_listing.tmpl */}}
+{{define "main"}}
+<article>
+<header>
+<h1 class="article_title"><a href="{{.URI}}">Posts from {{.Data.TimeUnit}}</a></h1>
+</header>
+
+<ul>
+{{range $i, $p := .Data.Posts}}
+  <li><a href="{{$p.URI}}">{{$p.URI}}</a></li>
+{{end}}
+</ul>
+</article>
+
+{{end}}

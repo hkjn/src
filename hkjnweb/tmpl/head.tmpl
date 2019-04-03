@@ -1,0 +1,13 @@
+{{define "head"}}
+<meta charset="utf-8">
+<title>{{.}}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon" />
+<link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
+<!-- Scale viewport in resolution-independent way. -->
+<link rel="stylesheet" href="/static/prism.css" />
+<style>
+{{template "style"}}
+{{template "fonts"}}
+</style>
+{{end}}
