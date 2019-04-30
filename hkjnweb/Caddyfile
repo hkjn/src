@@ -1,0 +1,11 @@
+talks.hkjn.me {
+  push
+  log    /var/log/talks.hkjn.me.access.log
+  proxy  / 127.0.0.1:3999
+}
+
+www.hkjn.me, hkjn.me {
+  push
+  log    /var/log/hkjn.me.access.log
+  proxy  / 127.0.0.1:8888
+}

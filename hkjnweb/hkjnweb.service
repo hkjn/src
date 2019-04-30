@@ -1,0 +1,13 @@
+[Unit]
+Description=hkjn.me website
+After=network-online.target
+
+[Service]
+Environment=BIND_ADDR=:443
+Environment=PROD=1
+ExecStart=/var/www/hkjn.me/hkjnweb -alsologtostderr
+Restart=always
+
+[Install]
+WantedBy=network-online.target
+
