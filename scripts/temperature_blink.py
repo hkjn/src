@@ -21,7 +21,7 @@ def read_max_temp():
 def set_color(temp):
     temp = min(temp, 100000.0)
     r = 164*(temp / 100000.0)
-    r = int(random.uniform(0.8, 1.2) * r)
+    r = int(random.uniform(0.75, 1.25) * r)
     os.system("blink1-tool -m 5 --rgb={},0,25".format(r))
 
 
@@ -31,11 +31,11 @@ def main(do_demo=False):
             set_color(t*1000.0)
             time.sleep(0.1)
     while True:
-        time.sleep(0.5 * random.uniform(0.8, 1.2))
+        time.sleep(5.0 * random.uniform(0.5, 1.5))
         t = read_max_temp()
         print('Read temperature, max is {} C'.format(t/1000.0))
         set_color(t)
 
 
 if __name__ == '__main__':
-    main(do_demo=False)
+    main(do_demo=True)
