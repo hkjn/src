@@ -174,6 +174,7 @@ alias mp50="mplayer -af scaletempo -fs -panscanrange -5 $@"
 alias xclip="xclip -selection c"
 alias shlogs="less ${HOME}/.shell_logs/${HOSTNAME}"
 alias rmkey="_rmkey ${1}"
+alias elec='electrum --oneserver --server=127.0.0.1:50001:t'
 
 export LANG="en_US.UTF-8"
 export LC_CTYPE="en_US.UTF-8"
