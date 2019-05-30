@@ -1,0 +1,13 @@
+[Unit]
+Description=Prometheus bitcoind exporter
+After=network.target bitcoind.service
+
+[Service]
+ExecStart=/opt/bitcoin/prometheus_bitcoind.py
+User=btc
+Group=btc
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,13 @@
+[Unit]
+Description=Prometheus Tor exporter
+After=network.target tor.service
+
+[Service]
+ExecStart=/opt/monitoring/prometheus_tor.py
+User=monitoring
+Group=monitoring
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
