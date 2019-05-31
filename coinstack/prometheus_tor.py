@@ -13,16 +13,23 @@ def get_energy():
             '/sys/class/power_supply/BAT0/energy_now',
             '/sys/class/power_supply/BAT0/energy_full']
     print('running {}'.format(' '.join(args)))
-    result = b""
     result = subprocess.check_output(args, stderr=subprocess.STDOUT, timeout=15)
     return [int(x) for x in result.split()]
 
 
-def get_connection_status(host):
+def get_pending_txns():
+    args = ['ls',
+            '/etc/bitcoin/pending-txns/']
+    print('running {}'.format(' '.join(args)))
+    result = subprocess.check_output(args, stderr=subprocess.STDOUT, timeout=15)
+    return [str(x) for x in result.split()]
+
+
+def get_connection_status(addr):
     args = ['curl',
             '-sL',
             '--output', '/dev/null',
-            host]
+            addr]
     print('running {}'.format(' '.join(args)))
     try:
         subprocess.check_call(args, stderr=subprocess.STDOUT, timeout=15)
@@ -60,11 +67,11 @@ def tor_can_reach_frankenbox():
 def main():
     print('prometheus_tor.py starting..')
     network_up_metric = prometheus_client.Gauge('network_up', 'Whether a functional network is up')
-    shift_network_up_metric = prometheus_client.Gauge('shift_network_up', 'Whether a functional network is up that can reach rocketchat.shiftcrypto.ch')
     tor_up_metric = prometheus_client.Gauge('tor_circuit_up', 'Whether a functional Tor circuit is up')
     frankenbox_is_alive_metric = prometheus_client.Gauge('frankenbox_is_alive', 'Whether the frankenbox is aliveo')
     wasabi_btc_usd_metric = prometheus_client.Gauge('wasabi_btc_usd', 'BTC/USD price from Wasabi')
     wasabi_sat_per_usd_metric = prometheus_client.Gauge('wasabi_sat_per_usd', 'Number of satoshi for 1 USD, price from Wasabi')
+    num_pending_txns_metric = prometheus_client.Gauge('num_pending_txns', 'Number of pending unconfirmed txns')
     energy_now_metric = prometheus_client.Gauge('energy_now', 'Current energy level')
     energy_full_metric = prometheus_client.Gauge('energy_full', 'Fully charged energy level')
 
@@ -73,28 +80,23 @@ def main():
         has_network = False
         has_circuit = False
         frankenbox_is_alive = False
-        has_network = get_connection_status("github.com")
-        has_network_shift = get_connection_status("rocketchat.shiftcrypto.ch")
+        try:
+            has_network = get_connection_status("https://github.com")
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
+            print('Error: {}'.format(e))
+
         try:
             has_circuit = tor_has_circuit()
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
             print('Error: {}'.format(e))
-            has_circuit = False
-        try:
-            has_circuit = tor_has_circuit()
-        except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
-            print('Error: {}'.format(e))
-            has_circuit = False
         try:
             frankenbox_is_alive = tor_can_reach_frankenbox()
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
             print('Error: {}'.format(e))
-            frankenbox_is_alive = False
 
+        num_pending_txns_metric.set(len(get_pending_txns()))
         has_network_num = 0 if not has_network else 1
-        has_network_shift_num = 0 if not has_network_shift else 1
         print("network_up: {}".format(has_network_num))
-        print("shift_network_up: {}".format(has_network_shift_num))
 
         has_circuit_num = 0 if not has_circuit else 1
         frankenbox_is_alive_num = 0 if not frankenbox_is_alive else 1
@@ -106,7 +108,6 @@ def main():
         energy_now_metric.set(energy_now)
         energy_full_metric.set(energy_full)
         network_up_metric.set(has_network_num)
-        shift_network_up_metric.set(has_network_shift_num)
         tor_up_metric.set(has_circuit_num)
         frankenbox_is_alive_metric.set(frankenbox_is_alive_num)
         wasabi_price_btc_usd = None
