@@ -102,7 +102,7 @@ fi
 
 
 # Trap + log commands.
-trap command_log DEBUG
+# trap command_log DEBUG
 
 # Load SSH keys in new session.
 load-ssh-key
