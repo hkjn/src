@@ -68,8 +68,9 @@ def main():
     print('prometheus_tor.py starting..')
     network_up_metric = prometheus_client.Gauge('network_up', 'Whether a functional network is up')
     tor_up_metric = prometheus_client.Gauge('tor_circuit_up', 'Whether a functional Tor circuit is up')
-    frankenbox_is_alive_metric = prometheus_client.Gauge('frankenbox_is_alive', 'Whether the frankenbox is aliveo')
+    frankenbox_is_alive_metric = prometheus_client.Gauge('frankenbox_is_alive', 'Whether the frankenbox is alive')
     wasabi_btc_usd_metric = prometheus_client.Gauge('wasabi_btc_usd', 'BTC/USD price from Wasabi')
+    tor_can_reach_wasabi_metric = prometheus_client.Gauge('can_reach_wasabi', 'Whether Wasabi .onion service is reachable')
     wasabi_sat_per_usd_metric = prometheus_client.Gauge('wasabi_sat_per_usd', 'Number of satoshi for 1 USD, price from Wasabi')
     num_pending_txns_metric = prometheus_client.Gauge('num_pending_txns', 'Number of pending unconfirmed txns')
     energy_now_metric = prometheus_client.Gauge('energy_now', 'Current energy level')
@@ -111,13 +112,17 @@ def main():
         tor_up_metric.set(has_circuit_num)
         frankenbox_is_alive_metric.set(frankenbox_is_alive_num)
         wasabi_price_btc_usd = None
+        tor_can_reach_wasabi = 0
         try:
             wasabi_price_btc_usd = get_wasabi_price_btc_usd()
+            tor_can_reach_wasabi = 1
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
             print('Error getting wasabi price: {}'.format(e))
         if wasabi_price_btc_usd:
             wasabi_btc_usd_metric.set(wasabi_price_btc_usd)
             wasabi_sat_per_usd_metric.set(10.0**8/wasabi_price_btc_usd)
+        tor_can_reach_wasabi_metric.set(tor_can_reach_wasabi)
+
 
         time.sleep(30)
 
