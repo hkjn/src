@@ -98,7 +98,10 @@ def main():
         should_blink = get_light() > 3
         if not should_blink:
             continue
-        blink_pending_txns()
+        try:
+            blink_pending_txns()
+        except Exception as e:
+            print('Error: {}'.format(e))
         try:
             tor_is_up = tor_up()
         except Exception as e:
