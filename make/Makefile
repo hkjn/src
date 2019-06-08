@@ -24,7 +24,7 @@ post-build:
 	@if [ "$(PUSH_ENABLED)" = "1" ]; then \
 		docker run --rm \
 		           -v /var/run/docker.sock:/var/run/docker.sock \
-			   hkjn/docker-squash -t $(IMAGE):$(VERSION)-$(DOCKER_ARCH) $(IMAGE):$(VERSION)-$(DOCKER_ARCH); \
+			   hkjn/docker-squash:1.1.0 -t $(IMAGE):$(VERSION)-$(DOCKER_ARCH) $(IMAGE):$(VERSION)-$(DOCKER_ARCH); \
 	else \
 		echo "Not squashing image, since PUSH_ENABLED=$(PUSH_ENABLED)."; \
 	fi
