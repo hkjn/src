@@ -3,7 +3,7 @@ ARCH=$(uname -m)
 if [[ "${ARCH}" = "x86_64" ]]; then
 	echo "346f9394393ee8db5f8bd1e229ee9d90e5b36931bdd754308b2ae68884dd6822"
 elif [[ "${ARCH}" = "armv7l" ]]; then
-	echo "xx"
+	echo "95adae8a8b813a75c2372f798408ca88bc4f2548a95ddbec4aedfffdc5861ea2"
 else
 	echo "FATAL: Unsupported CPU arch '${ARCH}'." >&2
 	exit 1
