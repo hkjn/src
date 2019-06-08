@@ -19,7 +19,7 @@ post-build:
 	@echo "Squashing image.."
 	docker run --rm \
 		   -v /var/run/docker.sock:/var/run/docker.sock \
-		   hkjn/docker-squash \
+		   hkjn/docker-squash:1.1.0 \
 		     -t $(IMAGE):$(VERSION)-$(DOCKER_ARCH) \
 		        $(IMAGE):$(VERSION)-$(DOCKER_ARCH)
 
