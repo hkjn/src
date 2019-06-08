@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+[[ $# -eq 1 ]] || {
+	echo "FATAL: Usage $(basename ${0}) docker-image" >&2
+	exit 1
+}
+echo "Squashing ${1}.."
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock hkjn/docker-squash:$(uname -m) -t ${1} ${1}

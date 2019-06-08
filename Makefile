@@ -1,6 +1,6 @@
-.PHONY : all alpine blocksci bitcoin btcd clightning config docker fileserver gcloud golang googleauth gpg lnd openvpn prober probes proto s3cmd terraform workspace
+.PHONY : all alpine blocksci bitcoin btcd clightning config docker docker-squash fileserver gcloud golang googleauth gpg lnd openvpn prober probes proto s3cmd terraform workspace
 
-all: alpine blocksci bitcoin btcd clightning config docker fileserver gcloud golang googleauth gpg lnd openvpn prober probes proto s3cmd terraform workspace
+all: alpine blocksci bitcoin btcd clightning config docker docker-squash fileserver gcloud golang googleauth gpg lnd openvpn prober probes proto s3cmd terraform workspace
 
 alpine:
 	@echo "Making alpine.."
@@ -29,6 +29,10 @@ config:
 docker:
 	@echo "Making docker.."
 	$(MAKE) -C docker
+
+docker-squash:
+	@echo "Making docker-squash.."
+	$(MAKE) -C docker-squash
 
 fileserver:
 	@echo "Making fileserver.."
