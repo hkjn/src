@@ -133,7 +133,7 @@ BASH_FUNCS="$HOME/src/hkjn.me/src/scripts/bash_funcs.sh"
 if [[ -e "$BASH_FUNCS" ]]; then
 	source "$BASH_FUNCS"
 else
-	echo "No '$BASH_FUNCS' found. Try 'go get hkjn.me/scripts'?"
+	echo "No '$BASH_FUNCS' found. Try 'go get hkjn.me/src'?"
 fi
 
 # enable color support of ls and also add handy aliases
