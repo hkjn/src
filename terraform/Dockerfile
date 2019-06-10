@@ -1,4 +1,4 @@
-FROM hkjn/alpine:0.1.0
+FROM hkjn/alpine:0.2.0
 
 ARG tf_arch
 ARG tf_version

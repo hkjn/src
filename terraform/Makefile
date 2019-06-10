@@ -1,7 +1,7 @@
 include ../make/Makefile
 NAME = terraform
 TF_ARCH=$(shell bash $(MAKE_DIR)/../terraform/get_tf_arch)
-VERSION = 0.11.11
+VERSION = 0.12.1
 
 docker-build:
 	@echo "Building image $(IMAGE):$(VERSION)-$(DOCKER_ARCH).."
