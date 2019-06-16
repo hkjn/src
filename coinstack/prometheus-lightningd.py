@@ -111,6 +111,7 @@ class ChannelsCollector(BaseLnCollector):
         peers = self.rpc.listpeers()['peers']
         for p in peers:
             for c in p['channels']:
+                print('xx: fetching channel_id from: {}'.format(c))
                 labels = [p['id'], c['channel_id']]
                 balance_gauge.add_metric(labels, c['to_us_msat'].to_satoshi())
                 spendable_gauge.add_metric(labels,

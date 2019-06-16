@@ -60,17 +60,11 @@ def tor_down_blink():
     if p.returncode != 0 or error:
         raise Exception("command failed: {}".format(error))
 
-
-def tor_up():
-    p = subprocess.Popen('curl -s localhost:8335'.split(), stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
-    output, error = p.communicate()
-    if p.returncode != 0:
-        raise Exception("command failed: {}".format(error))
-    parts = output.decode().split('\n')
-    status = [p for p in parts if 'tor_circuit_up' in p and p[0] != '#']
-    if len(status) != 1:
-        raise Exception("failed to parse tor_circuit_up: {}".format(parts))
-    return status[0].split()[-1] == "1.0"
+def tor_has_circuit():
+    args = 'curl --socks5 localhost:9050 --socks5-hostname localhost:9050 -s https://check.torproject.org/'.split()
+    print('running {}'.format(' '.join(args)))
+    output = subprocess.check_output(args, stderr=subprocess.STDOUT, timeout=15)
+    return 'Congratulations' in str(output)
 
 
 def bitcoin_mempool_fee():
@@ -103,7 +97,7 @@ def main():
         except Exception as e:
             print('Error: {}'.format(e))
         try:
-            tor_is_up = tor_up()
+            tor_is_up = tor_has_circuit()
         except Exception as e:
             print('Error: {}'.format(e))
             tor_is_up = False
