@@ -1,6 +1,6 @@
-.PHONY : all alpine blocksci bitcoin btcd clightning config docker docker-squash fileserver gcloud golang googleauth gpg lnd openvpn prober probes proto s3cmd terraform workspace
+.PHONY : all alpine blocksci bitcoin btcd clightning config docker docker-squash fileserver gcloud golang googleauth gpg lnd openvpn prober probes proto s3cmd terraform tor-browser workspace
 
-all: alpine blocksci bitcoin btcd clightning config docker docker-squash fileserver gcloud golang googleauth gpg lnd openvpn prober probes proto s3cmd terraform workspace
+all: alpine blocksci bitcoin btcd clightning config docker docker-squash fileserver gcloud golang googleauth gpg lnd openvpn prober probes proto s3cmd terraform tor-browser workspace
 
 alpine:
 	@echo "Making alpine.."
@@ -81,6 +81,10 @@ s3cmd:
 terraform:
 	@echo "Making terraform.."
 	$(MAKE) -C terraform
+
+tor-browser:
+	@echo "Making tor-browser.."
+	$(MAKE) -C tor-browser
 
 workspace:
 	@echo "Making workspace.."
