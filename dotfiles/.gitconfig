@@ -14,7 +14,7 @@
         autosetuprebase = always
 [alias]
         pr = "!f() { git fetch -fu ${2:-$(git remote |grep ^upstream || echo origin)} refs/pull/$1/head:pr/$1 && git checkout pr/$1; }; f"
-	refresh = "!r() { git fetch upstream && git merge upstream/master && git push; }; r"
+	refresh = "!r() { [ \"$(git rev-parse --abbrev-ref HEAD)\" = \"master\" ] || { echo \"not on master; won't refresh\"; exit 1; } && git fetch upstream && git merge upstream/master && git push; }; r"
         update = "!u() { git checkout master && git refresh && git checkout - && git rebase master; }; u"
 [tag]
         forceSignAnnotated = true
