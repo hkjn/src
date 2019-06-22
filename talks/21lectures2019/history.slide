@@ -1,38 +1,10 @@
 History of Bitcoin
-08:00 04 Mar 2019
+27 Jun 2019
 
 Henrik Jonsson
-Engineering Manager
-Shift Crypto
+Rōnin Coder
 me@hkjn.me
-hkjn@shiftcrypto.ch
 https://hkjn.me
-
-: Henrik Jonsson / hkjn @ { hkjn.me, shiftcrypto.ch, twitter.com, github.com }
-: thanks to Lucas for inviting me and all of you for coming
-: Henrik used to work for Google, also fintech and Bitcoin startups
-
-* Intro / disclaimer
-
-- don't trust, verify
-: not particularly qualified, but neither is anyone
-:   this is one person's view, not my company's or anything official (there is no one official)
-:   we are all still learning what the system is, if I am wrong on major points look forward to learning together
-
-- been around for a while
-:   followed since 2010 v0.3 release hit Slashdot
-:   was on cryptography list where Satoshi announced whitepaper and v0.1 but it ended up in spam filter
-:   left Google 2014 partly to focus more on learning about and contributing to Bitcoin project
-:   my main project most of the time since 2015
-
-- now with [[https://shiftcrypto.ch][Shift Crypto]]
-:   joined ~2 months ago
-:   jonas schnelli co-founder
-:   privacy / security: rights, should be accessible to everyone, not sacrificed for convenience
-:   equip people to keep their valuable information secure
-:   simple + safe
-:   hardware wallet called bitbox, new hw wallet coming Soon (tm)
-:   working on more stuff, come to talk next week
 
 - let's review history of Bitcoin from different angles
 : looking at the history of the system from a few different angles like
@@ -161,7 +133,7 @@ https://hkjn.me
 :   you are here
 :   lunatic fringe / early adopter
 :   aspiring digital gold
-:   scarce just like tulips, but also divisible, fungibleish, transmittable, ..
+:   scarce, just like tulips, but also divisible, fungibleish, transmittable, ..
 - 2017 — 2018: wave of forkcoins
 - 2019+: future?
 
@@ -218,6 +190,5 @@ https://hkjn.me
 
 - these slides: [[https://talks.hkjn.me/21lectures2019/history.slide]]
 - contact details: [[https://hkjn.me]]
-- my employer: [[https://shiftcrypto.ch]]
 
 Thanks!

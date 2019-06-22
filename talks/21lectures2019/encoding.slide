@@ -1,0 +1,29 @@
+Common encoding formats
+27 June 2019
+
+Henrik Jonsson
+Rōnin Coder
+me@hkjn.me
+https://hkjn.me
+
+* Common encoding formats
+
+: different ways to represent private and public keys and addresses
+: raw binary, hex, Base58Check, Bech32
+: for pubkeys: compressed/uncompressed
+: for privkeys: WIF, WIF-compressed
+: Base58Check prefixes:
+:   0x00 / 1: p2pkh addr
+:   0x05 / 3: p2sh addr
+:   0x6F / m or n: p2pkh testnet addr
+:   0x80 / 5 or K or L: privkey WIF
+:   0x0142 / 6P: BIP38 encrypted privkey
+:   0x0488B21E / xpub: BIP-32 extended public key
+
+* Questions / discussion
+
+- questions?
+- link to these slides: [[https://talks.hkjn.me/21lectures2019/encoding.slide]]
+- contact details: [[https://hkjn.me]]
+
+Thanks!

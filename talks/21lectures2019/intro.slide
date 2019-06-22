@@ -1,14 +1,12 @@
 Intro
-08:00 31 Jan 2019
+27 June 2019
 
 Henrik Jonsson
-Team Lead
-Shift Crypto
+Rōnin Coder
 me@hkjn.me
-hkjn@shiftcrypto.ch
 https://hkjn.me
 
-: Henrik Jonsson / hkjn @ { hkjn.me, shiftcrypto.ch, twitter.com, github.com }
+: Henrik Jonsson / hkjn @ { hkjn.me, twitter.com, github.com }
 : thanks to Lucas for inviting me and all of you for coming
 : used to work for Google, also fintech and Bitcoin startups
 
@@ -21,21 +19,30 @@ https://hkjn.me
 
 - been around for a while
 :   followed since 2010 v0.3 release hit Slashdot
-:   was on cryptography list where Satoshi announced whitepaper and v0.1 but it ended up in spam filter
+:   was on cryptography list where Satoshi announced whitepaper and v0.1, but it ended up in spam filter
 :   left Google 2014 partly to focus more on learning about and contributing to Bitcoin project
-:   my main project most of the time since 2015
 
-- now with [[https://shiftcrypto.ch][Shift Crypto]]
-:   joined ~5 months ago
-:   jonas schnelli co-founder
-:   privacy / security: rights, should be accessible to everyone, not sacrificed for convenience
-:   equip people to keep their valuable information secure
-:   simple + safe
-:   hardware wallet called bitbox, new hw wallet coming Soon (tm)
-:   working on more stuff, come to talk next week
+- earlier with [[https://google.com][Google]], [[https://safello.com/][Safello]], [[https://shiftcrypto.ch][Shift Crypto]], ..
+:   just left Shift after ~9 months
+:   building hardware wallets, BitBox02 in beta, worked on full node project called BitBox Base with Stadicus,
+:     2018 Advanced Course student
+
+- working for Bitcoin since ~2015
+:   Bitcoin has been my main professional focus since 2015
+:   teaching others main focus; we need 100x more developers working on building Bitcoin +
+:   building on top of Bitcoin
+:   still very early; everyone feels like they were latecomers when they first get deeply
+:     into Bitcoin
 
 - who are you?
-- what would you like to get from the course?
+- what would you like to get out of this?
+
+: I took Jimmy Song's Programming Blockchain course in Jan 2018
+: Justin Moon and https://mooniversity.io/ teaches Bitcoiners to Coder
+: we at 21Lectures teach coders how to Bitcoin
+: Stepan Snigirev and https://cryptoadvance.io/ teaches / builds hardware wallet kits
+
+- these slides: [[https://talks.hkjn.me/21lectures2019/]]
 
 * Course goals
 
@@ -45,28 +52,27 @@ https://hkjn.me
 : for a solid understanding of Bitcoin from a technical perspective. This course is the perfect introduction
 : to Bitcoin for developers and technologists. It also provides the necessary knowledge for our Advanced Course."
 
-- introduce Bitcoin to technical audience
-- allow understanding of key concepts
-- introduce Bitcoin protocol
+- introduce key Bitcoin concepts to technical audience
+- describe Bitcoin protocol
+- how does public key cryptography work?
 - what are nodes?
 - how does mining work?
-- how does public key cryptography work?
 - what are addresses and wallets?
-- hands-on experience with tools and concepts for advanced course
+- hands-on experience with tools and concepts to be ready for Advanced Course
 
 * Course structure
 
 - mix of theory and application
 - focus on how high-level concepts and how to work with tools
 - no proofs, limited math
-- many concepts interlock, need scaffolding to build understanding
+- since many concepts interlock, need scaffolding to build understanding
 - tools used: go, bx
 
 * Course overview: Day 1
 
-- 09:00 — 09:45 Course intro (you are here)
+- 09:00 — 09:45 [[intro.slide][Course intro (you are here)]]
 
-- 09:45 - 11:15: Public key crypto basics
+- 09:45 — 11:15: [[pkcrypto.slide][Public key crypto basics]]
 
 : cryptography underlying bitcoin
 : fairly theoretical, some math concepts
@@ -74,134 +80,50 @@ https://hkjn.me
 : signing: proving you control private key without sharing it
 : encryption: not used in Bitcoin!
 : ECDSA: elliptic curve digital signature algorithm
-: ECDSA: elliptic curves over finite fields of prime order
-: elliptic curves:
-:   - equations with form y^2 = x^3 + ax + b
-:   - diagram: example curve over reals
-:   - exercise: verify that the point (5, 30) is on the curve y^2 = x^3 + 5 (fix)
-:   - can define arithmetic operations over curve points just like we can for
-:     natural numbers, real, complex, ..
-:   - convention: lower case s is scalar, upper case G is curve point
-: finite fields:
-:   - F_7 has elements {0, 1, 2, 3, 4, 5, 6}, + - * / operations wrap around
-: elliptic curves over finite fields:
-:   - can define addition, etc over curve points so adding two curve points produces another
-:     point on the curve
-:   - generator point: if we have an elliptic curve over a finite field, can pick generator
-:     point G, and keep adding it to itself until it becomes point at infinity: G, G+G, 3*G, 4*G, .., n*G = 0
-:   - this generates all elements in the finite field: {0, G, 2*G, .., (n-1)*G}
-: discrete log problem:
-:   - P = p*G, finding p is hard given P, but finding P is easy given p
-:   - easy / hard is computational statements
-:   - choosing finite field of large order like 2^256 makes it infeasible to find p
-:   - this is how we generate a private and public key in Bitcoin!
-:   - a private key is a randomly chosen number
-:   - a public key is a point on the secp256k1 curve
-:   - params are y^2 = x^3 + 7, finite field over n = 2^256 - 2^32 - 977
-:   - G is (0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798,
-:           0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8)
-:   - verify that (x, y) of G lie on the curve: (y**2) % n == (x**3 + 7) % n
-:   - this means a=0 and b=7
-: ECDSA signatures:
-:  - calculate (r, s), cryptographically committing to hash of message being signed
-:  - given (r, s), someone who knows your public key P can verify mathematically
-:    that you know p!
 
 - 11:15 — 11:30 Break
 
-- 11:30 — 12:15 Bitcoin history
-: i.e "what is the history of Bitcoin and potential future?"
+- 11:30 — 12:15 [[encoding.slide][Common encoding formats]]
+
+: different ways to represent private and public keys and addresses
 
 - 12:15 — 13:30 Lunch
 
-- 13:30 - 14:15 Common encoding formats
+- 13:30 — 14:15 [[history.slide][History of Bitcoin]]
 
-: different ways to represent private and public keys and addresses
-: raw binary, hex, Base58Check, Bech32
-: for pubkeys: compressed/uncompressed
-: for privkeys: WIF, WIF-compressed
-: Base58Check prefixes:
-:   0x00 / 1: p2pkh addr
-:   0x05 / 3: p2sh addr
-:   0x6F / m or n: p2pkh testnet addr
-:   0x80 / 5 or K or L: privkey WIF
-:   0x0142 / 6P: BIP38 encrypted privkey
-:   0x0488B21E / xpub: BIP-32 extended public key
+: what is the history of Bitcoin, and its potential future?
 
-- 14:15 - 15:00 Bitcoin addresses basics
+- 14:15 - 15:00 [[address.slide][Bitcoin address basics]]
 
-: so what is an addr?
-:   - providing a P2PKH address to someone is to say "here's the hash of my pubkey,
-:     please create a tx which locks an output locked to the corresponding privkey"
-:   - P2SH: "here's the hash of a lock script which if satisfied can spend"
-:   - P2WPKH: like P2PKH but post-SegWit
-:   - P2WSH: like P2SH but post-SegWit
-
-: cryptographic hashes
-:   - SHA256
-:   - RIPEMD160
-: -> 160 bit hash of public key, encoded as base58
-
-: bitcoin address:
-:   - compressed/uncompressed pubkey in SEC format
-:   - a P2PKH bitcoin address is sha256 + ripemd160 of pubkey in SEC format, with checksum,
-:     encoded as base58
-:   - diagram: private key -> public key -> hash
-:   - exercise: generate a testnet addr and get some funds from a faucet
-:   - there's P2PK, P2PKH, P2M (raw multisig), P2SH, P2WSH, P2WPKH, ..
-:   - but these are simplifications to make it easier for people to follow:
-:     a bitcoin tx always assigns funds from one script to another
-:   - tx when created unlocks earlier outputs that it consumes, and sets lock script
-:     to specify conditions which allow funds to be spent in the future
-:   - if we spend 1 BTC UTXO in a tx, we provide an unlock script
-:     which mathematically proves that we control the private key which
-:     was specified in the lock script, and then create a new output
-:     which locks the value to a new script
-:   - lock script is run together with unlock script, and if they verify
-:     the tx is valid
-:   - sending a tx is making a statement that some mathematical properties
-:     holds
-:   - addresses, wallets and many other abstractions don't really exist on protocol level!
-:   - txns with inputs and outputs, ordered into blocks coming with PoW are fundamental units
-:   - tx: version, inputs, outputs, locktime
-:   - tx input is reference to earlier tx output, along with unlock script (ScriptSig), as well as sequence field (RBF)
-:   - tx input does not contain amount or the lock script, this needs to be looked up from referenced tx
-:   - tx output has amount (can be zero, OP_RETURN) and lock script (ScriptPubKey)
-:   - tx fee is implicit difference from sum(inputs)-sum(outputs)
-:   - utxo are always spent fully, can't spend half, so use change address to send back extra funds
-:     and avoid accidentally donating to miners
-:   - exercise: decode raw tx
+: what is a Bitcoin address anyway?
 
 - 15:00 — 15:15 Break
 
-- 15:15 — 16:00 Theory and practice
-: i.e "how did we get here; where might we go?"
+- 15:15 — 16:00 [[theory_and_practice.slide][Theory and practice]]
 
-- 16:00 — 16:45 Transactions basics
+: how did we get here; where might we go?
 
-: Bitcoin script: limited stack-based language, not turing complete
-: conceptually lock script and unlock script are concatenated and run together
-: scripts can express anything, lock script "2 + 2 = ?" and unlock script "4"
+- 16:00 — 16:45 [[tx.slide][Transaction basics]]
+
+: transactions and Script
 
 * Course overview: Day 2
 
 - 09:00 — 09:45 HD wallets and seed phrases
 - 09:45 — 10:30 Mining basics
 - 10:30 — 10:45 Break
-- 10:45 — 11:30 Consensus basics
-- 11:30 — 12:15 Forks basics
+- 09:45 — 10:30 Networking basics
+- 11:30 — 12:15 Consensus basics
 - 12:15 — 13:30 Lunch
-- 13:30 — 14:15 TBD
-- 14:15 — 15:00 TBD
+- 13:30 — 14:15 Forks basics
+- 14:15 — 15:00 Wasabi and Bisq
 - 15:00 — 15:15 Break
-- 15:15 — 16:00 TBD
-- 16:00 — 16:45 TBD
-
+- 15:15 — 16:00 Full nodes
+- 16:00 — 16:45 Q&A / Open discussion
 
 * Questions / discussion
 
 - these slides: [[https://talks.hkjn.me/21lectures2019/intro.slide]]
 - contact details: [[https://hkjn.me]]
-- Shift Crypto: [[https://shiftcrypto.ch]]
 
 Thanks!

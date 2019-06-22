@@ -1,11 +1,9 @@
 Public Key Cryptography basics
-08:00 22 Jan 2019
+27 June 2019
 
 Henrik Jonsson
-Team Lead
-Shift Crypto
+Rōnin Coder
 me@hkjn.me
-hkjn@shiftcrypto.ch
 https://hkjn.me
 
 * Public Key cryptography basics
@@ -19,23 +17,34 @@ https://hkjn.me
 - secp256k1
 : the bitcoin curve
 
-* Private / public keys
+* Private / public keys (1/2)
+
+- all Bitcoin private keys! [[https://allbitcoinprivatekeys.com/][https://allbitcoinprivatekeys.com/]]
+- what is a private key in Bitcoin?
+: a number!
+- what is an address in Bitcoin?
+: (typically) hash of a public key
+: xx: public key point for privkey "3", seedphrase/xprv/xpub for entropy "5"
+
+* Private / public keys (2/2)
 
 - easy to go from private to public
+: multiply the number with G, a generator point
+: public key: a (x, y) point on an elliptic curve
 - infeasible to go from public to private
 - bitcoin address: (typically) a hash of public key
 - bitcoin tx: transferring control from one script to another
 
 * Signing
 
-- signing: proving you control private key without sharing it
+- signing: proving you control private key, without revealing it
 - encryption: not used in Bitcoin!
 
 * ECDSA
 
 : elliptic curves:
-:   - diagram: example curve over reals
-:   - exercise: verify that the point (5, 30) is on the curve y^2 = x^3 + x + 1
+:   - xx: diagram: example curve over reals
+:   - xx: exercise: verify that sample point is on sample curve
 
 : elliptic curve digital signature algorithm
 - ecdsa: elliptic curves over finite fields of prime order
@@ -54,7 +63,6 @@ https://hkjn.me
 : if P1 is PaI, P1 + P2 = P2, like zero
 - multiplication: repeated addition
 : kP = P + P + .. + P, k times
-
 
 * finite fields
 

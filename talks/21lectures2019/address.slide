@@ -1,0 +1,57 @@
+Address basics
+27 Jun 2019
+
+Henrik Jonsson
+Rōnin Coder
+me@hkjn.me
+https://hkjn.me
+
+: so what is an addr?
+:   - providing a P2PKH address to someone is to say "here's the hash of my pubkey,
+:     please create a tx which locks an output locked to the corresponding privkey"
+:   - P2SH: "here's the hash of a lock script which if satisfied can spend"
+:   - P2WPKH: like P2PKH but post-SegWit
+:   - P2WSH: like P2SH but post-SegWit
+
+: cryptographic hashes
+:   - SHA256
+:   - RIPEMD160
+: -> 160 bit hash of public key, encoded as base58
+
+: bitcoin address:
+:   - compressed/uncompressed pubkey in SEC format
+:   - a P2PKH bitcoin address is sha256 + ripemd160 of pubkey in SEC format, with checksum,
+:     encoded as base58
+:   - diagram: private key -> public key -> hash
+:   - exercise: generate a testnet addr and get some funds from a faucet
+:   - there's P2PK, P2PKH, P2M (raw multisig), P2SH, P2WSH, P2WPKH, ..
+:   - but these are simplifications to make it easier for people to follow:
+:     a bitcoin tx always assigns funds from one script to another
+:   - tx when created unlocks earlier outputs that it consumes, and sets lock script
+:     to specify conditions which allow funds to be spent in the future
+:   - if we spend 1 BTC UTXO in a tx, we provide an unlock script
+:     which mathematically proves that we control the private key which
+:     was specified in the lock script, and then create a new output
+:     which locks the value to a new script
+:   - lock script is run together with unlock script, and if they verify
+:     the tx is valid
+:   - sending a tx is making a statement that some mathematical properties
+:     holds
+:   - addresses, wallets and many other abstractions don't really exist on protocol level!
+:   - txns with inputs and outputs, ordered into blocks coming with PoW are fundamental units
+:   - tx: version, inputs, outputs, locktime
+:   - tx input is reference to earlier tx output, along with unlock script (ScriptSig), as well as sequence field (RBF)
+:   - tx input does not contain amount or the lock script, this needs to be looked up from referenced tx
+:   - tx output has amount (can be zero, OP_RETURN) and lock script (ScriptPubKey)
+:   - tx fee is implicit difference from sum(inputs)-sum(outputs)
+:   - utxo are always spent fully, can't spend half, so use change address to send back extra funds
+:     and avoid accidentally donating to miners
+:   - exercise: decode raw tx
+
+* Questions / discussion
+
+- questions?
+- link to these slides: [[https://talks.hkjn.me/21lectures2019/address.slide]]
+- contact details: [[https://hkjn.me]]
+
+Thanks!
