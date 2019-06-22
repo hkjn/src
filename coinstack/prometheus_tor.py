@@ -17,6 +17,15 @@ def get_energy():
     return [int(x) for x in result.split()]
 
 
+def get_energy():
+    args = ['cat',
+            '/sys/class/power_supply/BAT0/energy_now',
+            '/sys/class/power_supply/BAT0/energy_full']
+    print('running {}'.format(' '.join(args)))
+    result = subprocess.check_output(args, stderr=subprocess.STDOUT, timeout=15)
+    return [int(x) for x in result.split()]
+
+
 def get_pending_txns():
     args = ['ls',
             '/etc/bitcoin/pending-txns/']
