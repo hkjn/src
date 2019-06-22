@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+#
+# Unlock the ironkey. Needs to run inside the container, with 32bit libs installed.
+#
+
+set -euo pipefail
+
+fatal() {
+  echo "[ $(basename "$0") ] FATAL: $*" >&2
+  exit 1
+}
+
+[[ -e "/dev/sr0" ]] || fatal "No /dev/sr0 device present."
+
+echo "Unlocking ironkey.."
+mount /dev/sr0 /mnt
+/mnt/linux/ironkey

@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+#
+# Build and push Docker image.
+#
+set -euo pipefail
+
+DOCKER_USER="hkjn"
+DOCKER_IMAGE="ironkey"
+
+TAG="$DOCKER_USER/$DOCKER_IMAGE"
+docker build -t $TAG .
+NO_PUSH=${NO_PUSH:-""}
+[[ "$NO_PUSH" ]] || docker push $TAG
+

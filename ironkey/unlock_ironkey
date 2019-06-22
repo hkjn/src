@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+#
+# Unlock the ironkey via the container with 32bit libs inside.
+#
+
+set -euo pipefail
+
+fatal() {
+  echo "[ $(basename "$0") ] FATAL: $*" >&2
+  exit 1
+}
+
+[[ -e "/dev/sr0" ]] || fatal "No /dev/sr0 device present."
+
+# TODO(hkjn): Use binary search to find the minimal set of capabilities
+# necessary to avoid giving full --privileged:
+# - https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities
+docker run --device /dev/sr0 --rm -it --privileged hkjn/ironkey unlock
