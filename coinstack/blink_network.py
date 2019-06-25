@@ -38,7 +38,13 @@ def blink_pending_txns():
     for txid in pending:
         print('xx: checking {}'.format(txid))
         cmd = 'bitcoin-cli getrawtransaction {} 1'.format(txid)
-        output = subprocess.check_output(cmd.split(), stderr=subprocess.STDOUT, timeout=10)
+        try:
+            output = subprocess.check_output(cmd.split(), stderr=subprocess.STDOUT, timeout=10)
+        except Exception as e:
+            print("command failed: {}".format(e))
+            blink(r=100, times=3)
+            continue
+
         print('xx: getrawtransaction finished')
         rawtx = json.loads(output)
         confirmed = rawtx.get("confirmations", 0) > 0

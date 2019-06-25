@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-
+"""
+This script uses bitcoin-cli to extract various information from a running
+bitcoind, and exposes them as Prometheus metrics.
+"""
 import json
 import time
 import subprocess
