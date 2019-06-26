@@ -27,13 +27,14 @@ https://hkjn.me
 :   building hardware wallets, BitBox02 in beta, worked on full node project called BitBox Base with Stadicus,
 :     2018 Advanced Course student
 
-- working for Bitcoin since ~2015
+- been working for Bitcoin since ~2015
 :   Bitcoin has been my main professional focus since 2015
 :   teaching others main focus; we need 100x more developers working on building Bitcoin +
 :   building on top of Bitcoin
 :   still very early; everyone feels like they were latecomers when they first get deeply
 :     into Bitcoin
 
+- thanks for coming!
 - who are you?
 - what would you like to get out of this?
 
@@ -47,30 +48,58 @@ https://hkjn.me
 * Course goals
 
 : via Lucas:
-: "At our beginner course you will learn the essential knowledge about Bitcoin. You will learn what nodes are,
-: how mining works, how public / private key cryptography works, how addresses are built and everything else
-: for a solid understanding of Bitcoin from a technical perspective. This course is the perfect introduction
-: to Bitcoin for developers and technologists. It also provides the necessary knowledge for our Advanced Course."
+:   "At our beginner course you will learn the essential knowledge about Bitcoin. You will learn what nodes are,
+:   how mining works, how public / private key cryptography works, how addresses are built and everything else
+:   for a solid understanding of Bitcoin from a technical perspective. This course is the perfect introduction
+:   to Bitcoin for developers and technologists. It also provides the necessary knowledge for our Advanced Course."
+: last goal used to be "hands-on experience with tools and concepts to be ready for Advanced Course"
 
-- introduce key Bitcoin concepts to technical audience
-- describe Bitcoin protocol
-- how does public key cryptography work?
+: change of plans, new goals:
+:   get more people building on top of Bitcoin, and using tools others build
+:   short notice for guest lecturers
+
+- give practical knowledge on how to use Bitcoin
+- describe core concepts as we go
+- give some understanding of Bitcoin protocol
 - what are nodes?
-- how does mining work?
 - what are addresses and wallets?
-- hands-on experience with tools and concepts to be ready for Advanced Course
+- how does public key cryptography work?
+- how does mining work?
 
 * Course structure
 
-- mix of theory and application
-- focus on how high-level concepts and how to work with tools
-- no proofs, limited math
-- since many concepts interlock, need scaffolding to build understanding
-- tools used: go, bx
+- mostly application, some theory
+- focus mainly on how how to work with tools
+- only as much math as we need
+- many concepts interlock, need scaffolding
+- disclaimer: not polished, not portable, not finished
+: i.e might have rough edges, not guaranteed to work everywhere (non
+: Debian Linux), does not focus on reliability or security of software
+: installation and operation
 
 * Course overview: Day 1
 
 - 09:00 — 09:45 [[intro.slide][Course intro (you are here)]]
+
+: red thread of practical examples:
+:   - ncoleman tools to generate p2pkh, p2sh-wrapped-p2wpkh and p2wpkh addresses
+:     - or generating seed phrase using dice and coin flips: https://github.com/taelfrinn/Bip39-diceware
+:   - EC math to from WIF-encoded privkey generate pubkey and hashing it to p2wpkh
+:   - computing seed words from entropy
+:   - signing tx with privkey
+:   - looking up transactions with bitcoin-cli getrawtransaction <txid>
+:   - looking up blocks with getblockhash <height> + getblock <blockhash>
+:   - types of wallets: software, hardware, full nodes, "light clients" vs remote controls
+:   - downloading bitcoin core, verifying signature, syncing
+:       blockchain (shared server / tmux)
+:   - 21.hkjn.me access from client: download script from here: <short link / github raw link>
+:   - 21.hkjn.me steps on server: download script from here: <short link / github raw link>
+:     - install bitcoin core, start syncing
+:     - check progress with getblockchaininfo
+:     - check connection info and peers with getpeers, getnetworkinfo
+:     - after IBD, configure Tor, and listen on .onion service
+:     -
+
 
 - 09:45 — 11:15: [[pkcrypto.slide][Public key crypto basics]]
 
@@ -93,7 +122,7 @@ https://hkjn.me
 
 : what is the history of Bitcoin, and its potential future?
 
-- 14:15 - 15:00 [[address.slide][Bitcoin address basics]]
+- 14:15 — 15:00 [[address.slide][Bitcoin address basics]]
 
 : what is a Bitcoin address anyway?
 
@@ -116,7 +145,7 @@ https://hkjn.me
 - 11:30 — 12:15 Consensus basics
 - 12:15 — 13:30 Lunch
 - 13:30 — 14:15 Forks basics
-- 14:15 — 15:00 Wasabi and Bisq
+- 14:15 — 15:00 [[applications.slide][Applications]]
 - 15:00 — 15:15 Break
 - 15:15 — 16:00 Full nodes
 - 16:00 — 16:45 Q&A / Open discussion

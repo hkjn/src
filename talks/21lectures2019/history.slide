@@ -6,7 +6,7 @@ Rōnin Coder
 me@hkjn.me
 https://hkjn.me
 
-- let's review history of Bitcoin from different angles
+: let's review history of Bitcoin from different angles
 : looking at the history of the system from a few different angles like
 :   mining
 :   protocol
@@ -68,9 +68,12 @@ https://hkjn.me
 : every 4y, block subsidy halves, starting at 50BTC
 : next one will go from 12.5 -> 6.25 BTC/block, in 64k blocks, 447d left (last time 80k blocks)
 
-.image speed-small-ever-2019-03-04.png 500 800
+.image speed-ever-2019-06-25.png 500 800
 
 [[http://bitcoin.sipa.be/][— bitcoin.sipa.be]]
+
+: about 57 quintillion / 57 exahashes / 5.7 * 10**19 per second, every second
+: 3x in last year
 
 * Eras of mining (2/2)
 
@@ -117,6 +120,7 @@ https://hkjn.me
 - Apr 2014: monetary supply was unbounded before [[https://github.com/bitcoin/bips/blob/master/bip-0042.mediawiki][BIP42]]
 - Sep 2018: potential coin inflation fixed: [[https://bitcoincore.org/en/2018/09/20/notice/][CVE-2018-17144]]
 : certain type of block could double spend outputs in the same block, creating coins out of thin air
+- not that many, either!
 
 * State of adoption (1/2)
 
