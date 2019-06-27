@@ -31,7 +31,7 @@ sha256sum --ignore-missing --check SHA256SUMS.asc
 echo "Extracting.."
 tar xzfv bitcoin-0.18.0-x86_64-linux-gnu.tar.gz
 
-echo "Configuring.."
+echo "Adding bitcoin.conf.."
 mkdir ~/.bitcoin
 cat << EOF > ~/.bitcoin/bitcoin.conf
 txindex=1
@@ -41,5 +41,9 @@ printtoconsole=1
 EOF
 echo "*********************************************"
 
+echo "Adding Bitcoin Core binaries to PATH.."
+echo 'PATH=${PATH}:${HOME}/bitcoin-core-0.18.0/bin/:.' >> ${HOME}/.bashrc
+
 echo "Bitcoin Core has been installed! Try starting it with:"
-echo "  ./bitcoin-core-0.18.0/bin/bitcoind"
+echo "  source ~/.bashrc"
+echo "  bitcoind"

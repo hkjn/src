@@ -70,6 +70,9 @@ mkdir -p ~/.ssh/
     gpg -o ~/.ssh/21_student_id_rsa -d 21_student_id_rsa.asc
 }
 
+echo "Removing temporary file 21_student_id_rsa.asc"
+rm -f 21_student_id_rsa.asc
+
 echo "Setting permissions expected by SSH for ~/.ssh/21_student_id_rsa.."
 chmod 400 ~/.ssh/21_student_id_rsa
 
