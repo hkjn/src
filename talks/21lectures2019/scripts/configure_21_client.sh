@@ -11,6 +11,7 @@ command -v mkdir >/dev/null 2>&1 || { echo >&2 "mkdir is missing"; exit 1; }
 command -v cat >/dev/null 2>&1 || { echo >&2 "cat is missing"; exit 1; }
 command -v chmod >/dev/null 2>&1 || { echo >&2 "chmod is missing"; exit 1; }
 command -v ssh-add >/dev/null 2>&1 || { echo >&2 "ssh-add is missing"; exit 1; }
+command -v ssh-agent >/dev/null 2>&1 || { echo >&2 "ssh-agent is missing"; exit 1; }
 
 #
 # Note: The PGP message below encodes a SSH private key, using
@@ -64,16 +65,13 @@ EOF
 echo "Creating ~/.ssh directory, if necessary.."
 mkdir -p ~/.ssh/
 
-[[ -e ~/.ssh/student_id_rsa ]] || {
+[[ -e ~/.ssh/21_student_id_rsa ]] || {
     echo "Attempting to decrypt SSH key ~/.ssh/21_student_id_rsa. Hint: genesis block."
     gpg -o ~/.ssh/21_student_id_rsa -d 21_student_id_rsa.asc
 }
 
 echo "Setting permissions expected by SSH for ~/.ssh/21_student_id_rsa.."
 chmod 400 ~/.ssh/21_student_id_rsa
-
-echo "Adding SSH key ~/.ssh/21_student_id_rsa (may prompt for passphrase to lock privkey file with)."
-ssh-add ~/.ssh/21_student_id_rsa
 
 echo "Adding aliases to SSH config (if necessary).."
 grep -q 21.hkjn.me ~/.ssh/config || cat << EOF >> ~/.ssh/config
@@ -93,6 +91,9 @@ Host 22
     IdentityFile ~/.ssh/21_student_id_rsa
 EOF
 
+echo "Adding SSH key ~/.ssh/21_student_id_rsa (may prompt for passphrase to lock privkey file with)."
+eval $(ssh-agent)
+ssh-add ~/.ssh/21_student_id_rsa
+
 echo "All done! Try connecting with:"
 echo "  ssh 21"
-
