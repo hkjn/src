@@ -74,10 +74,10 @@ echo "Removing temporary file 21_student_id_rsa.asc"
 rm -f 21_student_id_rsa.asc
 
 echo "Setting permissions expected by SSH for ~/.ssh/21_student_id_rsa.."
-chmod 400 ~/.ssh/21_student_id_rsa
+chmod 400 ${HOME}/.ssh/21_student_id_rsa
 
 echo "Adding aliases to SSH config (if necessary).."
-grep -q 21.hkjn.me ~/.ssh/config || cat << EOF >> ~/.ssh/config
+grep -q 21.hkjn.me ${HOME}/.ssh/config || cat << EOF >> ${HOME}/.ssh/config
 
 # The entries below were added by connect_21.sh.
 
@@ -96,7 +96,7 @@ EOF
 
 echo "Adding SSH key ~/.ssh/21_student_id_rsa (may prompt for passphrase to lock privkey file with)."
 eval $(ssh-agent)
-ssh-add ~/.ssh/21_student_id_rsa
+ssh-add ${HOME}/.ssh/21_student_id_rsa
 
 echo "All done! Try connecting with:"
 echo "  ssh 21"
