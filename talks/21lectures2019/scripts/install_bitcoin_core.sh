@@ -18,7 +18,7 @@ echo "Fetching Bitcoin Core and the signed hashes.."
 wget https://bitcoincore.org/bin/bitcoin-core-0.18.0/bitcoin-0.18.0-x86_64-linux-gnu.tar.gz
 wget https://bitcoincore.org/bin/bitcoin-core-0.18.0/SHA256SUMS.asc
 # if gpg servers are unstable, use local copy of key:
-# wget <short URL / raw github URL to .asc here>
+# wget https://j.mp/btc-release-key
 # gpg --import < 01EA5486DE18A882D4C2684590C8019E36C2E964.asc
 echo "*********************************************"
 echo "Verifying GPG signature.."
@@ -42,7 +42,7 @@ EOF
 echo "*********************************************"
 
 echo "Adding Bitcoin Core binaries to PATH.."
-echo 'PATH=${PATH}:${HOME}/bitcoin-core-0.18.0/bin/:.' >> ${HOME}/.bashrc
+echo 'PATH=${PATH}:${HOME}/bitcoin-0.18.0/bin/:.' >> ${HOME}/.bashrc
 
 echo "Bitcoin Core has been installed! Try starting it with:"
 echo "  source ~/.bashrc"
