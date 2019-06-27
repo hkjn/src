@@ -2,6 +2,7 @@ Common encoding formats
 27 June 2019
 
 Henrik Jonsson
+`D6187A03A40A3D5662F54B4603EFBF839A5FDC15`
 Rōnin Coder
 me@hkjn.me
 https://hkjn.me
@@ -19,11 +20,3 @@ https://hkjn.me
 :   0x80 / 5 or K or L: privkey WIF
 :   0x0142 / 6P: BIP38 encrypted privkey
 :   0x0488B21E / xpub: BIP-32 extended public key
-
-* Questions / discussion
-
-- questions?
-- link to these slides: [[https://talks.hkjn.me/21lectures2019/encoding.slide]]
-- contact details: [[https://hkjn.me]]
-
-Thanks!

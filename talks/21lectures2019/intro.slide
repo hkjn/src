@@ -2,6 +2,7 @@ Intro
 27 June 2019
 
 Henrik Jonsson
+`D6187A03A40A3D5662F54B4603EFBF839A5FDC15`
 Rōnin Coder
 me@hkjn.me
 https://hkjn.me
@@ -34,16 +35,34 @@ https://hkjn.me
 :   still very early; everyone feels like they were latecomers when they first get deeply
 :     into Bitcoin
 
-- thanks for coming!
+- thanks for coming to this experiment!
+- all slides: [[https://talks.hkjn.me/21lectures2019]]
+
 - who are you?
 - what would you like to get out of this?
 
-: I took Jimmy Song's Programming Blockchain course in Jan 2018
-: Justin Moon and https://mooniversity.io/ teaches Bitcoiners to Coder
-: we at 21Lectures teach coders how to Bitcoin
-: Stepan Snigirev and https://cryptoadvance.io/ teaches / builds hardware wallet kits
+* Other courses
 
-- these slides: [[https://talks.hkjn.me/21lectures2019/]]
+- [[https://www.21lectures.com/advanced-course][21 Lectures Advanced Course]] by James Chiang et al
+
+: James is currently in NYC for Chaincode Labs residency
+
+- [[https://programmingbitcoin.com/programming-blockchain/][Programming Blockchain]] by Jimmy Song
+
+: I took Jimmy Song's Programming Blockchain course in Jan 2018,
+: good overview of the protocol, high pace, he has a book out called
+: Programming Bitcoin
+
+- [[https://mooniversity.io/][Mooniversity]] by Justin Moon
+
+: Justin Moon and https://mooniversity.io/ teaches Bitcoiners to Code,
+: while at 21Lectures we teach coders how to Bitcoin
+
+- [[https://cryptoadvance.io/][Cryptoadvance]] by Stepan Snigirev
+
+- not crowded!
+- need _many_ more people to understand Bitcoin, how to build on it
+- teaching is best way to learn
 
 * Course goals
 
@@ -58,7 +77,7 @@ https://hkjn.me
 :   get more people building on top of Bitcoin, and using tools others build
 :   short notice for guest lecturers
 
-- give practical knowledge on how to use Bitcoin
+- give practical knowledge on what Bitcoin is, how to use it
 - describe core concepts as we go
 - give some understanding of Bitcoin protocol
 - what are nodes?
@@ -72,7 +91,7 @@ https://hkjn.me
 - focus mainly on how how to work with tools
 - only as much math as we need
 - many concepts interlock, need scaffolding
-- disclaimer: not polished, not portable, not finished
+- disclaimer: not polished, not portable, not "finished"
 : i.e might have rough edges, not guaranteed to work everywhere (non
 : Debian Linux), does not focus on reliability or security of software
 : installation and operation
@@ -81,34 +100,13 @@ https://hkjn.me
 
 - 09:00 — 09:45 [[intro.slide][Course intro (you are here)]]
 
-: red thread of practical examples:
-:   - ncoleman tools to generate p2pkh, p2sh-wrapped-p2wpkh and p2wpkh addresses
-:     - or generating seed phrase using dice and coin flips: https://github.com/taelfrinn/Bip39-diceware
-:   - EC math to from WIF-encoded privkey generate pubkey and hashing it to p2wpkh
-:   - computing seed words from entropy
-:   - signing tx with privkey
-:   - looking up transactions with bitcoin-cli getrawtransaction <txid>
-:   - looking up blocks with getblockhash <height> + getblock <blockhash>
-:   - types of wallets: software, hardware, full nodes, "light clients" vs remote controls
-:   - downloading bitcoin core, verifying signature, syncing
-:       blockchain (shared server / tmux)
-:   - 21.hkjn.me access from client: download script from here: <short link / github raw link>
-:   - 21.hkjn.me steps on server: download script from here: <short link / github raw link>
-:     - install bitcoin core, start syncing
-:     - check progress with getblockchaininfo
-:     - check connection info and peers with getpeers, getnetworkinfo
-:     - after IBD, configure Tor, and listen on .onion service
-:     -
-
-
-- 09:45 — 11:15: [[pkcrypto.slide][Public key crypto basics]]
+- 09:45 — 11:15: [[fullnodes.slide][Full nodes]]
 
 : cryptography underlying bitcoin
-: fairly theoretical, some math concepts
 : private / public keys
 : signing: proving you control private key without sharing it
 : encryption: not used in Bitcoin!
-: ECDSA: elliptic curve digital signature algorithm
+: ECDSA: elliptic curve digital signature algorithm used in Bitcoin
 
 - 11:15 — 11:30 Break
 
@@ -147,12 +145,38 @@ https://hkjn.me
 - 13:30 — 14:15 Forks basics
 - 14:15 — 15:00 [[applications.slide][Applications]]
 - 15:00 — 15:15 Break
-- 15:15 — 16:00 Full nodes
+- 15:15 — 16:00 [[pkcrypto.slide][Public key crypto basics]]
 - 16:00 — 16:45 Q&A / Open discussion
 
-* Questions / discussion
+* Logistics (1/2)
 
-- these slides: [[https://talks.hkjn.me/21lectures2019/intro.slide]]
-- contact details: [[https://hkjn.me]]
+- let us know if pace is too slow / too fast
+- lunch / social events
+- follow along in your local Linux environment, or on shared server:
+  $ ping 21.hkjn.me
+- let's look at the genesis block:
+  https://blockstream.info/block/000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f
+- PGP and verifying cryptographic signatures
+  $ gpg --recv-keys D6187A03A40A3D5662F54B4603EFBF839A5FDC15
+  $ gpg -k me@hkjn.me
+:   web-of-trust: let's sign keys later!
 
-Thanks!
+* Logistics (2/2)
+
+- configure environment to connect to `21.hkjn.me`
+  $ wget https://j.mp/21-client{,-sig}
+  $ gpg --verify 21-client-sig 21-client
+  $ rm 21-client-sig
+  $ less 21-client
+  $ bash 21-client
+  $ ssh 21
+  $ tmux attach
+- TOFU fingerprint
+  SHA256:UW3jEzYRagjTZX6X5hYo0Oh773xI2x6UEes0b8Pdraw
+- web-of-trust is a good idea
+
+* Appendix 1: PGP fallback slide
+- ... or we can try another keyserver
+  $ gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys D6187A03A40A3D5662F54B4603EFBF839A5FDC15
+- ... or we can just fetch it ourselves
+  $ wget https://hkjn.me/static/pub.asc && gpg --import pub.asc

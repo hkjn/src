@@ -1,0 +1,97 @@
+Full nodes
+27 June 2019
+
+Henrik Jonsson
+`D6187A03A40A3D5662F54B4603EFBF839A5FDC15`
+Rōnin Coder
+me@hkjn.me
+https://hkjn.me
+
+* Full nodes
+
+- p2p network
+- computer programs talking over network
+- "full" since many don't fully validate
+- .. or store their private keys, being your own bank is hard
+- some projects make it easier, like [[https://www.nodl.it/][nodl.it]], [[https://base.shiftcrypto.ch/][BitBox Base]]
+: was mostly working on Base for last several weeks personally
+: Roland / Stadicus is former 21lectures advanced class student
+
+* Bitcoin Core
+
+- [[https://bitcoincore.org]]
+- formerly "Satoshi client", or just "Bitcoin"
+- Satoshi called everything "Bitcoin": network, currency, protocol, software
+- reference client, shows how to follow rules
+
+* Installing Bitcoin Core
+
+- connect to `22.hkjn.me`, in clean state
+  $ ssh 22
+  $ tmux
+- TOFU fingerprint
+  SHA256:XX
+
+- Installation documented in [[https://github.com/hkjn/src/blob/master/talks/21lectures2019/scripts/install_bitcoin_core.sh][`install_bitcoin_core.sh`]]
+  git clone https://github.com/hkjn/src
+  cd src/talks/21lectures2019/scripts
+  less install_bitcoin_core.sh
+
+* Install time!
+
+- run individual commands, or [[https://github.com/hkjn/src/blob/master/talks/21lectures2019/scripts/install_bitcoin_core.sh][the script]]
+  bash install_bitcoin_core.sh
+- working with `tmux`
+  CTRL+B "
+  CTRL+B O
+- check status
+  bitcoin-cli getblockchaininfo
+  bitcoin-cli getblockchaininfo | grep -A1 blocks
+  bitcoin-cli getnetworkinfo
+  bitcoin-cli getpeerinfo | less
+  bitcoin-cli getrawtransaction 4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b
+  bitcoin-cli getrawtransaction ef8e3d21628bea9293145e81f7a00ca34b94507da8546d60874dd32a621618ff 1
+
+* Transaction crash course
+
+- genesis transaction is special
+- txns have at least one input, at least one output
+- txns prove that they can unlock inputs, and set new locks for outputs
+- chain of txns back to coinbase, minting new coins
+- "having BTC" means having a coin / utxo
+- "addresses" not really a thing
+
+* Why full nodes?
+
+- not your keys, not your coins
+- not your node, not your rules
+- using block explorers outsources validation and reduces privacy
+- "light clients" considered harmful
+- "remote controls" often better
+
+: if you look up the balance of an address, and then just afterwars
+:  a tx lands there, it's almost guaranteed to be you sending it
+
+* Over to 21
+
+- syncing takes time
+  ssh 21
+  bitcoin-cli getrawtransaction ef8e3d21628bea9293145e81f7a00ca34b94507da8546d60874dd32a621618ff 1
+- confirmations means a tx was included in a block
+- blocks are found through process of mining
+- address starting with `bc1` are modern Bitcoin addresses
+- each node can validate blocks and txns within
+- all input are unspent, signatures are valid, sum of outputs < sum of inputs
+- mining fee is implicit
+
+* Full node use cases
+
+- verifying incoming payments
+- generating outgoing payments
+- no need to "help the network"
+- your own gold smith
+- storing private keys?
+- access control?
+- mobile?
+- more tools needed..
+: we need more than just the full nodes
