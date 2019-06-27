@@ -66,7 +66,7 @@ mkdir -p ~/.ssh/
 
 [[ -e ~/.ssh/student_id_rsa ]] || {
     echo "Attempting to decrypt SSH key ~/.ssh/21_student_id_rsa. Hint: genesis block."
-    gpg -o ~/.ssh/21_student_id_rsa -d 21_student_id_rsa.gpg
+    gpg -o ~/.ssh/21_student_id_rsa -d 21_student_id_rsa.asc
 }
 
 echo "Setting permissions expected by SSH for ~/.ssh/21_student_id_rsa.."
