@@ -26,7 +26,9 @@ adduser --shell /bin/bash --disabled-password --gecos "" student
 echo "Giving SSH access to 21_student_id_rsa key.."
 echo "NOTE: the pubkey below is for the insecure shared 21_student_id_rsa privkey"
 echo "get access to the server."
+echo "*********************************************"
 echo "DO NOT RUN THIS ON A SERVER THAT SHOULD NOT BE ACCESSIBLE TO EVERYONE"
+echo "*********************************************"
 echo ""
 mkdir -p /home/student/.ssh
 cat << EOF > /home/student/.ssh/authorized_keys
