@@ -9,10 +9,37 @@ https://hkjn.me
 
 * Common encoding formats
 
-: different ways to represent private and public keys and addresses
-: raw binary, hex, Base58Check, Bech32
-: for pubkeys: compressed/uncompressed
-: for privkeys: WIF, WIF-compressed
+- private keys are numbers, up to ~2^256
+- public keys "curve points", derived from private keys
+- addresses typically represents lock script for public key
+
+.image ecc.svg 300 600
+
+[[https://en.wikipedia.org/wiki/Elliptic_curve][— https://en.wikipedia.org/wiki/Elliptic_curve]]
+
+
+* Private key, public key, address
+
+.image oneway.png 250 850
+
+[[https://github.com/bitcoinbook/bitcoinbook][— Mastering Bitcoin, Andreas Antonopolous]]
+
+* Different representations
+
+- modern public key hash address starts with `bc1`
+- different ways to represent private and public keys and addresses
+- raw binary, hex, old-style (`Base58Check`), new-style (`Bech32`)
+- let's see some keys: [[https://iancoleman.io/bip39/]]
+
+* Encoding formats
+
+- another useful iancoleman tool: [[https://iancoleman.io/bitcoin-key-compression/]]
+- pubkeys can be compressed or uncompressed
+- a point has (`x`, `y`)
+- if you know `x`, you can derive `y`
+- "WIF" format for private keys
+  L4JQcjsfroKeW92qEExfUnSGnBp5x982tCyyBZUsAXczsPGw6Eo1
+
 : Base58Check prefixes:
 :   0x00 / 1: p2pkh addr
 :   0x05 / 3: p2sh addr
@@ -20,3 +47,16 @@ https://hkjn.me
 :   0x80 / 5 or K or L: privkey WIF
 :   0x0142 / 6P: BIP38 encrypted privkey
 :   0x0488B21E / xpub: BIP-32 extended public key
+
+* Standards
+
+- BIP process used to propose standards for Bitcoin
+- [[https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki][BIP39]] defines HD wallets
+- take entropy, create master private/public key
+- arbitrarily many child keys
+- "seed words" encode the entropy
+
+* BIP39 Tool
+
+- useful tool by `iancoleman`: [[https://github.com/iancoleman/bip39]]
+

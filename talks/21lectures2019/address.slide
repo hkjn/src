@@ -7,12 +7,32 @@ Rōnin Coder
 me@hkjn.me
 https://hkjn.me
 
-: so what is an addr?
-:   - providing a P2PKH address to someone is to say "here's the hash of my pubkey,
-:     please create a tx which locks an output locked to the corresponding privkey"
-:   - P2SH: "here's the hash of a lock script which if satisfied can spend"
-:   - P2WPKH: like P2PKH but post-SegWit
-:   - P2WSH: like P2SH but post-SegWit
+* Addresses
+
+- what is an address?
+- typically, hash of pubkey
+- "here's the hash of my pubkey, lock an output to corresponding privkey"
+- sending a transaction typically means signing a message
+- in general, transactions have locks on their outputs
+- spending from those outputs in further transactions needs to unlock them
+- lock/unlock scripts are in small programming language
+
+* SegWit
+
+- upgrade in 2017 that addressed issues on several fronts
+- transaction malleability made second layer tech harder
+- better accounting for cost to network in transaction weight
+- modest capacity increase
+- new encoding format for addresses
+
+* Address types
+
+- P2PK: pay-to-pubkey (discouraged)
+- P2PKH: typical old-style addresses starting with `1`
+- P2SH: pay-to-script-hash, starts with `3`
+- P2WPKH: pay-to-witness-pubkey-hash
+- P2WSH: like P2SH but for SegWit addresses
+- P2SH-P2WPKH: P2SH-wrapped SegWit, "compatibility format"
 
 : cryptographic hashes
 :   - SHA256
@@ -23,7 +43,6 @@ https://hkjn.me
 :   - compressed/uncompressed pubkey in SEC format
 :   - a P2PKH bitcoin address is sha256 + ripemd160 of pubkey in SEC format, with checksum,
 :     encoded as base58
-:   - diagram: private key -> public key -> hash
 :   - exercise: generate a testnet addr and get some funds from a faucet
 :   - there's P2PK, P2PKH, P2M (raw multisig), P2SH, P2WSH, P2WPKH, ..
 :   - but these are simplifications to make it easier for people to follow:
@@ -48,11 +67,3 @@ https://hkjn.me
 :   - utxo are always spent fully, can't spend half, so use change address to send back extra funds
 :     and avoid accidentally donating to miners
 :   - exercise: decode raw tx
-
-* Questions / discussion
-
-- questions?
-- link to these slides: [[https://talks.hkjn.me/21lectures2019/address.slide]]
-- contact details: [[https://hkjn.me]]
-
-Thanks!

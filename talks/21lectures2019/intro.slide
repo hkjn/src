@@ -60,7 +60,7 @@ https://hkjn.me
 
 - [[https://cryptoadvance.io/][Cryptoadvance]] by Stepan Snigirev
 
-- not crowded!
+- still not crowded!
 - need _many_ more people to understand Bitcoin, how to build on it
 - teaching is best way to learn
 
@@ -75,7 +75,7 @@ https://hkjn.me
 
 : change of plans, new goals:
 :   get more people building on top of Bitcoin, and using tools others build
-:   short notice for guest lecturers
+:   short notice for guest lecturers, and hard to explain basics well
 
 - give practical knowledge on what Bitcoin is, how to use it
 - describe core concepts as we go
@@ -102,12 +102,6 @@ https://hkjn.me
 
 - 09:45 — 11:15: [[fullnodes.slide][Full nodes]]
 
-: cryptography underlying bitcoin
-: private / public keys
-: signing: proving you control private key without sharing it
-: encryption: not used in Bitcoin!
-: ECDSA: elliptic curve digital signature algorithm used in Bitcoin
-
 - 11:15 — 11:30 Break
 
 - 11:30 — 12:15 [[encoding.slide][Common encoding formats]]
@@ -116,9 +110,13 @@ https://hkjn.me
 
 - 12:15 — 13:30 Lunch
 
-- 13:30 — 14:15 [[history.slide][History of Bitcoin]]
+- 13:30 — 14:15 [[pkcrypto.slide][Public key crypto basics]]
 
-: what is the history of Bitcoin, and its potential future?
+: cryptography underlying bitcoin
+: private / public keys
+: signing: proving you control private key without sharing it
+: encryption: not used in Bitcoin!
+: ECDSA: elliptic curve digital signature algorithm used in Bitcoin
 
 - 14:15 — 15:00 [[address.slide][Bitcoin address basics]]
 
@@ -130,9 +128,7 @@ https://hkjn.me
 
 : how did we get here; where might we go?
 
-- 16:00 — 16:45 [[tx.slide][Transaction basics]]
-
-: transactions and Script
+- 16:00 — 16:45 Q&A / Open discussion
 
 * Course overview: Day 2
 
@@ -144,8 +140,11 @@ https://hkjn.me
 - 12:15 — 13:30 Lunch
 - 13:30 — 14:15 Forks basics
 - 14:15 — 15:00 [[applications.slide][Applications]]
+
 - 15:00 — 15:15 Break
-- 15:15 — 16:00 [[pkcrypto.slide][Public key crypto basics]]
+- 15:15 — 16:00 [[history.slide][History of Bitcoin]]
+: what is the history of Bitcoin, and its potential future?
+
 - 16:00 — 16:45 Q&A / Open discussion
 
 * Logistics (1/2)
@@ -171,6 +170,8 @@ https://hkjn.me
   $ bash 21-client
   $ ssh 21
   $ tmux attach
+- shared environment, attach to `tmux` to see what's happening
+- experiment outside `tmux`, carefully
 - TOFU fingerprint
   SHA256:UW3jEzYRagjTZX6X5hYo0Oh773xI2x6UEes0b8Pdraw
 - web-of-trust is a good idea

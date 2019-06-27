@@ -30,7 +30,7 @@ https://hkjn.me
   $ ssh 22
   $ tmux
 - TOFU fingerprint
-  SHA256:XX
+  SHA256:GtLyRuFySzrF1yhQwQNTVhRavr30jbNKqBpryxnREDw
 
 - Installation documented in [[https://github.com/hkjn/src/blob/master/talks/21lectures2019/scripts/install_bitcoin_core.sh][`install_bitcoin_core.sh`]]
   git clone https://github.com/hkjn/src
@@ -84,6 +84,14 @@ https://hkjn.me
 - all input are unspent, signatures are valid, sum of outputs < sum of inputs
 - mining fee is implicit
 
+* Tor improves privacy
+
+- Tor uses onion routing to obfuscate network requests
+- enabling it once Tor is installed means adding to `bitcoin.conf`
+  proxy=127.0.0.1:9050
+- verify with
+  $ bitcoin-cli getnetworkinfo
+
 * Full node use cases
 
 - verifying incoming payments
@@ -91,7 +99,8 @@ https://hkjn.me
 - no need to "help the network"
 - your own gold smith
 - storing private keys?
-- access control?
-- mobile?
-- more tools needed..
-: we need more than just the full nodes
+- access control? mobile? web UI?
+- better tools / integration needed..
+: we need more than just the full nodes to get anything useful done,
+: such as storing private keys offline on paper wallet, on hardware wallet
+: or similar

@@ -3,6 +3,8 @@
 # Create the student user and allow
 # them SSH access using the 21_student_id_rsa key.
 #
+# Fetch this script with wget https://j.mp/21-server.
+#
 echo "Setting flags to exit script if any command fails or if any variable is undefined.."
 set -eu
 
