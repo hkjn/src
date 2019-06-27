@@ -20,7 +20,7 @@ command -v systemctl >/dev/null 2>&1 || { echo >&2 "systemctl is missing"; exit 
 echo "Updating packages.."
 apt update
 echo "Installing useful packages.."
-apt install -y mosh jq
+apt install -y jq mosh tor
 
 echo "Creating student user.."
 adduser --shell /bin/bash --disabled-password --gecos "" student
