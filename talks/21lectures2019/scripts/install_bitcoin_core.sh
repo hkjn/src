@@ -34,12 +34,17 @@ gpg --verify SHA256SUMS.asc
 echo "*********************************************"
 
 echo "Verifying SHA256 hashes.."
+echo "*********************************************"
 sha256sum --ignore-missing --check SHA256SUMS.asc
-echo "Extracting.."
-tar xzfv bitcoin-0.18.0-x86_64-linux-gnu.tar.gz
+[[ -d "${HOME}/bitcoin-0.18.0" ]] || {
+    echo "*********************************************"
+    echo "Extracting archive.."
+    tar xzfv bitcoin-0.18.0-x86_64-linux-gnu.tar.gz
+    echo "*********************************************"
+}
 
 echo "Adding bitcoin.conf.."
-mkdir -p ~/.bitcoin
+mkdir -p ${HOME}/.bitcoin
 cat << EOF > ~/.bitcoin/bitcoin.conf
 txindex=1
 server=1
