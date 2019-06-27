@@ -70,10 +70,10 @@ mkdir -p ~/.ssh/
 }
 
 echo "Setting permissions expected by SSH for ~/.ssh/21_student_id_rsa.."
-chmod 400 ~/.ssh/student_id_rsa
+chmod 400 ~/.ssh/21_student_id_rsa
 
 echo "Adding SSH key ~/.ssh/21_student_id_rsa (may prompt for passphrase to lock privkey file with)."
-ssh-add ~/.ssh/student_id_rsa
+ssh-add ~/.ssh/21_student_id_rsa
 
 echo "Adding aliases to SSH config (if necessary).."
 grep -q 21.hkjn.me ~/.ssh/config || cat << EOF >> ~/.ssh/config
