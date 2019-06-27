@@ -17,6 +17,10 @@ command -v chmod >/dev/null 2>&1 || { echo >&2 "chmod is missing"; exit 1; }
 command -v sed >/dev/null 2>&1 || { echo >&2 "sed is missing"; exit 1; }
 command -v systemctl >/dev/null 2>&1 || { echo >&2 "systemctl is missing"; exit 1; }
 
+echo "Updating packages.."
+apt update
+apt install -y mosh
+
 echo "Creating student user.."
 adduser --shell /bin/bash --disabled-password --gecos "" student
 echo "Giving SSH access to 21_student_id_rsa key.."
