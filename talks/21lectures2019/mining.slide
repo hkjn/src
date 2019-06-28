@@ -1,0 +1,48 @@
+Mining basics
+27 June 2019
+
+Henrik Jonsson
+`D6187A03A40A3D5662F54B4603EFBF839A5FDC15`
+Rōnin Coder
+me@hkjn.me
+https://hkjn.me
+
+* Why do we need mining?
+
+- Bitcoin allows digital scarcity
+- must support anonymous participants
+- needs something scarce to avoid [[Sybils][https://en.wikipedia.org/wiki/Sybil_attack]]
+
+* What it mining?
+
+- miners produce blocks that full nodes demand
+- PoW mining links system to thermodynamics
+- heaviest valid chain wins
+- "it takes at least this many joules to unwind history"
+
+* Majority attacks
+
+- outproducing rest of network, causing reorgs
+- allows censoring txns
+- does not allow taking coins
+- economically unlikely
+
+* Why PoW mining?
+
+- easy to link digital <-> physical with trust
+- very hard without trust
+- energy is scarce
+- hash functions seem to be one-way functions
+- difficulty target and hashing repeatedly takes many tries
+- varying a nonce and hashing block contents
+- leads to each block being secured by physics
+
+* Ecological disaster?
+
+- in free market, hard to judge what others choose to spend energy on
+- you can always sell your kWh for BTC
+- Bitcoin produces global price floor for electricity
+- location independent, incentivizes cheap energy production
+- sun shines during the day, more so in Sahara
+
+

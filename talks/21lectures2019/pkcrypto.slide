@@ -111,5 +111,3 @@ https://hkjn.me
 :  - calculate (r, s), cryptographically committing to hash of message being signed
 :  - given (r, s), someone who knows your public key P can verify mathematically
 :    that you know s!
-
-Thanks!

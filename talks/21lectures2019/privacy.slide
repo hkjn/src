@@ -1,0 +1,36 @@
+Privacy basics
+27 June 2019
+
+Henrik Jonsson
+`D6187A03A40A3D5662F54B4603EFBF839A5FDC15`
+Rōnin Coder
+me@hkjn.me
+https://hkjn.me
+
+* Why privacy?
+
+- not a new concept in money
+- total loss of privacy in traditional finance is the radical part
+- cash-like levels of privacy for digital money is desirable
+- bad guys do use money
+- also cars, sandwiches
+
+* Do we have any?
+
+- on base layer, by default not a lot
+- possible to improve privacy and have convenience
+- but rough edges and experimental software
+- hard to monetize developing solid tools that integrate well
+
+* Second layer / offchain
+
+- Lightning Network most well known
+- does not need to be fancy, Opendime works
+
+
+* What to do?
+
+- learn: [[https://en.bitcoin.it/wiki/Privacy]]
+- experiment with 2nd layer
+- [[https://www.wasabiwallet.io/][Wasabi]] / [[https://samouraiwallet.com/whirlpool][Whirlpool]]
+- revealer.cc

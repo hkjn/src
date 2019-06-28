@@ -107,6 +107,7 @@ https://hkjn.me
 - 11:30 — 12:15 [[encoding.slide][Common encoding formats]]
 
 : different ways to represent private and public keys and addresses
+: xx: add HD wallet slides, seed phrase via iancoleman
 
 - 12:15 — 13:30 Lunch
 
@@ -126,21 +127,16 @@ https://hkjn.me
 
 - 15:15 — 16:00 [[theory_and_practice.slide][Theory and practice]]
 
-: how did we get here; where might we go?
-
 - 16:00 — 16:45 Q&A / Open discussion
 
 * Course overview: Day 2
 
-- 09:00 — 09:45 HD wallets and seed phrases
-- 09:45 — 10:30 Mining basics
+- 09:00 — 09:45 [[mining.slide][Mining basics]]
+- 09:45 — 10:30 [[privacy.slide][Privacy basics]]
 - 10:30 — 10:45 Break
-- 09:45 — 10:30 Networking basics
-- 11:30 — 12:15 Consensus basics
+- 09:45 — 12:30 [[consensus.slide][Consensus and forks]]
 - 12:15 — 13:30 Lunch
-- 13:30 — 14:15 Forks basics
-- 14:15 — 15:00 [[applications.slide][Applications]]
-
+- 13:30 — 15:00 [[applications.slide][Applications]]
 - 15:00 — 15:15 Break
 - 15:15 — 16:00 [[history.slide][History of Bitcoin]]
 : what is the history of Bitcoin, and its potential future?

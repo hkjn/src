@@ -12,27 +12,87 @@ https://hkjn.me
 - goals: usability, security, privacy
 - have to be "easy" to use Bitcoin + LN
 - should be more secure rather than less
-- and should give back more privacy rather than less
-- remote controlled full node
+- should give back more privacy rather than less
+- remote controlled full node is ideal
+
+* Disclaimers
+
+- all experimental software
+- hard to set up
+- some shortcuts to simplify demo
+- uncertain what will happen
+- DYOR
 
 * Tor
 
+- privacy for networking
+
 * Electrum
+
+- software wallet with integrations to everything
+- relatively easy to use
+- lot of control over details if you want it
+
+* Electrum demo
+
+- software seeds, with extra entropy
+- ledger, coldcard
+- importing master public keys
 
 * Electrs
 
+- Electrum by default connects to random servers
+- weak privacy towards server, like default Ledger usage with app
+- [[https://github.com/romanz/electrs][Electrs]] implements Electrum API
+- can run `electrs` in front of `bitcoind` for a personal Electrum server
+
+* Lightning
+
+- offchain protocol that anchors channels onchain
+- funding tx puts BTC in 2/2 multisig output
+- new offchain txns spend from funding, but are not normally published
+- offchain txns swapped back and forth any number of times
+- base layer as judge in case of defection
+- several implementations like c-lightning, LND, Eclair
+
 * Spark
 
-* Bisq
+- desktop and mobile wallet in front of c-lightning
+- Tor onion service allows for mobile remote control
+- [[https://www.lightningduel.com/]]
+- [[https://github.com/fiatjaf/kwh/][kWh]] webln plugin
 
 * Wasabi
 
-* Whirlpool
+- [[https://www.wasabiwallet.io/][Wasabi]] wallet
+- software wallet, limited hardware support
+- uses CoinJoin, [[https://github.com/nopara73/ZeroLink][ZeroLink]] protocol
+- can improve privacy drastically
+- blinded coordinator server
+- charges percentage fee
 
-* Questions / discussion
+* Sentinel
 
-- questions?
-- link to these slides: [[https://talks.hkjn.me/21lectures2019/address.slide]]
-- contact details: [[https://hkjn.me]]
+- [[https://samouraiwallet.com/sentinel][Sentinel]] mobile watch-only wallet
+- works online
+- don't assume any privacy until you can use your own node
 
-Thanks!
+* Samourai
+
+- [[https://samouraiwallet.com/][Samourai]] mobile wallet
+- [[https://samouraiwallet.com/whirlpool][Whirlpool]] GUI pairs with mobile app
+- charges flat fee
+
+.image whirlpool.png 400 800
+
+[[https://github.com/Samourai-Wallet/Whirlpool]]
+
+* Bisq
+
+- [[https://bisq.network/][Bisq]] exchange
+- p2p desktop app
+- uses Tor
+- censorship resistant BTC onramp
+- meet up in person and trade fiat for BTC
+- contribute and be compensated
+- somewhat complex to understand and use

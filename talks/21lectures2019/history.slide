@@ -184,15 +184,8 @@ https://hkjn.me
 :     regularly mentioned in Davos, IMF, US Fed reports
 - p2p digital cash?
 :   blocks became full in Jan 2017
-:   BCH split in 2017, they are trying their experiment
+:   BCH split in 2017, they tried their experiment
 :   a blockchain is an incredibly inefficient data structure
 :   like having a copy of every email ever sent
 :   blocksize parameter became political, should be like nuclear control rods, boring and decided by engineers
 :   blocksize grows linearly with number of txns, seems better to handle off-chain, when needed
-
-* Questions / discussion
-
-- these slides: [[https://talks.hkjn.me/21lectures2019/history.slide]]
-- contact details: [[https://hkjn.me]]
-
-Thanks!
