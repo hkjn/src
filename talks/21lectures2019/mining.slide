@@ -11,7 +11,7 @@ https://hkjn.me
 
 - Bitcoin allows digital scarcity
 - must support anonymous participants
-- needs something scarce to avoid [[Sybils][https://en.wikipedia.org/wiki/Sybil_attack]]
+- needs something scarce to avoid [[https://en.wikipedia.org/wiki/Sybil_attack][Sybils]]
 
 * What it mining?
 
@@ -27,22 +27,23 @@ https://hkjn.me
 - does not allow taking coins
 - economically unlikely
 
+
+
 * Why PoW mining?
 
-- easy to link digital <-> physical with trust
+- easy to link digital <-> physical with centralized trust
 - very hard without trust
 - energy is scarce
 - hash functions seem to be one-way functions
-- difficulty target and hashing repeatedly takes many tries
-- varying a nonce and hashing block contents
-- leads to each block being secured by physics
+- hitting difficulty target takes many attempts of repeated hashing 
+- each hash is over block content and varies a nonce
+- so each block is secured by physics
+- energy required to unwind blocks accumulates, burying your tx in amber
 
 * Ecological disaster?
 
 - in free market, hard to judge what others choose to spend energy on
 - you can always sell your kWh for BTC
 - Bitcoin produces global price floor for electricity
-- location independent, incentivizes cheap energy production
 - sun shines during the day, more so in Sahara
-
-
+- location independent, incentivizes cheap energy production

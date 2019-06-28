@@ -9,28 +9,34 @@ https://hkjn.me
 
 * Why privacy?
 
-- not a new concept in money
+- not a new concept in money, or in general
+- people seem okay with walls
 - total loss of privacy in traditional finance is the radical part
 - cash-like levels of privacy for digital money is desirable
 - bad guys do use money
 - also cars, sandwiches
 
-* Do we have any?
+* Do we have any in Bitcoin?
 
-- on base layer, by default not a lot
+- on base layer, no, by default not a lot
+- onramps like centralized exchanges heavily surveilled
 - possible to improve privacy and have convenience
 - but rough edges and experimental software
 - hard to monetize developing solid tools that integrate well
+- need to coordinate and specialize
 
 * Second layer / offchain
 
 - Lightning Network most well known
-- does not need to be fancy, Opendime works
-
+- but does not need to be fancy, Opendime also is offchain
+- only channel open / close tx seen onchain
+- LN has source routing
+- channels can be private
 
 * What to do?
 
-- learn: [[https://en.bitcoin.it/wiki/Privacy]]
-- experiment with 2nd layer
+- [[https://en.bitcoin.it/wiki/Privacy][learn]], build, explore and experiment
+- including on 2nd layer
+- many [[tools.slide][tools]]
 - [[https://www.wasabiwallet.io/][Wasabi]] / [[https://samouraiwallet.com/whirlpool][Whirlpool]]
 - revealer.cc

@@ -12,10 +12,28 @@ https://hkjn.me
 - by default, better to talk same language
 - diverging from protocol has risks
 - could be unable to send funds
+- could receive something that isn't real Bitcoin
+- could produce blocks that are not real Bitcoin
 
 * Forks
 
 - many early changes were hard forks
 - soft forks later discovery
 - most upgrades can be backwards compatible
-- if majority hashrate follows new rules
+- in softfork, if majority hashrate follows new rules, nodes running old rules come along
+- consensus rules around what counts as valid txns/blocks
+- restricting rules is soft forks
+- expanding rules is hard fork
+- many rules are very subtle or implicit
+
+* Lower layers solidifying
+
+- "move fast and break things" not a good idea with money
+- careful changes, less radical over time
+- even straight-forward improvements can become contentious
+- miner signalling used to be misunderstood
+- mean to signal readiness, not as a vote
+- economic full nodes that demand blocks determine rules
+- very small but intolerant minority can block hard forks
+- cool improvements like [[https://github.com/sipa/bips/blob/bip-schnorr/bip-schnorr.mediawiki][bip-schnorr]] coming
+- better privacy _and_ scalability means every user wins
