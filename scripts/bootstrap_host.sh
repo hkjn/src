@@ -32,7 +32,7 @@ elif [[ "$ID_LIKE" = "debian" ]]; then
 		apt-get -y update
 		aptitude -y install docker-ce
 	fi
-	adduser --ingroup docker --shell /bin/bash --disabled-password $RUSER
+	adduser --ingroup docker --shell /bin/bash --gecos "" --disabled-password $RUSER
 else
 	adduser -G docker -s /bin/bash $RUSER
 fi

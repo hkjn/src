@@ -95,6 +95,8 @@ def main():
     tor_is_up = False
     while True:
         time.sleep(30)
+        # Only blink if the light setting is high enough, so we can turn down
+        # the light and the blinking doesn't annoy anyone at night.
         should_blink = get_light() > 3
         if not should_blink:
             continue
