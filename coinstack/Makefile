@@ -1,4 +1,4 @@
-all: deploy-blink-network deploy-prometheus-tor deploy-lightningd-plugins
+all: deploy-prometheus-tor deploy-lightningd-plugins
 
 refresh-prometheus-bitcoind:
 	bash fetch_prometheus_bitcoind.sh

@@ -17,21 +17,21 @@ def get_energy():
     return [int(x) for x in result.split()]
 
 
-def get_energy():
-    args = ['cat',
-            '/sys/class/power_supply/BAT0/energy_now',
-            '/sys/class/power_supply/BAT0/energy_full']
-    print('running {}'.format(' '.join(args)))
-    result = subprocess.check_output(args, stderr=subprocess.STDOUT, timeout=15)
-    return [int(x) for x in result.split()]
-
-
 def get_pending_txns():
     args = ['ls',
             '/etc/bitcoin/pending-txns/']
     print('running {}'.format(' '.join(args)))
     result = subprocess.check_output(args, stderr=subprocess.STDOUT, timeout=15)
     return [str(x) for x in result.split()]
+
+
+def get_number_threads():
+    args = ['ps',
+            '-A',
+            '--no-headers']
+    print('running {}'.format(' '.join(args)))
+    result = subprocess.check_output(args, stderr=subprocess.STDOUT, timeout=15)
+    return len(result.split())
 
 
 def get_connection_status(addr):
@@ -91,6 +91,7 @@ def main():
     tor_can_reach_spark_metric = prometheus_client.Gauge('spark_onion_reached_count', 'Number of times Spark .onion service was reached')
     wasabi_sat_per_usd_metric = prometheus_client.Gauge('wasabi_sat_per_usd', 'Number of satoshi for 1 USD, price from Wasabi')
     num_pending_txns_metric = prometheus_client.Gauge('num_pending_txns', 'Number of pending unconfirmed txns')
+    num_threads_metric = prometheus_client.Gauge('num_threads', 'Number of threads')
     energy_now_metric = prometheus_client.Gauge('energy_now', 'Current energy level')
     energy_full_metric = prometheus_client.Gauge('energy_full', 'Fully charged energy level')
 
@@ -123,12 +124,13 @@ def main():
         if frankenbox_is_alive:
             frankenbox_is_alive_metric.inc()
 
-
         num_pending_txns_metric.set(len(get_pending_txns()))
         energy_now, energy_full = get_energy()
         print("energy_now: {}, energy_full: {}".format(energy_now, energy_full))
         energy_now_metric.set(energy_now)
         energy_full_metric.set(energy_full)
+
+        num_threads_metric.set(get_number_threads())
 
         wasabi_price_btc_usd = None
         tor_can_reach_wasabi = 0
