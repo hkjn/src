@@ -27,11 +27,11 @@ def get_pending_txns():
 
 def get_number_threads():
     args = ['ps',
-            '-A',
+            '-AL',
             '--no-headers']
-    print('running {}'.format(' '.join(args)))
+    print('running "{}"'.format(' '.join(args)))
     result = subprocess.check_output(args, stderr=subprocess.STDOUT, timeout=15)
-    return len(result.split())
+    return len(result.split(b'\n'))
 
 
 def get_connection_status(addr):
