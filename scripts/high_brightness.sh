@@ -12,11 +12,11 @@ LIGHT_LEVEL=$((LIGHT_LEVEL+1))
 echo "${0}: high bumped to ${LIGHT_LEVEL}" >> /tmp/brightness.log
 echo ${LIGHT_LEVEL} > /opt/hack/light
 
-# note: special-case hack for LIGHT_LEVEL=10 -> BRIGHTNESS=0.10
-BRIGHTNESS="0.${LIGHT_LEVEL}"
+# note: special-case hack for LIGHT_LEVEL=10 -> BRIGHTNESS=1.00
+BRIGHTNESS="1.0"
 [[ "${LIGHT_LEVEL}" -gt 9 ]] && BRIGHTNESS="1.${LIGHT_LEVEL}"
 echo "${0}: setting xrandr to ${BRIGHTNESS}" >> /tmp/brightness.log
 xrandr --output eDP-1 --brightness ${BRIGHTNESS}
-TEMPERATURE=$((${LIGHT_LEVEL} * 1000+500))
+TEMPERATURE=$((${LIGHT_LEVEL} * 800+500))
 echo "${0} setting temp to ${TEMPERATURE}" >> /tmp/brightness.log
 redshift -O ${TEMPERATURE}
