@@ -1,0 +1,118 @@
+# 2019-07-13
+
+- Hoon 101 class
+- following https://urbit.org/docs/learn/hoon/hoon-tutorial/setup/
+- using fakezod 
+- first run: ./build/urbit -F zod
+- later starts are: ./build/urbit zod
+- running hoon programs is easiest via "generators", basically text files of source code?
+- "naked generators" are "gates", or pure functions with one input and one output
+- running "mygen.hoon" is done via "+myhoon <argument>"
+- trying to run the list.hoon generator with +list 5 does not seem to find the file
+- needed to first mount a host directory from the ship's "pier" with `|mount %`
+  - this mounts the UNIX filesystem in <ship>/home to Arvo's filesystem
+- arvo: operating system
+- hoon: programming language
+  - subject-oriented: https://urbit.org/docs/learn/hoon/hoon-tutorial/the-subject-and-its-legs/
+  - face: hoon equivalent of variables
+  - rune: building blocks of hoon code, like keywords in other languages
+    - runes take a fixed number of "children", which in turn can be other runes
+    - runes are evaluated until there's just values, not further runes
+    - runes are chained together, so expressions often do not need to be closed
+    - the '|=' rune creates a "gate"
+  - gate: like a function, takes input and produces output
+  - atom: type for natural numbers, `@`
+    - e.g 0, 1, 24
+  - noun: atom or cell
+  - cell: ordered pair of nouns
+    - e.g [1 2], [1 [2 3]], [1 2 3]
+    - [1 2 3] is equivalent to [1 [2 3]], syntactic sugar
+    - can't always drop brackets, [[1 2] 3] is not equivalent to [1 [2 3]]
+    - cells have tree structure, [1 2] has entire cell as root, with 1 and 2 atoms as leafs
+    - [1 2 3] is equivalent to [1 [2 3]], root node is entire cell as before, left leaf is 1,
+      right subtree is [2 3], with leafs 2 and 3]:
+      .
+     / \
+    1   .
+       / \
+      2   3
+   - `+N: [ ]` evaluates the cell expression on the RHS, i.e subject is the cell
+   - if cell [1 2] is A, `+1: A` returns entire cell, the root node is #1, #2 holds 1, #3 holds 2:
+     .
+    / \
+   1   2
+     +2: A will give 1, +3: A will give 2
+   - trees use level ordering, so in cell with following structure:
+      .
+     / \
+    1   .
+       / \
+      2   3
+     root node is #1, node with atom 1 and right subtree are #2 and #3
+     and third level of tree would be #4, #5, #6, #7
+     since there is nothing on that level of the left-hand side of the tree,
+     #6 and #7 are the 2 and 3 atoms
+  - if a node is N, head of that node is 2N and tail is 2N+1
+  - head: fist noun in cell
+  - tail: last noun in cell
+    - with cell [[1 2][2 4]], head is [1 2] and tail is [2 4]
+    - two kinds of whitespaces in hoon, "space" is just single space", any larger amount of
+      whitespace is a "gap", needed to separate most arguments to runes
+  - aura: typed data on how to interpret a noun 
+- dojo: the shell 
+  - save face to dojo subject: `=foo (add 2 2)`
+  - dojo is opinionated about formatting, wants same formatting of atoms that hoon would use
+  - e.g 1000 is invalid, has to be written as 1.000
+  - uses `.` and not `,` because the latter is not URL safe
+  - `:-  2  4` uses the "col hep" rune to create a cell [2 4], using double space / gaps
+  - `? 1`: ask dojo how it interprets the input
+  - `@ud` is an example of a aura
+  - casting to atom: `@`~rapfyr-diglyt, returns number 5.374.720, which as atom is the name
+    of the planet
+  - `@p`~rapfyr-diglyt is default aura of a planet
+  - `@`~zod casts to atom aura, showing that `zod` is planet aura of the atom 0
+  - cord: string-like aura
+  - face: like variable assignment
+    - create face `i` with atom value, inside cell: `[i=1 2]`
+    - assign two faces inside cell: `[i=1 myface=2]`
+    - refer to a face inside cell: `myface:[i=1 myface=2]`
+    - assign entire cell to face `a`: `=a [i=1 myface=2]`
+    - refer to face `i` inside face `a`: `i.a`
+    - can also do `i:a`
+  - list: ordered collection of items that share a type
+    - create a list with: `[1 2 3 ~]`
+    - `~` is sig character, null-terminates list
+    - `~[1 2 3]` is equivalent syntax
+    - head of a list is first element, tail is the rest of the list
+    - like with trees, item #2 refers to 1 here: `+2:[1 2 3 ~]`
+  - tape: another data type, similar to cord
+    - cord is just encoded numbers, hard to manipulate
+    - "hello", i.e double instead of single quotes
+    - a tape is a list of cords, where individual cords are one character each
+    - standard library of hoon has lots of utilities for manipulating lists
+    - can move elements around, add elements etc
+    - the "hello" cord as a tree is:
+      .
+     / \
+    h   .
+       / \
+      e   .
+         / \
+        l   .
+           / \
+          l   .
+             / \
+            o   ~
+- nock: lower-level language than hoon
+  - nock has only nouns
+
+# 2019-07-14
+
+- after mounting UNIX filesystem into Arvo, need to place generators in <ship>/home/gen/
+- following https://urbit.org/docs/learn/hoon/hoon-tutorial/generators/, we find
+  'naked generators' defined
+- naked generator: simply a gate, i.e an anonymous function taking a "sample" or argument
+    and producing a noun
+  - to create a naked generator, write it into a file in <ship>/home/gen/
+  - naked generators can take only one argument
+  - can pass a cell to effectively give a pair of arguments
