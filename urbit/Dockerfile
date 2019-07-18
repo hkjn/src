@@ -1,3 +1,8 @@
+#
+# Usage:
+#   make init
+#      > |mount %
+#
 FROM debian:stretch
 
 RUN apt update && \
