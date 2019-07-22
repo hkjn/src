@@ -1,5 +1,5 @@
 variable "gcloud_credentials" {
-  default = ".gcp/tf-dns-editor.json"
+  default = ".gcp/tf-dns-gcp-admin.json"
 }
 
 variable "scaleway_organization_file" {
@@ -44,14 +44,6 @@ variable "admin2_builder_pubkey" {
   default = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDDt1kEy5DIwmIWFLlziyDiB0LIU3cyXTVGsPk07Y1oXmHVr84RX27geHw1VtnFAj0PJH2z+yk08Xd+KQxxwb8Ijv3rv+RG1hxgSioLc5OuqblD63xTBoA9MP4pXhaVnItbuvfcivzJXdP5FCVEn+Wfuw0g82Rr516QpsL22D4TRdPcrpzR3WbO48bfZNKKq8uOUcahEwcFbD0T9W6brCXf9vKOZTzyXpapfJ/pBPE0PnHZ+c1kEs0dMqYk4iZsY8RkWq0uNelsI8WcVwRsykvzT7CBm0qxr8O+q+j59L0oDJ3kZ3L33OkOqBD1i++jYQhQ6hTtgq4UWdIxolN0DhidETXYEjyFALLL/RD2ba8pIaBRm/pmrsyPhQJFG8oIo5FIoxfyM0Kf4IOA42ofzx2ukgJCrwbNfSC6oRBfuCw8O/YBuj1pi3/X3qArmeGaxOvrKUUYBC7cApqJ4czFyg6xOpNxv2pFNAcTt1C7st+7NsExNZ32VLSFnoPi/DgcRiu47I+ianLE0rerceCH2BJxlKc+Fb1sz9uXympvCmxMbd+3bJa1pbtX01E6sjI7h80NNm573UfHa51hUJtopnXrGzcOkaDbaZRxZQbvVtEcRoG/jB2KiiIenM6CCJl4XdYnAIySIF5++yDiyZX9BnHuGKyH+h6Wbjk3Cfvm3ow0qQ== zero@admin2"
 }
 
-variable "admin2_decenter_world_pubkey" {
-  default = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCsgXS6D4sn75MmcsG0chzXxwNnyJQJm6IfKSQSOCVZt6X7Js0k+D/J8vM2tDQzlQYNGWy1Qk+JQk0B8XZrImpiYYBtVUbRmaqD6mHNrT6vdovdh8piII0dNJY0MHIgckyK806EZurbcbApyVGlK5xZTILuEM5h5Iduhhu5HnHL0zzvjjAVk1C6CtbwKUmnfxZaHztN0ayJf6PYmQ+yJBQha+6+BiJm1NfUtMtn8K+fX7fIHYTcTUMNJOvGRRZXZ5LD+4s4XiIFKO2BH2XjZVhUawVpE6Z2okbuotrcKqcS4DipbobXnB7ujTTE4fJwzWuGH8lAH7/XSUIaV8NKLqH6osm3ee4OBhEa3MInQfAAYB6IkroxSKbuYvQiroG2R+vypSWgNCEX6bLzInR8Bddjn/saq7nzYtm0fybPlsHqrsb8y14yD0TAPb5swQKnsu561oExU5vEcIEum/uVJTIurT2qbOo6U+OT8tN8mR0y4aEdYDEwBqSa8BPKCgG+8KPri9nKotDzXeD1lxdXL/0ZeuREIwwAeFDkjhID1KUAXRdCysC6IsQ4W/nSeZkhldqcqpEsLhU/n9qYDEoJ/jW576q32zo9Jr55Gvgo3wMUfiyuPJ5Q8oi2Iv9Anl/1iMcr83rPsnh21CzVBnPoTmSHAvYHv0YzQVZ5ZcTvMmAzmw== zero@admin2"
-}
-
-variable "admin2_guac_pubkey" {
-  default = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDbEY3VQRAAjlnI31tvGFgnJaYNdipRH6LFlBir646WEDp+xZWI2BPPdy25qLOovGko5fVegLC7DISzTz1RMmzyVgd8IMpK5wKcHOK/FR2E3nRqVg2PMsFkHrboWuFDqFyLBvoq5wq+3lN86tDIhc+QZOT077cjBfeRrm2CDqEh41BqcIwXF+zAYI14NjreK/A2ug03vBWv1akJ3lonuED2+VCKn1afyf9w8YUlQZ5Hc+X6yGPPgZkCVaSiZWMwFBHI87h8HMjACUSTeRbkdugmrwtcmmPTLMPJgvW7pdVBbYOhLtaQLYqz5ar2p8mWNQMdF/WSObu5iJnnQ/9bt6QBHNOcB/bdtb6orT67tIV42rg4Pm1YpqfDj7hzJiMlEgU4LBpxGPuYD/BhZdSMZB6tnl43LziqzassbKtq1kMQTxX4Y+r0XTVaUDFg+mpa+8A8MlMJLNjPvEaanxgGOpW/mOtrv1Ta5zXRuwvBxMa5RI3nvoseqLSwb6psYhoZyhLDxjRAVf5y4z8JJX1+q2VCXWREcsuPnFCnpdnaBJzaUp0L9Cz+PXCkN5VlndJpdTH+8fB8ijypiCWU6hs3gzRy/Lu7d1FuU6MRGbEfyvzuUv9EwDi4cFhx0bsgx/Ymzx1wVKxFKhCWfxPXEc7gA4JIrKvHt8IAjch8Uu0x6wMkaQ== zero@admin2"
-}
-
 variable "gcloud_project" {
   default = "henrik-jonsson"
 }
@@ -88,24 +80,12 @@ variable "admin1_ip" {
   default = "51.15.200.169"
 }
 
-variable "exocore_ip" {
-  default = "159.100.250.108"
-}
-
 variable "hkjnweb_ip" {
   default = "163.172.173.208"
 }
 
 variable "mon_ip" {
   default = "163.172.184.153"
-}
-
-variable "vpn_ip" {
-  default = "163.172.184.153"
-}
-
-variable "ln0_decenter_world_ip" {
-  default = "174.138.11.8"
 }
 
 variable "builder_enabled" {
@@ -133,4 +113,4 @@ variable "blockpress_me_enabled" {
   default = true
 }
 
-variable "version" {}
+variable "infra_version" {}

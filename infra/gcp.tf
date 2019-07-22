@@ -120,7 +120,7 @@ resource "google_compute_instance" "admin2" {
   }
   metadata {
     sshKeys = "zero:${var.admin2_pubkey}"
-    version = "${var.version}"
+    version = "${var.infra_version}"
   }
 }
 
@@ -143,7 +143,7 @@ resource "google_compute_instance" "decenter-world" {
   }
   metadata {
     sshKeys = "core:${var.admin2_decenter_world_pubkey}"
-    version = "${var.version}"
+    version = "${var.infra_version}"
     user-data = "${file("bootstrap/decenter_world.json")}"
   }
 }
@@ -167,7 +167,7 @@ resource "google_compute_instance" "builder" {
   }
   metadata {
     sshKeys = "core:${var.admin2_builder_pubkey}"
-    version = "${var.version}"
+    version = "${var.infra_version}"
     user-data = "${file("bootstrap/builder.json")}"
   }
 }
