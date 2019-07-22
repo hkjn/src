@@ -1,0 +1,32 @@
+set -xeuo pipefail
+
+echo "Configuring host.."
+
+adduser --shell /bin/bash --gecos "" --disabled-password user
+mkdir -p /home/user/.ssh
+grep '^ssh-rsa' /root/.ssh/authorized_keys > /home/user/.ssh/authorized_keys
+chown -R user:user /home/user/
+chmod 700 /home/user/.ssh/
+chmod 400 /home/user/.ssh/authorized_keys
+
+apt update
+apt -y install mosh sudo
+echo 'user ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/user_sudo
+chmod 0440 /etc/sudoers.d/user_sudo
+
+add-apt-repository ppa:wireguard/wireguard
+apt update
+apt -y install wireguard
+
+adduser --home /opt/wireguard --shell /bin/bash --gecos "" --disabled-password wireguard
+
+sudo -u user mkdir /home/user/wireguard
+
+cat << 'EOF' >> /etc/ssh/sshd_config
+Port 2295
+PermitRootLogin no
+PasswordAuthentication no
+EOF
+sed -e s/'X11Forwarding yes'/'X11Forwarding no'/ -i /etc/ssh/sshd_config
+systemctl restart sshd
+

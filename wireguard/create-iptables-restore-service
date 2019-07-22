@@ -1,0 +1,17 @@
+set -xeuo pipefail
+
+echo "Creating iptables-restore.service.."
+cat << 'EOF' > /etc/systemd/system/iptables-restore.service
+[Unit]
+Description=Restore iptables rules
+Before=network.target
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c "/sbin/iptables-restore < /opt/wireguard/iptables.rules"
+[Install]
+WantedBy=multi-user.target
+EOF
+cp -v ${HOME}/wireguard/iptables.rules /opt/wireguard/
+systemctl daemon-reload
+systemctl start iptables-restore
+systemctl enable iptables-restore
