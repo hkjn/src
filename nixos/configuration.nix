@@ -69,6 +69,7 @@
      vim
      wget
      usbutils
+     tmux
   ];
 
   # Set environment to support gpg-agent as ssh-agent.
@@ -91,7 +92,6 @@
         i3status
         i3lock
         i3blocks
-        tmux
       ];
     };
   };
