@@ -1,0 +1,17 @@
+Win + enter: open terminal
+activating wifi can be done in console with nmtui
+Mod (Win) + enter repeatedly opens several terminals, splitting horizontally
+Mod+v switches to vertical split
+Mod+h switches back to horizontal split
+Mod+d opens simple text-based app menu
+Mod+shift+e: end i3 session
+Mod+shift+r: reload i3 config inplace
+Mod+j: focus on left window
+Mod+;: focus on right window
+Mod+k: focus on lower window
+Mod+l: focus on upper window
+Mod+1: switch to first workspace
+Mod+2: switch to second workspace
+Mod+shift+2: move current window to workspace 2
+Mod+Shift+s: lock screen
+after adding packages to configuration.nix, do nixos-rebuild switch

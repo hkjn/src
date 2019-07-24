@@ -1,0 +1,5 @@
+# after adding packages to configuration.nix, run:
+nixos-rebuild switch
+
+# after installation, copy .Xresources to ~/ and do:
+xrdb -merge .Xresources

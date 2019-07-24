@@ -1,0 +1,151 @@
+# nixos-help accesses web docs in browser
+# live usb has wifi access, unlike debian
+# systemctl start display-manager gets X going
+# links on https://nixos.wiki/wiki/Full_Disk_Encryption show that full disk encryption is possible
+# and yubikey as authentication mechanism is possible as well
+# https://logs.nix.samueldr.com/nixos/2019-07-24
+
+# wipe any existing fs
+wipefs -a /dev/nvm0n1
+# create GPT partition table:
+parted -s /dev/nvme0n1 -- mklabel gpt
+# creating root partition, setting aside 512MiB for boot
+parted /dev/nvme0n1 -- mkpart primary 512MiB 100%
+# creating boot ESP / EFI system partition:
+parted /dev/nvme0n1 -- mkpart ESP fat32 1MiB 512MiB
+parted /dev/nvme0n1 -- set 2 boot on
+partprobe /dev/nvme0n1
+# following https://nixos.wiki/wiki/Yubikey_based_Full_Disk_Encryption_(FDE)_on_NixOS
+# alternative install guides:
+# https://qfpl.io/posts/installing-nixos/
+# https://nixos.wiki/wiki/Full_Disk_Encryption
+EFI_PART=/dev/nvme0n1p2
+LUKS_PART=/dev/nvme0n1p1
+# creating boot filesystem:
+EFI_MNT=/root/boot
+mkdir "$EFI_MNT"
+mkfs.vfat -F 32 -n uefi "$EFI_PART"
+mount "$EFI_PART" "$EFI_MNT"
+# creating location for crypto salt value:
+STORAGE=/crypt-storage/default
+mkdir -p "$(dirname $EFI_MNT$STORAGE)"
+# install necessary tools to interact with yubikey:
+nix-env -i gcc-wrapper
+nix-env -i yubikey-personalization
+nix-env -i openssl
+# define helper functions:
+rbtohex() {
+    ( od -An -vtx1 | tr -d ' \n' )
+}
+
+hextorb() {
+    ( tr '[:lower:]' '[:upper:]' | sed -e 's/\([0-9A-F]\{2\}\)/\\\\\\x\1/gI'| xargs printf )
+}
+# compile helper program:
+HEADERS=$(find / | grep "openssl/evp\.h" | head -1 | sed -e 's|/openssl/evp\.h$||g' | tr -d '\n')
+FILES=$(find / | grep "lib/libcrypto" | head -1 | sed -e 's|/libcrypto\..*$||g' | tr -d '\n')
+SOURCES=$(find / | grep "pbkdf2-sha512\.c" | head -1 | tr -d '\n')
+cc -O3 -I$HEADERS -L$FILES $SOURCES -o ./pbkdf2-sha512 -lcrypto
+# gather salt for the yubikey pre-boot authentication / PBA:
+SALT_LENGTH=16
+SALT="$(dd if=/dev/random bs=1 count=$SALT_LENGTH 2>/dev/null | rbtohex)"
+# gather entropy for yubikey:
+YUBI_SECRET="$(dd if=/dev/random bs=1 count=20 2>/dev/null | rbtohex)"
+# gather user-provided entropy:
+read -s USER_SECRET
+# compute initial challenge to yubikey:
+CHALLENGE=$(echo -n $SALT | sha512sum | cut -d ' ' -f 1)
+# compute response yubikey should provide to challenge:
+RESPONSE="$(echo -n $CHALLENGE | hextorb | openssl dgst -binary -sha1 -mac HMAC -macopt hexkey:$YUBI_SECRET | rbtohex)"
+# derive luks slot key from USER_SECRET and YUBI_SECRET:
+KEY_LENGTH=512
+ITERATIONS=1000000
+LUKS_KEY="$(echo -n $USER_SECRET | ./pbkdf2-sha512 $(($KEY_LENGTH / 8)) $ITERATIONS $RESPONSE | rbtohex)"
+# erase any existing luks headers:
+dd if=/dev/urandom of=$LUKS_PART bs=512 count=4096
+# create luks device:
+CIPHER=aes-xts-plain64
+HASH=sha512
+echo -n "$LUKS_KEY" | hextorb | cryptsetup luksFormat --cipher="$CIPHER" --key-size="$KEY_LENGTH" --hash="$HASH" --key-file=- "$LUKS_PART"
+# store information about salt on boot partition:
+echo -ne "$salt\n$ITERATIONS" > $EFI_MNT$STORAGE
+# program yubikey with key, requiring touch to respond:
+SLOT=2
+ykpersonalize -"$SLOT" -ochal-resp -ochal-hmac -ochal-btn-trig -a"$YUBI_SECRET"
+# verify that yubikey answers challenge is answered correctly:
+ykchalresp -2 "$(echo -n $CHALLENGE | hextorb)"
+# unlock luks device
+LUKSROOT=nixos-enc
+echo -n "$LUKS_KEY" | hextorb | cryptsetup luksOpen $LUKS_PART $LUKSROOT --key-file=-
+# create physical volume on luksroot:
+pvcreate "/dev/mapper/$LUKSROOT"
+# create volume group:
+VGNAME=partitions
+vgcreate "$VGNAME" "/dev/mapper/$LUKSROOT"
+# create logical volumes on luks device:
+lvcreate -L 2G -n swap "$VGNAME"
+FSROOT=fsroot
+lvcreate -l 100%FREE -n "$FSROOT" "$VGNAME"
+vgchange -ay
+# create swap filesystem:
+mkswap -L swap /dev/partitions/swap
+# create main root btrfs filesystem:
+mkfs.btrfs -L "$FSROOT" "/dev/partitions/$FSROOT"
+# mount root filesystem:
+mount "/dev/partitions/$FSROOT" /mnt
+# create subvolumes for root and home
+cd /mnt
+btrfs subvolume create root
+btrfs subvolume create home
+cd -
+# create mountpoints on subvolumes:
+umount /mnt
+mount -o subvol=root "/dev/partitions/$FSROOT" /mnt
+mkdir /mnt/home
+mount -o subvol=home "/dev/partitions/$FSROOT" /mnt/home
+mkdir /mnt/boot
+mount "$EFI_PART" /mnt/boot
+# enable swap:
+swapon /dev/partitions/swap
+# write initial configuration file:
+nixos-generate-config --root /mnt
+# edit /mnt/etc/nixos/configuration.nix according to needs
+# do the installation:
+cp configuration.nix /mnt/etc/nixos/
+nixos-install
+# USER_SECRET is not accepted at boot, not sure why
+# instead followed guide to authenticate with yubikey but
+# no user passphrase, this time the yubikey auth clearly
+# passed, then:
+# Segmentation fault
+# BusyBox v1.30.1 () multi-call binary.
+#
+# Usage: printf FORMAT [ARG]...
+#
+# Format and print ARG(s) according to FORMAT (a-la C printf)
+# Nothing to read on input.
+# Authentication failed!
+
+# instead created static .key file on usb drive:
+dd if=/dev/urandom of=/key/keys/.nix.key bs=4096 count=1
+cryptsetup luksFormat --cipher="$CIPHER" --key-file=/key/keys/.nix.key $LUKS_PART
+# still did not work, couldn't read from USB key on startup for some reason
+# but plugging in USB during install does work
+
+# recovering after failed boot:
+EFI_PART=/dev/nvme0n1p2
+LUKS_PART=/dev/nvme0n1p1
+LUKSROOT=nixos-enc
+FSROOT=fsroot
+# dd if=/dev/sda of=.nix.key bs=4096 count=1
+mkdir /key
+mount /dev/sdc1 /key
+cryptsetup luksOpen "$LUKS_PART" --key-file=/key/keys/.nix.key $LUKSROOT
+mkdir /mnt/home /mnt/boot
+lvchange -a y /dev/partitions/fsroot
+lvchange -a y /dev/partitions/swap
+mount -o subvol=root "/dev/partitions/$FSROOT" /mnt
+mount -o subvol=home "/dev/partitions/$FSROOT" /mnt/home
+mount "$EFI_PART" /mnt/boot
+swapon /dev/partitions/swap
+
