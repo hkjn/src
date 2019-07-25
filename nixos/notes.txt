@@ -1,5 +1,9 @@
-# after adding packages to configuration.nix, run:
+# after adding packages or otherwise editing configuration.nix, build new
+# configuration and switch to it for next boot:
 nixos-rebuild switch
+
+# rebuild but do not switch to new config next boot:
+nixos-rebuild test
 
 # after installation, copy .Xresources to ~/ and do:
 xrdb -merge .Xresources
@@ -12,6 +16,9 @@ nix-env --list-generations
 
 # switch generations:
 nix-env --switch-generation 43
+
+# rebuild VM
+nixos-rebuild build-vm
 
 # bitcoind and lightningd can both be installed via official stable packages,
 # but installs versions v0.17.1.0 and v0.6.3, should fork repo from

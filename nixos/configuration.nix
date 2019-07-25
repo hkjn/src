@@ -67,6 +67,7 @@
      gnumake
      file
      mosh
+     mkpasswd
      redshift
      tmux
      vim
@@ -140,6 +141,7 @@
   users.users.user = {
     isNormalUser = true;
     extraGroups = [ "wheel" "networkmanager" ]; # Enable sudo and networkmanager for the user.
+    initialHashedPassword = "$6$gQ/dMey1PH$aKVUdM1EybW2iFGC80cOby/S2nQNpn3SlCzl3mk7IU39A5b4ew22cAxvpOx8N7yZZ..IOB4vWdnp8ZPrmJvHT0";
   };
 
   # This value determines the NixOS release with which your system is to be
