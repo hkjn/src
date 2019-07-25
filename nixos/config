@@ -28,6 +28,11 @@ bindsym $mod+Return exec xfce4-terminal
 # kill focused window
 bindsym $mod+Shift+q kill
 
+# increase/decrease brightness
+bindsym XF86MonBrightnessUp exec bash brightnessinc
+bindsym XF86MonBrightnessDown exec bash brightnessdec
+
+# lock screen
 bindsym $mod+Shift+s exec i3lock
 
 # start dmenu (a program launcher)

@@ -65,11 +65,14 @@
      git
      gnupg
      gnumake
+     file
      mosh
+     redshift
+     tmux
      vim
      wget
      usbutils
-     tmux
+     xbrightness
   ];
 
   # Set environment to support gpg-agent as ssh-agent.
@@ -130,6 +133,8 @@
   # Enable sound.
   sound.enable = true;
   hardware.pulseaudio.enable = true;
+
+  virtualisation.docker.enable = true;
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.user = {

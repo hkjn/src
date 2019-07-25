@@ -1,0 +1,3 @@
+TEMPERATURE=7000
+xbrightness +5000
+redshift -P -O ${TEMPERATURE}

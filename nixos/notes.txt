@@ -3,3 +3,6 @@ nixos-rebuild switch
 
 # after installation, copy .Xresources to ~/ and do:
 xrdb -merge .Xresources
+
+# search for packages:
+nix search <pattern>
