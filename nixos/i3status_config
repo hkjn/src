@@ -12,7 +12,7 @@ order += "wireless _first_"
 order += "tztime local"
 
 # order += "ipv6"
-# order += "cpu_temperature 0"
+order += "cpu_temperature 0"
 
 wireless _first_ {
         # if you use %speed, i3status requires root privileges
@@ -53,10 +53,7 @@ volume master {
         mixer_idx = 0
 }
 
-#ethernet _first_ {
-#        # if you use %speed, i3status requires root privileges
-#        format_up = "E: %ip (%speed)"
-#        format_up = "eth: %ip"
-#        format_down = "E: down"
-#}
+cpu_temperature 0 {
+        format = "T: %degrees °C"
+}
 
