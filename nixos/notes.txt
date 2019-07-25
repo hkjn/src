@@ -6,3 +6,19 @@ xrdb -merge .Xresources
 
 # search for packages:
 nix search <pattern>
+
+# list all generations:
+nix-env --list-generations
+
+# switch generations:
+nix-env --switch-generation 43
+
+# bitcoind and lightningd can both be installed via official stable packages,
+# but installs versions v0.17.1.0 and v0.6.3, should fork repo from
+# https://github.com/NixOS/nixpkgs and update locally to later versions, and
+# add to local user packages, not configuration.nix
+
+# can run electrs via docker container built from repo, should contribute .nix
+# package, or check nix-bitcoin repo
+
+# should compile electrum and contribute .nix package
