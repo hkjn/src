@@ -56,7 +56,7 @@
   # Enable power management, powertop, and cap max frequency.
   powerManagement.enable = true;
   powerManagement.cpuFreqGovernor = "powersave";
-  powerManagement.cpufreq.max = 2000000;
+  powerManagement.cpufreq.max = 1000000;
   powerManagement.powertop.enable = true;
 
   # Set your time zone.
@@ -76,6 +76,7 @@
      mplayer
      nmap
      redshift
+     srm
      tmux
      vim
      wget
@@ -88,7 +89,7 @@
     export GPG_TTY="$(tty)"
     gpg-connect-agent /bye
     # xx: this doesn't seem to show up
-    export SSH_AUTH_SOCK="/run/user/$UID/gnupg/S.gpg-agent.ssh"
+    # export SSH_AUTH_SOCK="/run/user/$UID/gnupg/S.gpg-agent.ssh"
   '';
 
   services.xserver = {
@@ -125,6 +126,10 @@
       enable = true;
       enableSSHSupport = true;
     };
+    bash.shellInit = ''
+      export SSH_AUTH_SOCK="/run/user/$UID/gnupg/S.gpg-agent.ssh"
+    '';
+
   };
 
   # List services that you want to enable:

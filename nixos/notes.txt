@@ -33,6 +33,8 @@ nixos-rebuild switch -I nixpkgs=~/src/hkjn.me/nixpkgs
 ln -s ~/src/hkjn.me/src/nixpkgs ~/.nix-defexpr/nixpkgs
 nix -i bitcoin
 
+# uninstall packages:
+nix-env -e irssi
 
 # can run electrs via docker container built from repo, should contribute .nix
 # package, or check nix-bitcoin repo
@@ -44,3 +46,14 @@ nix -i bitcoin
 $ cat /sys/class/backlight/intel_backlight/max_brightness
 $ echo "100" | sudo tee /sys/class/backlight/intel_backlight/brightness
 
+# build package from .nix config:
+git clone foobar
+cat >default.nix <<EOF
+with import <nixpkgs> { };
+stdenv.lib.overrideDerivation foobar (oldAttrs : {
+  src = ./foobar;
+})
+EOF
+nix-build
+
+# useful info at https://nixos.wiki/wiki/Cheatsheet
