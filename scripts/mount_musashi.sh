@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Mounts the "musashi" logical volume under the /dev/miyato volume group:
 # /dev/miyato/musashi: LUKS

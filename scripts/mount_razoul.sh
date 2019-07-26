@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Mounts the "razoul" logical volume under the /dev/iago volume group:
 # /dev/iago/razoul: LUKS, with keyfile

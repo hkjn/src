@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Mounts the "farouk" logical volume under the /dev/iago volume group:
 # /dev/iago/farouk: LUKS, with passphrase

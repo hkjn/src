@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Unmounts the logical volumes under the /dev/dumbo volume group:
 # /dev/dumbo/clown: LUKS
