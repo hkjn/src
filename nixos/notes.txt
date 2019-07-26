@@ -17,13 +17,22 @@ nix-env --list-generations
 # switch generations:
 nix-env --switch-generation 43
 
-# rebuild VM
+# rebuild VM:
 nixos-rebuild build-vm
+
+# check nixos version:
+nixos-version
 
 # bitcoind and lightningd can both be installed via official stable packages,
 # but installs versions v0.17.1.0 and v0.6.3, should fork repo from
 # https://github.com/NixOS/nixpkgs and update locally to later versions, and
 # add to local user packages, not configuration.nix
+
+# rebuilding from local packages, branched from nixos-19.03
+nixos-rebuild switch -I nixpkgs=~/src/hkjn.me/nixpkgs
+ln -s ~/src/hkjn.me/src/nixpkgs ~/.nix-defexpr/nixpkgs
+nix -i bitcoin
+
 
 # can run electrs via docker container built from repo, should contribute .nix
 # package, or check nix-bitcoin repo

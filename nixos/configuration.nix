@@ -65,9 +65,12 @@
      git
      gnupg
      gnumake
+     go
      file
      mosh
      mkpasswd
+     mplayer
+     nmap
      redshift
      tmux
      vim
