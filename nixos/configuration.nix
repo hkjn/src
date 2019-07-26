@@ -53,9 +53,11 @@
   # Provide networkmanager (control with nmtui) for easy wireless configuration.
   networking.networkmanager.enable = true;
 
+  # Enable power management, powertop, and cap max frequency.
   powerManagement.enable = true;
   powerManagement.cpuFreqGovernor = "powersave";
   powerManagement.cpufreq.max = 2000000;
+  powerManagement.powertop.enable = true;
 
   # Set your time zone.
   # time.timeZone = "Europe/Amsterdam";
