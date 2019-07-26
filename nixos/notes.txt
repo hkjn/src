@@ -38,3 +38,9 @@ nix -i bitcoin
 # package, or check nix-bitcoin repo
 
 # should compile electrum and contribute .nix package
+
+# backlight seems to work, however setting the value also affects
+# display brightness
+$ cat /sys/class/backlight/intel_backlight/max_brightness
+$ echo "100" | sudo tee /sys/class/backlight/intel_backlight/brightness
+

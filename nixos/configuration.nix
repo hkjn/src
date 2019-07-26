@@ -54,6 +54,8 @@
   networking.networkmanager.enable = true;
 
   powerManagement.enable = true;
+  powerManagement.cpuFreqGovernor = "powersave";
+  powerManagement.cpufreq.max = 2000000;
 
   # Set your time zone.
   # time.timeZone = "Europe/Amsterdam";
