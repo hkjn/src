@@ -56,7 +56,7 @@
   # Enable power management, powertop, and cap max frequency.
   powerManagement.enable = true;
   powerManagement.cpuFreqGovernor = "powersave";
-  powerManagement.cpufreq.max = 1000000;
+  powerManagement.cpufreq.max = 2600000;
   powerManagement.powertop.enable = true;
 
   # Set your time zone.
@@ -76,7 +76,9 @@
      mosh
      mkpasswd
      mplayer
+     ncdu
      nmap
+     pwgen
      redshift
      srm
      tmux
@@ -84,14 +86,13 @@
      wget
      usbutils
      xbrightness
+     xclip
   ];
 
   # Set environment to support gpg-agent as ssh-agent.
   environment.shellInit = ''
     export GPG_TTY="$(tty)"
     gpg-connect-agent /bye
-    # xx: this doesn't seem to show up
-    # export SSH_AUTH_SOCK="/run/user/$UID/gnupg/S.gpg-agent.ssh"
   '';
 
   services.xserver = {
@@ -130,6 +131,8 @@
     };
     bash.shellInit = ''
       export SSH_AUTH_SOCK="/run/user/$UID/gnupg/S.gpg-agent.ssh"
+      alias elec="electrum --oneserver --server=127.0.0.1:50001:t"
+      alias xcl="xclip -selection c"
     '';
 
   };

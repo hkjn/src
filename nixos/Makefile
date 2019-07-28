@@ -7,4 +7,4 @@ deploy-i3-config:
 
 update-packages:
 	cp configuration.nix /etc/nixos/
-	nixos-rebuild switch
+	nixos-rebuild switch -I nixpkgs=/home/user/src/hkjn.me/nixpkgs
