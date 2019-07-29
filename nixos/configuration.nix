@@ -66,6 +66,7 @@
   # $ nix search wget
   environment.systemPackages = with pkgs; [
      electrum
+     exfat
      firefox
      git
      gnupg
@@ -82,9 +83,11 @@
      redshift
      srm
      tmux
+     tor
      vim
      wget
      usbutils
+     youtube-dl-light
      xbrightness
      xclip
   ];
@@ -121,7 +124,6 @@
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;
-  # programs.gnupg.agent = { enable = true; enableSSHSupport = true; };
   programs = {
     ssh.startAgent = false;
     ssh.extraConfig = "Host admin1.hkjn.me\nPort 6200\nUser zero\nHost admin2.hkjn.me\nPort 6200\nUser zero";
@@ -142,7 +144,7 @@
 
   # Enable the OpenSSH daemon.
   # services.openssh.enable = true;
-
+  services.tor.enable = true;
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];
