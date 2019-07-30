@@ -80,6 +80,7 @@
      ncdu
      nmap
      pwgen
+     python3
      redshift
      srm
      tmux
