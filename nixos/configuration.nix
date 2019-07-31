@@ -27,11 +27,12 @@
   boot.initrd.postDeviceCommands = pkgs.lib.mkBefore ''
     echo "waiting for usb disk..";
     sleep 5;
-    echo "creating /key"
+    echo "creating /key";
     mkdir -m 0755 -p /key;
     sleep 2; # To make sure the usb key has been loaded
     echo "mounting disk: $(ls -hsal /dev/disk/by-id)";
-    mount -n -t vfat -o ro /dev/disk/by-id/usb-SMI_USB_DISK_AA00000000014172-0:0-part1 /key;
+    mount -n -t vfat -o ro /dev/disk/by-id/usb-SMI_USB_DISK_AA00000000014172-0:0-part1 /key ||
+    mount -n -t vfat -o ro /dev/disk/by-id/usb-Generic_Flash_Disk_18082009002113-0:0-part1 /key;
   '';
 
   # Configuration to use Luks device.
