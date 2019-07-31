@@ -1,7 +1,7 @@
 #
 # Build image for fileserver.
 #
-FROM hkjn/golang
+FROM hkjn/golang:1.12.6
 
 ENV CGO_ENABLED=0
 WORKDIR /home/go/src/hkjn.me/fileserver/
