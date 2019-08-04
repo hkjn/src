@@ -17,6 +17,9 @@ nix-env --list-generations
 # switch generations:
 nix-env --switch-generation 43
 
+# query for package:
+nix-env -q <pattern>
+
 # rebuild VM:
 nixos-rebuild build-vm
 
@@ -91,3 +94,5 @@ print t
 nix-build --arg pkgs 'import <nixpkgs> {}' -A electrs
 # build finishes successfully, how to easiest install electrs?
 # after successful build, electrs can be started with ./result/bin/electrs
+
+# nix-env operates on profiles, which are sequences of generations

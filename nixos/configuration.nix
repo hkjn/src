@@ -84,6 +84,7 @@
      python3
      redshift
      srm
+     steghide
      tmux
      tor
      vim
