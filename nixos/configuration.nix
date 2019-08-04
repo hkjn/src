@@ -30,10 +30,10 @@
     sleep 5; # To make sure the usb key has been loaded
     echo "mounting apollo (expecting id usb-Generic_Flash_Disk_18082009002113-0:0-part1): $(ls -hsal /dev/disk/by-id)";
     if ! mount -n -t vfat -o ro /dev/disk/by-id/usb-Generic_Flash_Disk_18082009002113-0:0-part1 /key; then
-      echo "Apollo not found, waiting for XX..";
+      echo "apollo not found, waiting for sangus..";
       sleep 5;
       echo "mounting sangus (expecting id usb-SMI_USB_DISK_AA00000000014172-0:0-part1): $(ls -hsal /dev/disk/by-id)";
-      mount -n -t vfat -o ro /dev/disk/by-id/usb-SMI_USB_DISK_AA00000000014172-0:0-part1 /key;
+      mount -n -t vfat -o ro /dev/disk/by-id/usb-SMI_USB_DISK_AA00000000014172-0:0-part1 /key || echo "could not find sangus either, giving up."
     fi;
   '';
 
