@@ -26,13 +26,15 @@
   # Mount USB key before trying to decrypt root filesystem
   boot.initrd.postDeviceCommands = pkgs.lib.mkBefore ''
     echo "waiting for usb disk..";
-    sleep 5;
-    echo "creating /key";
     mkdir -m 0755 -p /key;
-    sleep 2; # To make sure the usb key has been loaded
-    echo "mounting disk: $(ls -hsal /dev/disk/by-id)";
-    mount -n -t vfat -o ro /dev/disk/by-id/usb-SMI_USB_DISK_AA00000000014172-0:0-part1 /key ||
-    mount -n -t vfat -o ro /dev/disk/by-id/usb-Generic_Flash_Disk_18082009002113-0:0-part1 /key;
+    sleep 5; # To make sure the usb key has been loaded
+    echo "mounting apollo (expecting id usb-Generic_Flash_Disk_18082009002113-0:0-part1): $(ls -hsal /dev/disk/by-id)";
+    if ! mount -n -t vfat -o ro /dev/disk/by-id/usb-Generic_Flash_Disk_18082009002113-0:0-part1 /key; then
+      echo "Apollo not found, waiting for XX..";
+      sleep 5;
+      echo "mounting sangus (expecting id usb-SMI_USB_DISK_AA00000000014172-0:0-part1): $(ls -hsal /dev/disk/by-id)";
+      mount -n -t vfat -o ro /dev/disk/by-id/usb-SMI_USB_DISK_AA00000000014172-0:0-part1 /key;
+    fi;
   '';
 
   # Configuration to use Luks device.
@@ -60,8 +62,9 @@
   powerManagement.cpufreq.max = 2600000;
   powerManagement.powertop.enable = true;
 
-  # Set your time zone.
-  # time.timeZone = "Europe/Amsterdam";
+  # Set time zone:
+  # https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+  time.timeZone = "Asia/Yerevan";
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
@@ -164,6 +167,15 @@
      wantedBy = [ "default.target" ];
   };
   systemd.user.services.bitcoin.enable = true;
+  systemd.user.services.clightning = {
+     description = "c-lightning daemon";
+       serviceConfig = {
+         ExecStart = "${pkgs.clightning}/bin/lightningd";
+         Restart = "on-failure";
+     };
+     wantedBy = [ "default.target" ];
+  };
+  systemd.user.services.clightning.enable = true;
 
   # Enable sound.
   sound.enable = true;
@@ -180,6 +192,10 @@
     # Set default password.
     initialHashedPassword = "$6$gQ/dMey1PH$aKVUdM1EybW2iFGC80cOby/S2nQNpn3SlCzl3mk7IU39A5b4ew22cAxvpOx8N7yZZ..IOB4vWdnp8ZPrmJvHT0";
   };
+
+  # Enable automatic nix garbage collection of unreferenced packages:
+  nix.gc.automatic = true;
+  nix.gc.dates = "03:15";
 
   # This value determines the NixOS release with which your system is to be
   # compatible, in order to avoid breaking some software such as database

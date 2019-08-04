@@ -5,6 +5,9 @@ deploy-i3-config:
 	cp brightness{inc,dec} ~/bin/
 	cp i3status_config ~/.config/i3status/config
 
-update-packages:
+refresh-packages:
+	bash refresh_packages
+
+update-packages: refresh-packages
 	cp configuration.nix /etc/nixos/
 	nixos-rebuild switch -I nixpkgs=/home/user/src/hkjn.me/nixpkgs

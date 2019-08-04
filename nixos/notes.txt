@@ -14,6 +14,9 @@ nix search <pattern>
 # list all generations:
 nix-env --list-generations
 
+# using filesystem, list all generations in the system profile:
+ls -l /nix/var/nix/profiles/system-*-link
+
 # switch generations:
 nix-env --switch-generation 43
 
@@ -96,3 +99,30 @@ nix-build --arg pkgs 'import <nixpkgs> {}' -A electrs
 # after successful build, electrs can be started with ./result/bin/electrs
 
 # nix-env operates on profiles, which are sequences of generations
+
+# removing old and unreferenced packages:
+nix-collect-garbage
+
+# seek out identical files and replace them with hard links to a single copy:
+nix-store --optimise
+
+# lock password to root account, since sudo is used instead:
+sudo passwd -l root
+
+# build nixos package closure and install it in the system profile:
+nix-env -p /nix/var/nix/profiles/system -f '<nixpkgs/nixos>' -I nixos-config=/etc/nixos/configuration.nix -iA system
+
+# delete specific generations:
+nix-env --dry-run --delete-generations 2 3 4 5
+nix-env --delete-generations 2 3 4 5
+nix-collect-garbage
+
+# install using a specific attribute:
+nix-env -i -A gcc40mips
+nix-env -i -A xorg.xorgserver
+
+# install all derivations in the Nix expression foo.nix:
+nix-env -f ~/foo.nix -i '.*'
+
+# install from a Nix expression specified on the command-line:
+nix-env -f ./foo.nix -i -E 'f: (f {system = "i686-linux";}).subversionWithJava'

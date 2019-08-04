@@ -1,0 +1,10 @@
+set -euo pipefail
+VERSION=nixos-19.03
+echo "Refreshing upstream.."
+cd /home/user/src/hkjn.me/nixpkgs
+git fetch upstream
+echo "Refreshing channels.."
+git fetch channels
+echo "Rebasing on top of ${VERSION}.."
+git rebase channels/${VERSION}
+
