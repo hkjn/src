@@ -142,7 +142,7 @@
 
   };
 
-  # List services that you want to enable:
+  # List services to enable:
 
   # Enable the OpenSSH daemon.
   # services.openssh.enable = true;
@@ -153,16 +153,30 @@
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
 
+  # Enable bitcoind.
+  systemd.user.services.bitcoin = {
+     description = "Bitcoin Core daemon";
+       serviceConfig = {
+         ExecStart = "${pkgs.bitcoin}/bin/bitcoind";
+         Restart = "on-failure";
+     };
+     wantedBy = [ "default.target" ];
+  };
+  systemd.user.services.bitcoin.enable = true;
+
   # Enable sound.
   sound.enable = true;
   hardware.pulseaudio.enable = true;
 
+  # Enable docker.
   virtualisation.docker.enable = true;
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.user = {
     isNormalUser = true;
-    extraGroups = [ "wheel" "networkmanager" ]; # Enable sudo and networkmanager for the user.
+    # Enable sudo and networkmanager for the user.
+    extraGroups = [ "wheel" "networkmanager" ];
+    # Set default password.
     initialHashedPassword = "$6$gQ/dMey1PH$aKVUdM1EybW2iFGC80cOby/S2nQNpn3SlCzl3mk7IU39A5b4ew22cAxvpOx8N7yZZ..IOB4vWdnp8ZPrmJvHT0";
   };
 
