@@ -167,6 +167,7 @@
      wantedBy = [ "default.target" ];
   };
   systemd.user.services.bitcoin.enable = true;
+  # Enable clightning.
   systemd.user.services.clightning = {
      description = "c-lightning daemon";
        serviceConfig = {
@@ -176,6 +177,16 @@
      wantedBy = [ "default.target" ];
   };
   systemd.user.services.clightning.enable = true;
+  # Enable electrs.
+  systemd.user.services.electrs = {
+     description = "electrs daemon";
+       serviceConfig = {
+         ExecStart = "xx-pkgs.electrs-goes-here/bin/electrs";
+         Restart = "on-failure";
+     };
+     wantedBy = [ "default.target" ];
+  };
+  systemd.user.services.electrs.enable = true;
 
   # Enable sound.
   sound.enable = true;

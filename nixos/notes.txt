@@ -98,6 +98,10 @@ nix-build --arg pkgs 'import <nixpkgs> {}' -A electrs
 # build finishes successfully, how to easiest install electrs?
 # after successful build, electrs can be started with ./result/bin/electrs
 
+# built results can be installed with:
+nix-env -i /nix/store/1aqydk16mih4jcqnxsd8567b916vhna8-electrs-0.6.2
+
+
 # nix-env operates on profiles, which are sequences of generations
 
 # removing old and unreferenced packages:
@@ -126,3 +130,11 @@ nix-env -f ~/foo.nix -i '.*'
 
 # install from a Nix expression specified on the command-line:
 nix-env -f ./foo.nix -i -E 'f: (f {system = "i686-linux";}).subversionWithJava'
+
+# enabled systemd.user.services.bitcoin, and after rebuilding service is running:
+systemctl --user status bitcoin
+
+# tried enabling systemd.user.services.clightning, but lightningd process can't
+# find bitcoin-cli on PATH, since it needs to know where under /nix/store the symlink
+# is pointing:
+systemctl --user status clightning

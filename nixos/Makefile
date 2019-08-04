@@ -8,6 +8,6 @@ deploy-i3-config:
 refresh-packages:
 	bash refresh_packages
 
-update-packages: refresh-packages
+update-packages:
 	cp configuration.nix /etc/nixos/
 	nixos-rebuild switch -I nixpkgs=/home/user/src/hkjn.me/nixpkgs
