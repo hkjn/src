@@ -138,3 +138,8 @@ systemctl --user status bitcoin
 # find bitcoin-cli on PATH, since it needs to know where under /nix/store the symlink
 # is pointing:
 systemctl --user status clightning
+
+# tried enabling systemd.user.services.electrs, but ${pkgs.electrs} is not defined,
+# and listing electrs in environment.systemPackages produces an error, despite
+# nix-env saying the package is installed:
+nix-env -q electrs
