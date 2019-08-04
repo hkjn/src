@@ -59,7 +59,7 @@
   # Enable power management, powertop, and cap max frequency.
   powerManagement.enable = true;
   powerManagement.cpuFreqGovernor = "powersave";
-  powerManagement.cpufreq.max = 2600000;
+  powerManagement.cpufreq.max = 2000000;
   powerManagement.powertop.enable = true;
 
   # Set time zone:
@@ -78,6 +78,7 @@
      go
      file
      htop
+     gptfdisk
      mosh
      mkpasswd
      mplayer
@@ -92,6 +93,7 @@
      tor
      vim
      wget
+     urbit
      usbutils
      youtube-dl-light
      xbrightness

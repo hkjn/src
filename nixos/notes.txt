@@ -143,3 +143,17 @@ systemctl --user status clightning
 # and listing electrs in environment.systemPackages produces an error, despite
 # nix-env saying the package is installed:
 nix-env -q electrs
+
+# got error around GLX when starting electrum after updating:
+# qt.glx: qglx_findConfig: Failed to finding matching FBConfig (1 1 1 0)
+# Could not initialize GLX
+# Aborted
+
+# installed glxinfo in attempt to debug, but had separate issue so uninstalled
+# again:
+nix-env -i glxinfo
+nix-env -e glxinfo
+
+# after upgrading from electrum-3.3.7 to electrum-3.3.8 via following command,
+# electrum starts fine again:
+nix-env -i electrum
