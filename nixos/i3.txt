@@ -14,3 +14,4 @@ Mod+1: switch to first workspace
 Mod+2: switch to second workspace
 Mod+shift+2: move current window to workspace 2
 Mod+Shift+s: lock screen
+Color schemes for xfce4-terminal in ~/.config/xfce4/terminal/terminalrc
