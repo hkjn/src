@@ -95,12 +95,9 @@ print t
 # from the nix-bitcoin repo root, the following command builds the electrs
 # derivation:
 nix-build --arg pkgs 'import <nixpkgs> {}' -A electrs
-# build finishes successfully, how to easiest install electrs?
 # after successful build, electrs can be started with ./result/bin/electrs
-
-# built results can be installed with:
+# built results can be installed with nix-env, using output from nix-build command:
 nix-env -i /nix/store/1aqydk16mih4jcqnxsd8567b916vhna8-electrs-0.6.2
-
 
 # nix-env operates on profiles, which are sequences of generations
 
@@ -157,3 +154,47 @@ nix-env -e glxinfo
 # after upgrading from electrum-3.3.7 to electrum-3.3.8 via following command,
 # electrum starts fine again:
 nix-env -i electrum
+
+# installed tor package, but seems that some extra configuration is needed to
+# make it do anything:
+# [warn] SocksPort, TransPort, NATDPort, DNSPort, and ORPort are all undefined,
+# and there aren't any hidden services configured.  Tor will still run, but
+# probably won't do anything.
+
+# from the nix-bitcoin repo root, used following command to build and install
+# hwi tools:
+nix-build --arg pkgs 'import <nixpkgs> {}' -A hwi
+nix-env -i /nix/store/6y6c6zjn5brlwcha3l5zq61a319mwwrv-python3.5-hwi-1.0.1
+
+# via lsusb and /dev/bus/usb, seems that permissions were wrong, so changed
+# them manually:
+sudo chown user:users /dev/bus/usb/001/007
+
+# added services.udev.extraRules for coldcard to configuration.nix
+# via http://docs.electrum.org/en/latest/hardware-linux.html, package to
+# install for cold card is:
+# python3 -m pip install ckcc-protocol
+# trying to find how to use pip with nixos, seems via
+# https://unix.stackexchange.com/questions/519110/how-to-install-python-pip-on-nixos
+# that it can be installed with:
+nix-env -i python3.7-pip-19.1.1
+
+# attempting to install ckcc-protocol failed due to 'No module named setuptools',
+# which doesn't change by adding it explicitly:
+pip install setuptools
+pip install ckcc-protocol
+
+# attempting to set up a virtualenv instead makes some progress, but then fails
+# due to not having gcc, binutils, and crtio.o (seems to be provided by libc6-dev
+# package on debian, but not clear how to fetch it on nixos):
+nix-env -i python3.7-virtualenv-16.4.3
+nix-env -i gcc
+nix-env -i binutils-2.31.1
+echo ckcc-protocol > requirements.txt
+virtualenv python-env
+source python-env/bin/activate
+pip install -r requirements.txt
+
+# better would be to have electrum directly use hwi binary instead of importing
+# python libraries, since both electrum and hwi have .nix packages, should file
+# issue in electrum to suggest that and offer to help
