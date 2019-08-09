@@ -1,17 +1,32 @@
 set -euo pipefail
 
 VERSION=nixos-19.03
-BRANCH=20190726-crypto
+GENERATION_NUMBER=51
+LOCAL_BRANCH=build-${GENERATION_NUMBER}
+COMMITS=(
+	3586ab3   # clightning: 0.6.3 -> 0.7.0 (#56788)
+	fbc381e2  # clightning: 0.7.0 -> 0.7.1
+	7971cec52 # bitcoin: 0.17.3 -> 0.18.0, enable and run unit tests
+	bc0a2e870 # bitcoin: cleanup check-only input, move to checkInputs
+)
 
-echo "Refreshing ${BRANCH}.."
+echo "Refreshing upstream and channels.."
 cd /home/user/src/hkjn.me/nixpkgs
-git checkout ${BRANCH}
 git fetch upstream
-echo "Refreshing channels.."
 git fetch channels
-echo "Rebasing ${BRANCH} on top of ${VERSION}.."
-git rebase channels/${VERSION}
-echo "Rebasing nixos-unstable.."
+
+echo "Updaing nixos-unstable branch.."
 git checkout nixos-unstable
 git rebase remotes/channels/nixos-unstable
+git push
+
+echo "Creating ${LOCAL_BRANCH} branch.."
+git checkout master
+git checkout channels/${VERSION}
+git checkout -b ${LOCAL_BRANCH}
+for commit in "${COMMITS[@]}"; do
+    echo "cherry-picking ${commit}.."
+    git cherry-pick ${commit}
+done
+git push
 

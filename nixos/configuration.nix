@@ -50,9 +50,11 @@
     pkgs.yubikey-personalization
     pkgs.libu2f-host
   ];
-  # coldcard udev rules
   services.udev.extraRules = ''
+    # coldcard udev rules
     SUBSYSTEM=="usb", ENV{ID_VENDOR}=="d13e", ENV{ID_PRODUCT}=="cc10", MODE="0660", TAG+="uaccess" TAG+="udev-acl"
+    # ledger nano udev rules
+    SUBSYSTEM=="usb", ENV{ID_VENDOR}=="2c97", ENV{ID_PRODUCT}=="0001", MODE="0660", TAG+="uaccess" TAG+="udev-acl"
   '';
 
   # Set hostname.

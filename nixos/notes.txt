@@ -198,3 +198,40 @@ pip install -r requirements.txt
 # better would be to have electrum directly use hwi binary instead of importing
 # python libraries, since both electrum and hwi have .nix packages, should file
 # issue in electrum to suggest that and offer to help
+
+# should create electrs.service file via configuration.nix, currently started
+# with:
+cd .config/electrs && electrs -vvvv
+
+# coldcard udev rules don't seem to be taking effect, /dev/bus/usb/m/n still
+# is readable only by root
+
+# after changing permissions manually, hwi tool allows fetching xpub at
+# arbitrary paths:
+hwi --fingerprint $FINGERPRINT getxpub "m/84'/0'/0'"
+
+# using local checkout of https://github.com/jlopp/xpub-converter, the
+# xpub can be re-encoded as zpub which allows importing as watchonly
+# in electrum, but would be better if electrum supported descriptor
+# language:
+# https://github.com/bitcoin/bitcoin/blob/master/doc/descriptors.md
+
+# not clear how to make hardware wallet display xpub, but individual
+# p2wpkh addresses can be shown and verified on the device:
+hwi --fingerprint $FINGERPRINT displayaddress --path "m/84'/0'/0'/0/0" --wpkh
+
+# bitcoin-cli commands failed to connect after reboot, but doing
+# systemctl --user restart bitcoin it worked again
+
+# fetching keys for import in bitcoin core using getkeypool, without
+# --path seems to be same as doing --path "m/84'/0'/0'/*" and
+# --path "m/84'/0'/1'/*" --internal and combining results:
+hwi --fingerprint $FINGERPRINT getkeypool --wpkh --keypool 0 1000
+
+# attempting to import the keys throws error 'Invalid scriptPubKey':
+bitcoin-cli -rpcwallet=$WALLET importmulti $KEYS
+
+# after rebuilding from v0.18.0, which should have been the previous
+# version as well, bitcoin-cli help importmulti does show up the
+# desc field for the bitcoin core descriptor language, and now
+# the importmulti command does not error immediately
