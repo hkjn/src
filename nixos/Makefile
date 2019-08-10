@@ -11,4 +11,4 @@ refresh-packages:
 
 update-packages:
 	cp configuration.nix /etc/nixos/
-	nixos-rebuild switch -I nixpkgs=/home/user/src/hkjn.me/nixpkgs
+	nixos-rebuild switch -I nixpkgs=/home/user/src/hkjn.me/nixpkgs --upgrade -p test0
