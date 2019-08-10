@@ -271,6 +271,9 @@ sudo nixos-rebuild boot
 # may also help to reinstall bootloader with:
 sudo nixos-rebuild --install-bootloader switch
 
+# after rebooting, some more recent generations between 50-53 shows up with
+# nix-env --list-generations
+
 # even with a new tx to a fresh address generated with getnewaddress,
 # the balance reported by getwalletinfo is 0.0
 
@@ -299,3 +302,6 @@ hwi --fingerprint $FINGERPRINT signtx $PSBT
 bitcoin-cli finalizepsbt $SIGNED_PSBT
 bitcoin-cli decoderawtransaction $RAW_TX
 bitcoin-cli sendrawtransaction $RAW_TX
+
+# rebuild with different profile than system:
+nixos-rebuild switch -I nixpkgs=/home/user/src/hkjn.me/nixpkgs -p test0
