@@ -97,6 +97,7 @@
      steghide
      tmux
      tor
+     tor-browser-bundle-bin
      vim
      wget
      urbit

@@ -197,14 +197,21 @@ pip install -r requirements.txt
 
 # better would be to have electrum directly use hwi binary instead of importing
 # python libraries, since both electrum and hwi have .nix packages, should file
-# issue in electrum to suggest that and offer to help
+# issue in electrum to suggest that and offer to help, to get a sense for how
+# far away hwi is from fully supporting everything electrum needs
+
+# there is also many pip packages defined in nixpkgs/pkgs/top-level/python-packages.nix,
+# as documented at https://nixos.org/nixpkgs/manual/#contributing-guidelines, so
+# perhaps ckcc-protocol etc could be referenced there, and defined in
+# pkgs/development/python-modules/ckcc-protocol/default.nix
 
 # should create electrs.service file via configuration.nix, currently started
 # with:
 cd .config/electrs && electrs -vvvv
 
 # coldcard udev rules don't seem to be taking effect, /dev/bus/usb/m/n still
-# is readable only by root
+# is readable only by root, despite /etc/udev/rules.d/99-local.rules being
+# updated based on services.udev.extraRules
 
 # after changing permissions manually, hwi tool allows fetching xpub at
 # arbitrary paths:
@@ -228,10 +235,67 @@ hwi --fingerprint $FINGERPRINT displayaddress --path "m/84'/0'/0'/0/0" --wpkh
 # --path "m/84'/0'/1'/*" --internal and combining results:
 hwi --fingerprint $FINGERPRINT getkeypool --wpkh --keypool 0 1000
 
+# creating a new watchonly wallet $WALLET in bitcoin core using:
+bitcoin-cli createwallet "$WALLET" true
+
 # attempting to import the keys throws error 'Invalid scriptPubKey':
-bitcoin-cli -rpcwallet=$WALLET importmulti $KEYS
+bitcoin-cli -rpcwallet=$WALLET importmulti "$KEYS"
 
 # after rebuilding from v0.18.0, which should have been the previous
 # version as well, bitcoin-cli help importmulti does show up the
 # desc field for the bitcoin core descriptor language, and now
-# the importmulti command does not error immediately
+# the importmulti command does succeed
+
+# after import finished, since the addresses have earlier transactions,
+# blockchain has to be rescanned for core to find out about them and
+# show the correct balance, using a height before the first tx:
+bitcoin-cli -rpcwallet=$WALLET rescanblockchain 581400
+
+# after rescan, getnewaddress does return the expected first free
+# address, and getwalletinfo shows a txcount of 6 as expected, however
+# balance is still listed as 0.0
+
+# after restart of bitcoind, wallet has to be loaded with:
+bitcoin-cli loadwallet $WALLET
+
+# however balance still shows up as 0.0 after restart
+
+# the generations listed at nix-env --list-generations lists the current
+# one as 49 still, but with the UEFI boot menu, the latest is 80+
+# via https://nixos.wiki/wiki/Bootloader, seems like the following command
+# is needed when doing rebuilds to update bootloader, however via manpage,
+# seems that nixos-rebuild switch should do the same as nixos-rebuild boot,
+# and in additionally should switch to the new configuration immediately:
+sudo nixos-rebuild boot
+
+# may also help to reinstall bootloader with:
+sudo nixos-rebuild --install-bootloader switch
+
+# even with a new tx to a fresh address generated with getnewaddress,
+# the balance reported by getwalletinfo is 0.0
+
+# despite balance showing as 0.0 in getwalletinfo, with bitcoin-qt, the
+# expected balance does show up, so might be a bug with the rpc call?
+# trying to import another watchonly wallet from a ledger nano device,
+# the behavior differs but still seems buggy; both bitcoind and
+# bitcoin-qt shows 0.0 balance, despite showing expected transactions
+# adding up to > 0.0
+# after restarting bitcoin-qt, expected balance shows for ledger nano
+# wallet and coldcard wallet in gui, but still both shows 0.0 with
+# bitcoin-cli getwalletinfo
+
+# wasabi should have .nix package contributed, either as part of
+# main https://github.com/zkSNACKs/WalletWasabi/releases or nix-bitcoin
+# repo
+# while doing bitcoin-cli importmulti, the bitcoin-qt gui seems to stop
+# redrawing.. perhaps doing heavy work on ui thread?
+
+# seems that X11 docker containers for some reason can't connect to x
+# socket on nixos, giving error 'Error: Can't open display: :0'
+
+# creating psbt and signing using hwi:
+bitcoin-cli -rpcwallet=$WALLET walletcreatefundedpsbt '[]' '[{"$RECIPIENT_ADDR":0.01}]' 0 '{"includeWatching":true}' true
+hwi --fingerprint $FINGERPRINT signtx $PSBT
+bitcoin-cli finalizepsbt $SIGNED_PSBT
+bitcoin-cli decoderawtransaction $RAW_TX
+bitcoin-cli sendrawtransaction $RAW_TX
