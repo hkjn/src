@@ -104,6 +104,10 @@ nix-env -i /nix/store/1aqydk16mih4jcqnxsd8567b916vhna8-electrs-0.6.2
 # removing old and unreferenced packages:
 nix-collect-garbage
 
+# also delete everything not used by the current generations of each
+# profile:
+nix-collect-garbage -d
+
 # seek out identical files and replace them with hard links to a single copy:
 nix-store --optimise
 
@@ -205,6 +209,29 @@ pip install -r requirements.txt
 # perhaps ckcc-protocol etc could be referenced there, and defined in
 # pkgs/development/python-modules/ckcc-protocol/default.nix
 
+# also seems that there's a package definition for pip2nix tool, which might
+# be useful to convert ckcc-protocol's requirements.txt into .nix derivation:
+# ./pkgs/development/python-modules/pip2nix/default.nix
+
+# also there is a pypi2nix package, which seems like it could potentially help
+# convert ckcc-protocol's requirements.txt into .nix:
+nix-env -i pypi2nix
+cd ~/src/github.com/Coldcard/ckcc-protocol
+pypi2nix --python-version 3
+nix-shell requirements.nix -A interpreter
+
+# however, build fails, seemingly due to libusb.h not being included as
+# dependency in the generated .nix package
+
+# docs at github for pypi2nix mention that non-python dependencies can
+# be added like -E libusb:
+pypi2nix --python-version 3 -E libusb -E libffi
+
+# although following command does build result/bin/python where ckcc can
+# be imported, dir(ckcc) shows no attributes so seems to be some further
+# issue:
+nix build -f requirements.nix interpreter
+
 # should create electrs.service file via configuration.nix, currently started
 # with:
 cd .config/electrs && electrs -vvvv
@@ -274,6 +301,10 @@ sudo nixos-rebuild --install-bootloader switch
 # after rebooting, some more recent generations between 50-53 shows up with
 # nix-env --list-generations
 
+# via the filesystem, seems that the generations listed in uefi boot
+# menu up to 86 actually exist:
+ls -l /nix/var/nix/profiles/
+
 # even with a new tx to a fresh address generated with getnewaddress,
 # the balance reported by getwalletinfo is 0.0
 
@@ -305,3 +336,22 @@ bitcoin-cli sendrawtransaction $RAW_TX
 
 # rebuild with different profile than system:
 nixos-rebuild switch -I nixpkgs=/home/user/src/hkjn.me/nixpkgs -p test0
+
+# query for all available derivations in the active nix expression:
+nix-env -qaf /home/user/src/hkjn.me/nixpkgs
+
+# following https://nixos.org/nix/manual/#chap-writing-nix-expressions,
+# along with https://github.com/NixOS/nix/issues/2259 when doing a build
+# of the basic hello derivation did not succeed, but does build when
+# called as:
+nix-build -E '(import <nixpkgs> {}).callPackage ./default.nix {}'
+
+# docs at https://github.com/NixOS/nixpkgs/blob/master/doc/languages-frameworks/python.section.md
+# are useful for understanding how to work with python packages on nixos
+
+# shell can be entered with python packages installed with:
+nix-shell -p 'python35.withPackages(ps: with ps; [ nose ])'
+
+# a local ~/.config/nixpkgs/config.nix can be used to define additional
+# packages via overrides, like tools containing python packages and
+# tools for interacting with hardware wallets
