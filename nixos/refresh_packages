@@ -8,6 +8,8 @@ COMMITS=(
 	fbc381e2  # clightning: 0.7.0 -> 0.7.1
 	7971cec52 # bitcoin: 0.17.3 -> 0.18.0, enable and run unit tests
 	bc0a2e870 # bitcoin: cleanup check-only input, move to checkInputs
+	769f992fb # electrum: 3.3.7 -> 3.3.8
+	36f9da4ec # electrum: optional qt5 and darwin fixes
 )
 
 echo "Refreshing upstream and channels.."
