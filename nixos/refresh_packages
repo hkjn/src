@@ -1,7 +1,7 @@
 set -euo pipefail
 
 VERSION=nixos-19.03
-GENERATION_NUMBER=51
+GENERATION_NUMBER=66
 LOCAL_BRANCH=build-${GENERATION_NUMBER}
 COMMITS=(
 	3586ab3   # clightning: 0.6.3 -> 0.7.0 (#56788)
@@ -10,6 +10,9 @@ COMMITS=(
 	bc0a2e870 # bitcoin: cleanup check-only input, move to checkInputs
 	769f992fb # electrum: 3.3.7 -> 3.3.8
 	36f9da4ec # electrum: optional qt5 and darwin fixes
+	da98d1040 # maintainers: Add hkjn
+	ccfd3e049 # python3Packages:ckcc-protocol: init
+	c7f0e9ad8 # electrum: Add ckcc-protocol
 )
 
 echo "Refreshing upstream and channels.."
@@ -17,7 +20,11 @@ cd /home/user/src/hkjn.me/nixpkgs
 git fetch upstream
 git fetch channels
 
-echo "Updaing nixos-unstable branch.."
+echo "Updating master branch..
+git rebase upstream/master
+git push
+
+echo "Updating nixos-unstable branch.."
 git checkout nixos-unstable
 git rebase remotes/channels/nixos-unstable
 git push
