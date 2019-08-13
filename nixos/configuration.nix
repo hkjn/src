@@ -52,9 +52,9 @@
   ];
   services.udev.extraRules = ''
     # coldcard udev rules
-    SUBSYSTEM=="usb", ENV{ID_VENDOR}=="d13e", ENV{ID_PRODUCT}=="cc10", MODE="0660", TAG+="uaccess" TAG+="udev-acl"
+    SUBSYSTEM=="usb", ENV{ID_VENDOR}=="d13e", ENV{ID_PRODUCT}=="cc10", MODE="0660", GROUP="users", TAG+="uaccess", TAG+="udev-acl", SYMLINK+="+coldcard%n"
     # ledger nano udev rules
-    SUBSYSTEM=="usb", ENV{ID_VENDOR}=="2c97", ENV{ID_PRODUCT}=="0001", MODE="0660", TAG+="uaccess" TAG+="udev-acl"
+    SUBSYSTEM=="usb", ENV{ID_VENDOR}=="2c97", ENV{ID_PRODUCT}=="0001", MODE="0660", GROUP="users", TAG+="uaccess", TAG+="udev-acl", SYMLINK+="+ledger%n"
   '';
 
   # Set hostname.
@@ -208,7 +208,7 @@
   users.users.user = {
     isNormalUser = true;
     # Enable sudo and networkmanager for the user.
-    extraGroups = [ "wheel" "networkmanager" ];
+    extraGroups = [ "wheel" "networkmanager" "hardwarewallets" ];
     # Set default password.
     initialHashedPassword = "$6$gQ/dMey1PH$aKVUdM1EybW2iFGC80cOby/S2nQNpn3SlCzl3mk7IU39A5b4ew22cAxvpOx8N7yZZ..IOB4vWdnp8ZPrmJvHT0";
   };
