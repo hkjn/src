@@ -355,3 +355,16 @@ nix-shell -p 'python35.withPackages(ps: with ps; [ nose ])'
 # a local ~/.config/nixpkgs/config.nix can be used to define additional
 # packages via overrides, like tools containing python packages and
 # tools for interacting with hardware wallets
+
+# seems like udev rules can be added as package inputs, like for
+# pkgs/applications/misc/digitalbitbox/:
+# , udevRule51 ? ''
+# ,   SUBSYSTEM=="usb", TAG+="uaccess", TAG+="udev-acl", SYMLINK+="dbb%n", ATTRS{idVendor}=="03eb", ATTRS{idProduct}=="2402"
+# , ''
+# seems like udev packages also can be added to system.udev.packages:
+#     system.udev.packages = [ pkgs.digitalbitbox ];
+
+# seems that fort-nix/nix-bitcoin has udev rules for trezor and ledger
+# in modules/hardware-wallets.nix which should be usable to figure out
+# why permissions are not being set automatically, docs at
+# https://nixos.wiki/wiki/Module might help
