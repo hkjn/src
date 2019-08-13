@@ -1,7 +1,7 @@
 set -euo pipefail
 
-VERSION=nixos-19.03
-GENERATION_NUMBER=66
+BASE_VERSION=nixos-19.03
+GENERATION_NUMBER=67
 LOCAL_BRANCH=build-${GENERATION_NUMBER}
 COMMITS=(
 	3586ab3   # clightning: 0.6.3 -> 0.7.0 (#56788)
@@ -9,10 +9,9 @@ COMMITS=(
 	7971cec52 # bitcoin: 0.17.3 -> 0.18.0, enable and run unit tests
 	bc0a2e870 # bitcoin: cleanup check-only input, move to checkInputs
 	769f992fb # electrum: 3.3.7 -> 3.3.8
-	36f9da4ec # electrum: optional qt5 and darwin fixes
 	da98d1040 # maintainers: Add hkjn
-	ccfd3e049 # python3Packages:ckcc-protocol: init
-	c7f0e9ad8 # electrum: Add ckcc-protocol
+	08bd28bc2 # python3Packages.ckcc-protocol: init at 0.7.9
+	1d2affa07 # electrum: Add ckcc-protocol
 )
 
 echo "Refreshing upstream and channels.."
@@ -20,7 +19,8 @@ cd /home/user/src/hkjn.me/nixpkgs
 git fetch upstream
 git fetch channels
 
-echo "Updating master branch..
+echo "Updating master branch.."
+git checkout master
 git rebase upstream/master
 git push
 
@@ -30,8 +30,7 @@ git rebase remotes/channels/nixos-unstable
 git push
 
 echo "Creating ${LOCAL_BRANCH} branch.."
-git checkout master
-git checkout channels/${VERSION}
+git checkout channels/${BASE_VERSION}
 git checkout -b ${LOCAL_BRANCH}
 for commit in "${COMMITS[@]}"; do
     echo "cherry-picking ${commit}.."
