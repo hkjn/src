@@ -368,3 +368,6 @@ nix-shell -p 'python35.withPackages(ps: with ps; [ nose ])'
 # in modules/hardware-wallets.nix which should be usable to figure out
 # why permissions are not being set automatically, docs at
 # https://nixos.wiki/wiki/Module might help
+
+# the sha256 hashes needed for fetchurl stanzas:
+nix-prefetch-url --unpack https://github.com/zkSNACKs/WalletWasabi/archive/v1.1.6.zip

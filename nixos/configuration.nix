@@ -100,6 +100,7 @@
      tor-browser-bundle-bin
      vim
      wget
+     unzip
      urbit
      usbutils
      youtube-dl-light
