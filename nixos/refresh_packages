@@ -1,7 +1,7 @@
 set -euo pipefail
 
 BASE_VERSION=nixos-19.03
-GENERATION_NUMBER=67
+GENERATION_NUMBER=69
 LOCAL_BRANCH=build-${GENERATION_NUMBER}
 COMMITS=(
 	3586ab3   # clightning: 0.6.3 -> 0.7.0 (#56788)
@@ -29,8 +29,9 @@ git checkout nixos-unstable
 git rebase remotes/channels/nixos-unstable
 git push
 
-echo "Creating ${LOCAL_BRANCH} branch.."
+echo "Checkout out channels/${BASE_VERSION}.."
 git checkout channels/${BASE_VERSION}
+echo "Creating ${LOCAL_BRANCH} branch.."
 git checkout -b ${LOCAL_BRANCH}
 for commit in "${COMMITS[@]}"; do
     echo "cherry-picking ${commit}.."
