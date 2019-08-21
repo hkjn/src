@@ -45,6 +45,9 @@
     preLVM = false;
   } ];
 
+  # Add kvm kernel modules.
+  boot.kernelModules = [ "kvm-intel" ];
+
   # Add udev packages for yubikey device.
   services.udev.packages = [
     pkgs.yubikey-personalization
@@ -83,7 +86,10 @@
      gnumake
      go
      file
+     imagemagick
+     libosinfo
      htop
+     glxinfo
      gptfdisk
      mosh
      mkpasswd
@@ -100,9 +106,12 @@
      tor-browser-bundle-bin
      vim
      wget
+     qemu
      unzip
      urbit
      usbutils
+     virtmanager
+     virtviewer
      youtube-dl-light
      xbrightness
      xclip
@@ -205,11 +214,14 @@
   # Enable docker.
   virtualisation.docker.enable = true;
 
+  # Enable libvirtd for KVM.
+  virtualisation.libvirtd.enable = true;
+
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.user = {
     isNormalUser = true;
     # Enable sudo and networkmanager for the user.
-    extraGroups = [ "wheel" "networkmanager" "hardwarewallets" ];
+    extraGroups = [ "wheel" "networkmanager" "hardwarewallets" "libvirtd" ];
     # Set default password.
     initialHashedPassword = "$6$gQ/dMey1PH$aKVUdM1EybW2iFGC80cOby/S2nQNpn3SlCzl3mk7IU39A5b4ew22cAxvpOx8N7yZZ..IOB4vWdnp8ZPrmJvHT0";
   };

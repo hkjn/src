@@ -371,3 +371,33 @@ nix-shell -p 'python35.withPackages(ps: with ps; [ nose ])'
 
 # the sha256 hashes needed for fetchurl stanzas:
 nix-prefetch-url --unpack https://github.com/zkSNACKs/WalletWasabi/archive/v1.1.6.zip
+
+# after setting virtualisation.libvirtd.enable = true and rebuilding, the virsh command
+# is available to interact with Xen, QEMU, KVM, LXC, OpenVZ, VirtualBox and VMWare ESX,
+# and a service has been started:
+systemctl status libvirtd
+
+# list all vms in inactive and active domains:
+virsh list --all
+
+# list networks:
+virsh net-list
+
+# create empty 10GiB image for vm data:
+sudo mkdir /var/lib/libvirt/images/
+dd if=/dev/zero of=/var/lib/libvirt/images/debian0.img bs=1M count=10240
+virt-install --virt-type kvm --name debian0 --ram 2048 --vcpus=2 --disk path=/var/lib/libvirt/images/debian0.img --network bridge=br0 --graphics vnc --cdrom /home/user/media/os_images/debian-9.8.0-amd64-xfce-CD-1.iso --os-variant=debian9
+# valid options for --os-variant can be listed with command below, or set to "auto"
+# for autodetection:
+osinfo-query os
+
+# command above gives error around /usr/libexec/qemu-bridge-helper not existing, which
+# via searching online seems to be a known issue but not believed to prevent qemu
+# or kvm vms on nixos
+
+# installed and tried virt-manager, and added kvm-intel to kernelmodules, but still
+# gives same error around "could not detect a default hypervisor":
+virt-manager
+
+# however, after selecting File > Add Connection > QEMU/KVM user session manually,
+# seems like debian vm can be created
