@@ -415,3 +415,15 @@ virt-manager
 # nixpkgs/nixos/modules/services/security/tor.nix
 
 # now only remaining part is to figure out format for services.tor.hiddenServices
+# by referencing nix-bitcoin.nix, correct map format was found and lightningd
+# hidden service was defined, after which .lightning/config could be updated
+# to add bind-addr and announce-addr
+
+# .bitcoin/bitcoin.conf also has proxy=127.0.0.1:9050 and bind=127.0.0.1, with
+# no further configuration necessary, assuming tor control port on 127.0.0.1:9051
+# has been enabled
+
+# since wasabi uses large key depths due to the CJ implementation, for electrum
+# wallet's gap limit should be raised:
+wallet.gap_limit_for_change = 100
+wallet.gap_limit = 100

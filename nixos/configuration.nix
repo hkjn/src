@@ -174,12 +174,12 @@
   services.tor.enable = true;
   services.tor.client.enable = true;
   services.tor.controlPort = 9051;
-  # services.tor.hiddenServices = {
-  #  name = "lightningd";
-  #  version = 3;
-  #  port = 9735;
-  #  destination = 9735;
-  # };
+  services.tor.hiddenServices.lightningd = {
+    map = [{
+      port = 9735;
+    }];
+    version = 3;
+  };
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
