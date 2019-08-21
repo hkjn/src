@@ -392,8 +392,8 @@ virt-install --virt-type kvm --name debian0 --ram 2048 --vcpus=2 --disk path=/va
 osinfo-query os
 
 # command above gives error around /usr/libexec/qemu-bridge-helper not existing, which
-# via searching online seems to be a known issue but not believed to prevent qemu
-# or kvm vms on nixos
+# via searching online and finding https://github.com/NixOS/nixpkgs/issues/34972,
+# seems to be a known issue but not believed to prevent qemu or kvm vms on nixos
 
 # installed and tried virt-manager, and added kvm-intel to kernelmodules, but still
 # gives same error around "could not detect a default hypervisor":
@@ -401,3 +401,17 @@ virt-manager
 
 # however, after selecting File > Add Connection > QEMU/KVM user session manually,
 # seems like debian vm can be created
+
+# available nixos options can be viewed at https://nixos.org/nixos/options.html
+
+# after setting services.tor.client.enable to true, 127.0.0.1:9050 now is open,
+# serving SOCKS5, but still not clear how to set options like ControlPort 9051
+# to torrc with nixos
+
+# via systemd logs, seems like torrc used is something like
+# /nix/store/82598wz91g76wcqgqm8ha1i2sc9v9fxi-torrc
+
+# turns out it's possible to just set services.tor.controlPort etc, referencing
+# nixpkgs/nixos/modules/services/security/tor.nix
+
+# now only remaining part is to figure out format for services.tor.hiddenServices

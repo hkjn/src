@@ -169,7 +169,18 @@
 
   # Enable the OpenSSH daemon.
   # services.openssh.enable = true;
+
+  # Enable tor and tor client.
   services.tor.enable = true;
+  services.tor.client.enable = true;
+  services.tor.controlPort = 9051;
+  # services.tor.hiddenServices = {
+  #  name = "lightningd";
+  #  version = 3;
+  #  port = 9735;
+  #  destination = 9735;
+  # };
+
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];
