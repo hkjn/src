@@ -73,11 +73,12 @@
 
   # Set time zone:
   # https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
-  time.timeZone = "Asia/Yerevan";
+  time.timeZone = "Europe/Helsinki";
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
+     bind
      electrum
      exfat
      firefox
@@ -113,6 +114,7 @@
      virtmanager
      virtviewer
      youtube-dl-light
+     xautolock
      xbrightness
      xclip
   ];
