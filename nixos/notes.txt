@@ -321,7 +321,8 @@ ls -l /nix/var/nix/profiles/
 # wasabi should have .nix package contributed, either as part of
 # main https://github.com/zkSNACKs/WalletWasabi/releases or nix-bitcoin
 # repo
-# while doing bitcoin-cli importmulti, the bitcoin-qt gui seems to stop
+
+# bug: while doing bitcoin-cli importmulti, the bitcoin-qt gui seems to stop
 # redrawing.. perhaps doing heavy work on ui thread?
 
 # seems that X11 docker containers for some reason can't connect to x
@@ -427,3 +428,26 @@ virt-manager
 # wallet's gap limit should be raised:
 wallet.gap_limit_for_change = 100
 wallet.gap_limit = 100
+
+# installing spark-wallet is simple via nix-bitcoin:
+nix-build --arg pkgs 'import <nixpkgs> {}' -A spark-wallet
+nix-env -i /nix/store/xrpqwni739bs8c1qphal5593sc6vf7ca-node-spark-wallet-0.2.8
+
+# bug: electrum behavior when bumping fee on one-input-one-output txns is
+# to include another input, and to create a change output, while the expected
+# behavior is to decrease the size of the only input to make more room for fee
+
+# QEMU disk image for VM:
+file /home/user/.local/share/libvirt/images/${VMNAME}.qcow2
+
+# trying to get X to automatically lock, after installing xautolock, the
+# following added to i3_config works:
+exec_always --no-startup-id xautolock -time 10 -locker i3lock
+
+# running the command manually does lock after specified amount of time,
+# so one gotcha is having the manually executed command preventing the
+# one in exec_always from being started:
+xautolock -time 10 -locker i3lock
+
+# can also suspend to memory with:
+systemctl suspend
