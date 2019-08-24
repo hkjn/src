@@ -451,3 +451,13 @@ xautolock -time 10 -locker i3lock
 
 # can also suspend to memory with:
 systemctl suspend
+
+# seems like increasing gap limits leads to many more addresses being
+# watched, which triggers the unresponsive electrs state seen before:
+# https://github.com/romanz/electrs/issues/163
+# lowered gap limits for specific wasabi and whirlpool wallets, so
+# fewer addresses should be watched in the future
+
+# trying to set --onion for spark-wallet crashes due to trying to
+# write to a read-only directory:
+# https://github.com/shesek/spark-wallet/issues/108
