@@ -428,6 +428,8 @@ virt-manager
 # wallet's gap limit should be raised:
 wallet.gap_limit_for_change = 100
 wallet.gap_limit = 100
+# seems like the change gap limit needs to be > 20 or so, but raising gap_limit
+# itself might not be necessary
 
 # installing spark-wallet is simple via nix-bitcoin:
 nix-build --arg pkgs 'import <nixpkgs> {}' -A spark-wallet
@@ -461,3 +463,31 @@ systemctl suspend
 # trying to set --onion for spark-wallet crashes due to trying to
 # write to a read-only directory:
 # https://github.com/shesek/spark-wallet/issues/108
+
+# qemu vms created by virt-manager can be viewed with virsh commands:
+virsh list --all
+
+# another command shows that qemu:///session is the uri used:
+virsh uri
+
+# vms can be suspended and resumed:
+virsh suspend <name>
+virsh resume <name>
+
+# should be possible to manually create vms on cli using:
+virsh create <xmlfile>
+
+# can create xml template from existing vm / domain:
+virsh dumpxml <domain> > domain.xml
+
+# via manpage, have to them update <name>, remove <uid>, and probably
+# should change the .qcow2 disk image
+
+# wasabi's UI is not great on low resolutions, can't see all of xpub/zpub
+# for example without resorting to trickery, also could be easier to copy
+# similar to addresses on receive tab
+
+# services that currently have to be started manually:
+lightningd
+cd .config/electrs && electrs -vvvv
+spark-wallet --no-rates
