@@ -88,6 +88,7 @@
      go
      file
      imagemagick
+     jhead
      libosinfo
      htop
      glxinfo
