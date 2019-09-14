@@ -265,6 +265,10 @@ hwi --fingerprint $FINGERPRINT getkeypool --wpkh --keypool 0 1000
 # creating a new watchonly wallet $WALLET in bitcoin core using:
 bitcoin-cli createwallet "$WALLET" true
 
+# listing wallets does not show all of the existing ones:
+bitcoin-cli listwallets
+ls ~/.bitcoin
+
 # attempting to import the keys throws error 'Invalid scriptPubKey':
 bitcoin-cli -rpcwallet=$WALLET importmulti "$KEYS"
 
@@ -491,3 +495,7 @@ virsh dumpxml <domain> > domain.xml
 lightningd
 cd .config/electrs && electrs -vvvv
 spark-wallet --no-rates
+
+# also have to restart bitcoin.service once after restart every so often,
+# for unknown reasons:
+systemctl --user restart bitcoin

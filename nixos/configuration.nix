@@ -114,6 +114,7 @@
      usbutils
      virtmanager
      virtviewer
+     wasabiwallet
      youtube-dl-light
      xautolock
      xbrightness
@@ -164,6 +165,7 @@
       alias elec="electrum --oneserver --server=127.0.0.1:50001:t"
       alias xcl="xclip -selection c"
       alias pp="git pull && git push"
+      alias vms="virt-manager -c qemu:///session"
     '';
 
   };
