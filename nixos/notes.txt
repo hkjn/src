@@ -182,6 +182,9 @@ sudo chown user:users /dev/bus/usb/001/007
 # https://unix.stackexchange.com/questions/519110/how-to-install-python-pip-on-nixos
 # that it can be installed with:
 nix-env -i python3.7-pip-19.1.1
+# but later found that the "nix way" seems to be to not use other package managers,
+# instead have .nix expressions for all tools, including for handling python
+# dependencies
 
 # attempting to install ckcc-protocol failed due to 'No module named setuptools',
 # which doesn't change by adding it explicitly:
@@ -499,3 +502,63 @@ spark-wallet --no-rates
 # also have to restart bitcoin.service once after restart every so often,
 # for unknown reasons:
 systemctl --user restart bitcoin
+
+# starting guix vm image using kvm:
+qemu-system-x86_64 -net user -net nic,model=virtio -enable-kvm -m 1024 -device virtio-blk,drive=myhd -drive if=none,file=guix-system-vm-image-1.0.1.x86_64-linux,id=myhd
+
+# mounting /dev/bus/usb/001/015 inside the vm:
+qemu-system-x86_64 -net user -net nic,model=virtio -enable-kvm -m 1024 -device virtio-blk,drive=myhd -drive if=none,file=guix-system-vm-image-1.0.1.x86_64-linux,id=myhd -usb -device usb-host,hostbus=0,hostaddr=15
+
+# creating debian vm with persistent disk and graphical installer:
+qemu-img create deb2.img 7500M
+qemu-system-x86_64 -net user -net nic,model=virtio -enable-kvm -m 1024 -device virtio-blk,drive=myhd -drive if=none,file=deb2.img,id=myhd -usb -device usb-host,hostbus=0,hostaddr=15 -cdrom debian-9.8.0-amd64-xfce-CD-1.iso
+
+# after installing debian os, cd no longer needs to be mounted:
+qemu-system-x86_64 -net user -net nic,model=virtio -enable-kvm -m 1024 -device virtio-blk,drive=myhd -drive if=none,file=deb2.img,id=myhd
+
+# when mounting /dev/bus/usb/x/y as above with ledger nano, following error occurs and
+# device disappears and is replaced by y+1 as soon as os in vm boots:
+# (qemu) libusb: error [udev_hotplug_event] ignoring udev action bind
+# qemu-system-x86_64: libusb_release_interface: -4 [NO_DEVICE]
+# qemu-system-x86_64: libusb_release_interface: -4 [NO_DEVICE]
+# qemu-system-x86_64: libusb_release_interface: -4 [NO_DEVICE]
+
+# trying to get ledger-agent working, with bitcoin app open it shows:
+# ledgerblue.commException.CommException: Exception : Invalid status 6d00 (Unknown reason)
+# with the dashboard open:
+# ledgerblue.commException.CommException: Exception : Invalid status 6e00 (Unknown reason)
+# with the ssh/pgp agent app open on the ledger nano, a dialog
+# appears asking whether to provide public key to host, with the server side logging:
+# Bad protocol version identification '-HSS2.0-sshlib-0.1'
+
+# after omitting --connect, pubkey is displayed and can be added
+# to remote .ssh/authorized_keys, given host in .ssh/config:
+ledger-agent -v --debug host
+# after adding pubkey to remote .ssh/authorized_keys, ledger-agent
+# can be used to connect via ssh or mosh:
+ledger-agent -v --debug --connect vpn
+ledger-agent -v --debug --mosh vpn
+# using --shell, a $SHELL can be spawned under SSH agent, so that
+# regular ssh-based tools (e.g git with ssh'ed remotes) can be used,
+# calling out to the ledger nano s to sign when connecting to one
+# of the hosts listed in ~/.ssh/ledger.conf
+ledger-agent ~/.ssh/ledger.conf --shell -v
+
+# in guix vm, guix system subcommand can be used to list generations:
+guix system list-generations
+
+# upgrading all packages:
+guix upgrade
+
+# starting a vm that shares the host's store immutably:
+guix system vm
+# with a separate store:
+guix system vm-image
+
+# can connect graphical client on spice://localhost:5900:
+remote-viewer
+
+# after making changes to config.scm, following steps pull
+# down updates and rebuilds the system:
+guix pull
+guix system reconfigure /etc/config.scm

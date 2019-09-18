@@ -48,16 +48,14 @@
   # Add kvm kernel modules.
   boot.kernelModules = [ "kvm-intel" ];
 
-  # Add udev packages for yubikey device.
   services.udev.packages = [
+    pkgs.ledger-udev-rules
     pkgs.yubikey-personalization
     pkgs.libu2f-host
   ];
   services.udev.extraRules = ''
     # coldcard udev rules
     SUBSYSTEM=="usb", ENV{ID_VENDOR}=="d13e", ENV{ID_PRODUCT}=="cc10", MODE="0660", GROUP="users", TAG+="uaccess", TAG+="udev-acl", SYMLINK+="+coldcard%n"
-    # ledger nano udev rules
-    SUBSYSTEM=="usb", ENV{ID_VENDOR}=="2c97", ENV{ID_PRODUCT}=="0001", MODE="0660", GROUP="users", TAG+="uaccess", TAG+="udev-acl", SYMLINK+="+ledger%n"
   '';
 
   # Set hostname.
@@ -93,6 +91,7 @@
      htop
      glxinfo
      gptfdisk
+     ledger-live-desktop
      mosh
      mkpasswd
      mplayer
