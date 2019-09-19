@@ -560,5 +560,21 @@ remote-viewer
 
 # after making changes to config.scm, following steps pull
 # down updates and rebuilds the system:
-guix pull
-guix system reconfigure /etc/config.scm
+sudo guix pull
+sudo guix system reconfigure /etc/config.scm
+
+# creating new GPG key stored on ledger nano s:
+ledger-gpg init "Henrik Jonsson <me@hkjn.me>"
+# 2019-09-19 13:25:31,158 WARNING      This GPG tool is still in EXPERIMENTAL mode, so please note that the API and features may change without backwards compatibility! [__init__.py:118]
+# 2019-09-19 13:25:31,199 WARNING      NOTE: in order to re-generate the exact same GPG key later, run this command with "--time=1568892331" commandline flag (to set the timestamp of the GPG key manually). [__init__.py:35]
+# gpg: inserting ownertrust of 6
+# gpg: checking the trustdb
+# gpg: marginals needed: 3  completes needed: 1  trust model: pgp
+# gpg: depth: 0  valid:   1  signed:   0  trust: 0-, 0q, 0n, 0m, 0f, 1u
+# sec   nistp256 2019-09-19 [SC]
+#      51E616577801CA32E157DD4C895E6B606F9130A8
+# uid           [ultimate] Henrik Jonsson <me@hkjn.me>
+# ssb   nistp256 2019-09-19 [E]
+
+# now, with GNUPGHOME set correctly, all gpg commands
+GNUPGHOME=~/.gnupg/ledger gpg --decrypt msg.asc
