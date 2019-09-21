@@ -578,3 +578,6 @@ ledger-gpg init "Henrik Jonsson <me@hkjn.me>"
 
 # now, with GNUPGHOME set correctly, all gpg commands
 GNUPGHOME=~/.gnupg/ledger gpg --decrypt msg.asc
+
+# the ledger udev rules referenced in configuration.nix are from:
+# pkgs/os-specific/linux/ledger-udev-rules/default.nix
