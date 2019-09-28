@@ -9,7 +9,7 @@ deploy-i3-config:
 refresh-packages:
 	bash refresh_packages
 
-update-packages:
+install-user-config:
 	cp config.nix /home/user/.config/nixpkgs/
 	nix-env -iA nixpkgs.tools
 

@@ -1,4 +1,4 @@
-# after adding packages or otherwise editing configuration.nix, build new
+ after adding packages or otherwise editing configuration.nix, build new
 # configuration and switch to it for next boot:
 nixos-rebuild switch
 
@@ -581,3 +581,27 @@ GNUPGHOME=~/.gnupg/ledger gpg --decrypt msg.asc
 
 # the ledger udev rules referenced in configuration.nix are from:
 # pkgs/os-specific/linux/ledger-udev-rules/default.nix
+
+# list all packages installed system-wide:
+nix-store --query --requisites $(readlink -f /run/current-system)
+
+# list all dependencies of installed package:
+nix-store --query --references $(which vim)
+
+# unlocking trezor t:
+hwi --device-path webusb:001:2 --device-type trezor promptpin
+hwi --device-path webusb:001:2 --device-type trezor sendpin 123456
+
+# since hwi's getmasterxpub fetches the m/44'/0'/0' xpub, we have to
+# use getxpub to get the BIP84 p2wpkh xpub:
+hwi --device-path webusb:001:2 --device-type trezor getxpub "m/84'/0'/0'"
+
+# to import the xpub to electrum, can convert to zpub using lopp's
+# xpub-converter tool, but would be better to have support in electrum
+# for the descriptor language merged to core
+
+# could fetch all udev rules from github.com/bitcoin-core/HWI/hwilib/udev
+
+# only setting that needs to be changed when importing wasabi wallet (seed
+# words or xpub) into electrum is:
+# wallet.gap_limit_for_change = 25

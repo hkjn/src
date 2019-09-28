@@ -1,13 +1,16 @@
 set -euo pipefail
 
 BASE_VERSION=master
-GENERATION_NUMBER=76
+GENERATION_NUMBER=77
 LOCAL_BRANCH=build-${GENERATION_NUMBER}
 COMMITS=(
 	08bd28bc2 # python3Packages.ckcc-protocol: init at 0.7.9
 	1d2affa07 # electrum: Add ckcc-protocol
-        062267447 # python: ledgerblue: 0.1.24 -> 0.1.28
         d0886a69f # ledgeragent: init at 0.9.0
+	5d9dd6f0a # pythonPackages.trezor_agent: add hkjn to maintainers
+	78bb1905a # trezor_agent: init at 0.10.0
+	f72e03391 # ledger_agent: init at 0.9.0
+	001584d45 # keepkey_agent: init at 0.9.0
 )
 
 echo "Refreshing upstream and channels.."
