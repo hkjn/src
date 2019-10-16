@@ -66,7 +66,7 @@
   # Enable power management, powertop, and cap max frequency.
   powerManagement.enable = true;
   powerManagement.cpuFreqGovernor = "powersave";
-  powerManagement.cpufreq.max = 2000000;
+  powerManagement.cpufreq.max = 1600000;
   powerManagement.powertop.enable = true;
 
   # Set time zone:
@@ -187,7 +187,7 @@
   };
 
   # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
+  networking.firewall.allowedTCPPorts = [ 8333 ];
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
