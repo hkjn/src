@@ -66,8 +66,8 @@ def tor_has_circuit():
 
 
 def tor_can_reach_frankenbox():
-    args = ('curl --socks5 localhost:9050 --socks5-hostname localhost:9050 '
-            '-s didqi7crkvxxqz5pnw2khrac7ncchwqgz5yyxcfvbow56wh3fce2peid.onion:8527').split()
+    args = ('torsocks nc -w 5 '
+            'didqi7crkvxxqz5pnw2khrac7ncchwqgz5yyxcfvbow56wh3fce2peid.onion 8527').split()
     print('running {}'.format(' '.join(args)))
     output = subprocess.check_output(args, stderr=subprocess.STDOUT, timeout=15)
     return 'SSH' in str(output)
