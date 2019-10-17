@@ -82,7 +82,6 @@ def tor_can_reach_spark():
 
 
 def main():
-    print('prometheus_tor.py starting..')
     network_up_metric = prometheus_client.Gauge('github_reached_count', 'Number of times a HTTPS connection to github.com could be made')
     tor_up_metric = prometheus_client.Gauge('tor_status_reached_count', 'Number of times the Tor status page could be reached via Tor')
     frankenbox_is_alive_metric = prometheus_client.Gauge('frankenbox_sshd_onion_reached_count', 'Number of times the frankenbox sshd onion service was reached')
@@ -95,7 +94,9 @@ def main():
     energy_now_metric = prometheus_client.Gauge('energy_now', 'Current energy level')
     energy_full_metric = prometheus_client.Gauge('energy_full', 'Fully charged energy level')
 
-    prometheus_client.start_http_server(8335)
+    listen_port = 8335
+    print('prometheus_tor.py starting at {}..'.format(listen_port))
+    prometheus_client.start_http_server(listen_port)
     while True:
         has_network = False
         try:
