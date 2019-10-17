@@ -98,6 +98,8 @@
      mplayer
      ncdu
      nmap
+     prometheus
+     prometheus-tor-exporter
      pwgen
      python3
      redshift
@@ -170,10 +172,83 @@
 
   };
 
-  # List services to enable:
+  services.prometheus.enable = true;
+  services.prometheus.listenAddress = "127.0.0.1:9090";
+  services.prometheus.extraFlags = [
+    "--storage.tsdb.retention.size=5GB"
+  ];
 
-  # Enable the OpenSSH daemon.
-  # services.openssh.enable = true;
+  services.prometheus.scrapeConfigs = [
+    {
+      job_name = "node";
+      static_configs = [
+        {
+          targets = [
+            "localhost:9100"
+          ];
+        }
+      ];
+    }
+    {
+      job_name = "custom";
+      static_configs = [
+        {
+          targets = [
+            "localhost:8335"
+          ];
+        }
+      ];
+    }
+  ];
+  services.prometheus.exporters = {
+    node = {
+      enable = true;
+      enabledCollectors = [
+        "conntrack"
+        "diskstats"
+        "entropy"
+        "filefd"
+        "filesystem"
+        "loadavg"
+        "mdadm"
+        "meminfo"
+        "netdev"
+        "netstat"
+        "stat"
+        "time"
+        "vmstat"
+        "systemd"
+        "logind"
+        "interrupts"
+        "ksmd"
+      ];
+    };
+    # custom.enable = true;
+    tor.enable = true;
+  };
+
+  # Enable grafana service.
+  services.grafana = {
+    enable   = true;
+    port     = 3000;
+    domain   = "localhost";
+    protocol = "http";
+    dataDir  = "/var/lib/grafana";
+    # xx: settings below seem to not take effect
+    provision.datasources = [
+      {
+        type = "prometheus";
+        url = "http://localhost:9090";
+      }
+    ];
+    provision.dashboards = [
+      {
+        name = "prometheusXXX";
+        type = "prometheus";
+        editable = false;
+      }
+    ];
+  };
 
   # Enable tor and tor client.
   services.tor.enable = true;
@@ -189,8 +264,6 @@
   # Open ports in the firewall.
   networking.firewall.allowedTCPPorts = [ 8333 ];
   # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
 
   # Enable bitcoind.
   systemd.user.services.bitcoin = {
