@@ -10,17 +10,26 @@ import (
 	"log"
 	"net/http"
 
-	"code.google.com/p/go.net/html"
+	"golang.org/x/net/html"
 )
 
 // The site to connect to.
-const site = "http://thepiratebay.se/search/%s/0/7/0"
+//
+// Alternatives:
+// domain = "https://unblockpirate.uk/search/%s/0/7/0"
+const domain = "https://proxtpb.art"
+const searchPattern = "%s/search/%s/0/7/0"
 
 var dry_run = flag.Bool("dry_run", false, "if specified, don't actually request URLs")
 
-type magnet struct {
-	url string
-}
+type (
+	magnet struct {
+		url string
+	}
+	torrentLink struct {
+		url string
+	}
+)
 
 // getBody fetches url and returns a io.ReadCloser for the content.
 func getBody(url string) (io.ReadCloser, error) {
@@ -31,7 +40,7 @@ func getBody(url string) (io.ReadCloser, error) {
 	}
 	if resp.StatusCode != http.StatusOK {
 		return &DummyReadCloser{}, errors.New(
-			fmt.Sprintf("Failed to retrieve %s: %d", url, resp.Status))
+			fmt.Sprintf("Failed to retrieve %q: %v", url, resp.Status))
 	}
 	return resp.Body, nil
 }
@@ -66,52 +75,106 @@ func (d *DummyReadCloser) Read(b []byte) (n int, err error) {
 // Close doesn't do anything.
 func (DummyReadCloser) Close() error { return nil }
 
-// getMagnet returns 'magnet:' link within a html.Token, or empty string.
-func getMagnet(tok html.Token) magnet {
+// getTorrentLink returns '<a href="/torrent/">' element within a html.Token, or empty string if there's none.
+func getTorrentLink(tok html.Token) *torrentLink {
 	if tok.Type == html.StartTagToken {
 		for _, a := range tok.Attr {
 			if a.Key == "href" {
-				if len(a.Val) > 8 && a.Val[:8] == "magnet:?" {
-					return magnet{a.Val}
+				if len(a.Val) > 8 && a.Val[:8] == "/torrent" {
+					log.Printf("found href to /torrent: %v\n", a.Val)
+					return &torrentLink{a.Val}
 				}
 			}
 		}
 	}
-	return magnet{}
+	return nil
+}
+
+// getMagnet returns 'magnet:' link within a html.Token.
+func getMagnet(tok html.Token) *magnet {
+	if tok.Type == html.StartTagToken {
+		for _, a := range tok.Attr {
+			if a.Key == "href" {
+				if len(a.Val) > 8 && a.Val[:8] == "magnet:?" {
+					return &magnet{a.Val}
+				}
+			}
+		}
+	}
+	return nil
 }
 
 // getMagnetLinks retrieves up to n "magnet:" links from url.
-func getMagnetLinks(url string, n int, dry_run bool) []magnet {
-	var rcloser io.ReadCloser
+func getMagnetLinks(url string, n int, dry_run bool) []*magnet {
+	var body io.ReadCloser
 	var err error
 	if dry_run {
 		log.Printf("--dry_run\n")
-		return getMagnets(&DummyReadCloser{}, n)
+		return getMagnets(&DummyReadCloser{}, url, n)
 	} else {
 		log.Printf("--nodry_run\n")
-		rcloser, err = getBody(url)
+		body, err = getBody(url)
 		if err != nil {
 			log.Fatal(err)
 		}
-		return getMagnets(rcloser, n)
+		return getMagnets(body, url, n)
 	}
 }
 
-// getMagnets returns up to n "magnet:" links to be found in the ReadCloser.
-func getMagnets(rcloser io.ReadCloser, n int) (result []magnet) {
-	z := html.NewTokenizer(rcloser)
-	result = make([]magnet, n)
+// scrapeTorrent returns the magnet link found by following the torrentLink.
+func scrapeTorrent(link torrentLink, baseUrl string) (*magnet, error) {
+	url := fmt.Sprintf("%s%s", domain, link.url)
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to retrieve %q: %v", link, resp.Status)
+	}
+	defer resp.Body.Close()
+
+	tokenizer := html.NewTokenizer(resp.Body)
+	result := &magnet{}
 	i := 0
 	for {
-		_, tok := z.Next(), z.Token()
+		_, tok := tokenizer.Next(), tokenizer.Token()
 		if tok.Type == html.ErrorToken {
-			if z.Err().Error() == "EOF" {
+			if tokenizer.Err().Error() == "EOF" {
 				break
 			}
-			log.Fatalf("Parse error: %v", z.Err())
+			log.Fatalf("Parse error: %v", tokenizer.Err())
 		}
 		m := getMagnet(tok)
-		if (m != magnet{}) {
+		if m != nil {
+			result = m
+			i += 1
+			break
+		}
+	}
+	return result, nil
+}
+
+// getMagnets returns up to n "magnet:" links to be found in the body.
+func getMagnets(body io.ReadCloser, url string, n int) []*magnet {
+	defer body.Close()
+	tokenizer := html.NewTokenizer(body)
+	result := make([]*magnet, n)
+	i := 0
+	for {
+		_, tok := tokenizer.Next(), tokenizer.Token()
+		if tok.Type == html.ErrorToken {
+			if tokenizer.Err().Error() == "EOF" {
+				break
+			}
+			log.Fatalf("Parse error: %v", tokenizer.Err())
+		}
+		link := getTorrentLink(tok)
+		if link != nil {
+			m, err := scrapeTorrent(*link, url)
+			if err != nil {
+				log.Printf("failed to fetch magnet: %v\n", err)
+				m = nil
+			}
 			result[i] = m
 			i += 1
 			if i >= n {
@@ -119,21 +182,18 @@ func getMagnets(rcloser io.ReadCloser, n int) (result []magnet) {
 			}
 		}
 	}
-	rcloser.Close()
-	return
+	return result
 }
 
 func main() {
 	flag.Parse()
-	search_term := flag.Arg(0)
-	log.Printf("Search term: %s\n", search_term)
-	magnets := getMagnetLinks(fmt.Sprintf(site, search_term), 10, *dry_run)
+	searchTerm := flag.Arg(0)
+	log.Printf("Search term: %s\n", searchTerm)
+	magnets := getMagnetLinks(fmt.Sprintf(searchPattern, domain, searchTerm), 10, *dry_run)
 	for _, m := range magnets {
-		if (m == magnet{}) {
+		if m == nil {
 			break
 		}
 		fmt.Printf("%s\n", m.url)
-		// TODO: Also print URL-decoded 'dn' param to show title?
-		// TODO: Also print # seeds / leaches?
 	}
 }
