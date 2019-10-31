@@ -1,0 +1,14 @@
+[Unit]
+Description=Systemd Collector
+After=network-online.target
+
+[Service]
+User=monitoring
+Group=monitoring
+Type=simple
+ExecStart=/usr/bin/python /usr/local/bin/systemd_collector.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
