@@ -32,6 +32,10 @@
 # Allow mDNS.
 -A INPUT -p udp --sport 5353 --dport 5353 -j ACCEPT
 
+# Allow LLMNR:
+# https://en.wikipedia.org/wiki/Link-Local_Multicast_Name_Resolution
+-A INPUT -p igmp -d 224.0.0.1 -j ACCEPT
+
 # Allow inbound TCP traffic to bitcoin port.
 -A INPUT -p tcp --dport 8333 -j ACCEPT
 -A INPUT -p tcp --dport 18333 -j ACCEPT
@@ -79,13 +83,17 @@
 -A OUTPUT -p udp -m udp --dport 53 -j ACCEPT
 -A OUTPUT -p tcp -m tcp --dport 53 -j ACCEPT
 
+-A OUTPUT -p udp --dport 1337 -j ACCEPT
+-A OUTPUT -p udp --dport 6969 -j ACCEPT
+
 # Allow mDNS.
 -A OUTPUT -p udp --sport 5353 --dport 5353 -j ACCEPT
+-A OUTPUT -p tcp --dport 5353 -j ACCEPT
 
-# Allow outbound LLMNR.
+# Allow outbound LLMNR and IGMP multicast:
+#   https://en.wikipedia.org/wiki/Link-Local_Multicast_Name_Resolution
+#   https://en.wikipedia.org/wiki/Multicast_address
 -A OUTPUT -p udp -d 224.0.0.252 --sport 5355 --dport 5355 -j ACCEPT
-
-# Allow IGMP multicast: http://en.wikipedia.org/wiki/Multicast_address
 -A OUTPUT -p igmp -d 224.0.0.22 -j ACCEPT
 
 # Allow NTP lookups.
@@ -102,8 +110,74 @@
 -A OUTPUT -p tcp --sport 22 -j ACCEPT
 -A OUTPUT -p tcp --sport 8527 -j ACCEPT
 
-# Allow outbound lightningd traffic.
+# Allow outbound lightning traffic.
 -A OUTPUT -p tcp --dport 9735 -j ACCEPT
+-A OUTPUT -p tcp --dport 9736 -j ACCEPT
+
+# Allow outbound torrent DHT traffic.
+-A OUTPUT -p tcp --dport 6881 -j ACCEPT
+
+# Allow outbound torrent traffic to trackers.
+-A OUTPUT -p tcp --dport 6889 -j ACCEPT
+
+# Following lists observed attempted traffic from unknown services
+# that ends up being blocked by virtue of not being whitelisted:
+# -A OUTPUT -p tcp --dport 1 -j ACCEPT
+# -A OUTPUT -p tcp --dport 1900 -j ACCEPT
+# -A OUTPUT -p tcp --dport 5516 -j ACCEPT
+# -A OUTPUT -p tcp --dport 6882 -j ACCEPT
+# -A OUTPUT -p tcp --dport 8999 -j ACCEPT
+# -A OUTPUT -p tcp --dport 11975 -j ACCEPT
+# Connection attempts below might be random high-level ports from
+# same process?
+# -A OUTPUT -p tcp --dport 13938 -j ACCEPT
+# -A OUTPUT -p tcp --dport 15570 -j ACCEPT
+# -A OUTPUT -p tcp --dport 15675 -j ACCEPT
+# -A OUTPUT -p tcp --dport 18446 -j ACCEPT
+# -A OUTPUT -p tcp --dport 18359 -j ACCEPT
+# -A OUTPUT -p tcp --dport 19664 -j ACCEPT
+# -A OUTPUT -p tcp --dport 20089 -j ACCEPT
+# -A OUTPUT -p tcp --dport 20294 -j ACCEPT
+# -A OUTPUT -p tcp --dport 22236 -j ACCEPT
+# -A OUTPUT -p tcp --dport 24346 -j ACCEPT
+# -A OUTPUT -p tcp --dport 26621 -j ACCEPT
+# -A OUTPUT -p tcp --dport 27287 -j ACCEPT
+# -A OUTPUT -p tcp --dport 27876 -j ACCEPT
+# -A OUTPUT -p tcp --dport 28245 -j ACCEPT
+# -A OUTPUT -p tcp --dport 28729 -j ACCEPT
+# -A OUTPUT -p tcp --dport 33755 -j ACCEPT
+# -A OUTPUT -p tcp --dport 37939 -j ACCEPT
+# -A OUTPUT -p tcp --dport 38848 -j ACCEPT
+# -A OUTPUT -p tcp --dport 38856 -j ACCEPT
+# -A OUTPUT -p tcp --dport 41247 -j ACCEPT
+# -A OUTPUT -p tcp --dport 41521 -j ACCEPT
+# -A OUTPUT -p tcp --dport 45390 -j ACCEPT
+# -A OUTPUT -p tcp --dport 46081 -j ACCEPT
+# -A OUTPUT -p tcp --dport 46319 -j ACCEPT
+# -A OUTPUT -p tcp --dport 47100 -j ACCEPT
+# -A OUTPUT -p tcp --dport 50231 -j ACCEPT
+# -A OUTPUT -p tcp --dport 51044 -j ACCEPT
+# -A OUTPUT -p tcp --dport 51413 -j ACCEPT
+# -A OUTPUT -p tcp --dport 52410 -j ACCEPT
+# -A OUTPUT -p tcp --dport 52522 -j ACCEPT
+# -A OUTPUT -p tcp --dport 53617 -j ACCEPT
+# -A OUTPUT -p tcp --dport 53517 -j ACCEPT
+# -A OUTPUT -p tcp --dport 55130 -j ACCEPT
+# -A OUTPUT -p tcp --dport 55528 -j ACCEPT
+# -A OUTPUT -p tcp --dport 55688 -j ACCEPT
+# -A OUTPUT -p tcp --dport 57219 -j ACCEPT
+# -A OUTPUT -p tcp --dport 57501 -j ACCEPT
+# -A OUTPUT -p tcp --dport 58106 -j ACCEPT
+# -A OUTPUT -p tcp --dport 60016 -j ACCEPT
+# -A OUTPUT -p tcp --dport 61246 -j ACCEPT
+# -A OUTPUT -p tcp --dport 62665 -j ACCEPT
+
+# Following comments explain some commonly seen traffic that
+# ends up being blocked by virtue of not being whitelisted:
+#
+# Do not allow Microsoft SSDP:
+#   https://www.speedguide.net/port.php?port=1900
+# -A OUTPUT -p tcp --dport 1900 -j ACCEPT
 
 # Allow outbound TCP traffic to Tor ports.
 -A OUTPUT -p tcp --dport 9001 -j ACCEPT
@@ -125,6 +199,10 @@
 
 
 # Configure 'drop' chains, which just jump to LOG -> DROP.
+#
+# View logs with:
+#   journalctl -k -f | grep "IN=.*OUT=.*"
+#
 -A forwarddrop -m limit --limit 2/min -j LOG --log-prefix "[FORWARD] IPTables-Dropped: "
 -A forwarddrop -j DROP
 -A inputdrop -m limit --limit 2/min -j LOG --log-prefix "[INPUT] IPTables-Dropped: "
