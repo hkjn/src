@@ -1,2 +1,10 @@
+bash brightnessdec
+sleep 1
+bash brightnessdec
+sleep 1
+bash brightnessdec
+sleep 1
+bash brightnessdec
+sleep 1
+
 i3lock
-systemctl suspend

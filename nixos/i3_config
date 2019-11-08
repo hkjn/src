@@ -38,9 +38,7 @@ bindsym XF86MonBrightnessUp exec bash brightnessinc
 bindsym XF86MonBrightnessDown exec bash brightnessdec
 
 # lock screen
-bindsym $mod+Shift+s exec i3lock
-
-# lock screen + suspend
+bindsym $mod+Shift+s exec bash lockscreen
 bindsym $mod+Escape exec bash lockscreen
 
 # start dmenu (a program launcher)
@@ -178,4 +176,4 @@ bar {
 }
 
 # Automatically lock X session after 5min of inactivity
-exec_always --no-startup-id xautolock -time 5 -locker i3lock
+exec_always --no-startup-id xautolock -time 5 -locker bash lockscreen

@@ -1,3 +1,13 @@
-TEMPERATURE=2500
-xbrightness -5000
-redshift -P -O ${TEMPERATURE}
+#
+# Decrease brightness down to ${BRIGHTNESS_FLOOR}, and
+# set redshift temperature to warm.
+#
+set -euo pipefail
+
+WARM_TEMPERATURE=2500
+CURRENT_BRIGHTNESS=$(xbrightness | cut -d ':' -f1)
+BRIGHTNESS_FLOOR=${BRIGHTNESS_FLOOR:-15000}
+
+[[ "${CURRENT_BRIGHTNESS}" -gt ${BRIGHTNESS_FLOOR} ]] && xbrightness -5000
+
+redshift -P -O ${WARM_TEMPERATURE}

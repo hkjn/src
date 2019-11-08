@@ -202,6 +202,7 @@
   ];
   services.prometheus.exporters = {
     node = {
+      listenAddress = "127.0.0.1";
       enable = true;
       enabledCollectors = [
         "conntrack"
