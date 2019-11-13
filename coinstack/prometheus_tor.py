@@ -1,57 +1,4 @@
-#!/usr/bin/env python3
-
-import json
-import prometheus_client
-import time
-import subprocess
-import sys
-
-
-# xx: move elsewhere
-def get_energy():
-    args = ['cat',
-            '/sys/class/power_supply/BAT0/energy_now',
-            '/sys/class/power_supply/BAT0/energy_full']
-    print('running {}'.format(' '.join(args)))
-    result = subprocess.check_output(args, stderr=subprocess.STDOUT, timeout=15)
-    return [int(x) for x in result.split()]
-
-
-def get_pending_txns():
-    args = ['ls',
-            '/etc/bitcoin/pending-txns/']
-    print('running {}'.format(' '.join(args)))
-    result = subprocess.check_output(args, stderr=subprocess.STDOUT, timeout=15)
-    return [str(x) for x in result.split()]
-
-
-def get_number_threads():
-    args = ['ps',
-            '-AL',
-            '--no-headers']
-    print('running "{}"'.format(' '.join(args)))
-    result = subprocess.check_output(args, stderr=subprocess.STDOUT, timeout=15)
-    return len(result.split(b'\n'))
-
-
-def get_connection_status(addr):
-    args = ['curl',
-            '-sL',
-            '--output', '/dev/null',
-            addr]
-    print('running {}'.format(' '.join(args)))
-    try:
-        subprocess.check_call(args, stderr=subprocess.STDOUT, timeout=15)
-    except subprocess.CalledProcessError:
-        return False
-    return True
-
-
-def get_wasabi_price_btc_usd():
-    args = ['curl',
-            '--socks5', 'localhost:9050',
-            '--socks5-hostname', 'localhost:9050',
-            '-s', 'http://wasabiukrxmkdgve5kynjztuovbg43uxcbcxn6y2okcrsg7gb6jdmbad.onion/api/v3/btc/Offchain/exchange-rates',
+           '-s', 'http://wasabiukrxmkdgve5kynjztuovbg43uxcbcxn6y2okcrsg7gb6jdmbad.onion/api/v3/btc/Offchain/exchange-rates',
             '-H', '"accept: application/json"']
     print('running {}'.format(' '.join(args)))
     output = subprocess.check_output(args, stderr=subprocess.STDOUT, timeout=15)
@@ -74,8 +21,9 @@ def tor_can_reach_frankenbox():
 
 
 def tor_can_reach_spark():
+    spark_addr = 'http://32ut5g2tb4v6eajmomjgg3ssvq7o7zdz6a6febmw34gxm2i7d3bsnayd.onion/'
     args = ('curl --socks5 localhost:9050 --socks5-hostname localhost:9050 '
-            '-s http://zfzt7mmfqaj263jp33hacwpn55l2nyqj4pgdg5ktdgxd2jy2zd4p3aad.onion').split()
+            '-s {}'.format(spark_addr)).split()
     print('running {}'.format(' '.join(args)))
     output = subprocess.check_output(args, stderr=subprocess.STDOUT, timeout=15)
     return '401 Unauthorized' in str(output)

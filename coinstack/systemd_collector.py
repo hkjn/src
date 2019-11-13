@@ -18,6 +18,7 @@ CPU_TEMP = prometheus_client.Gauge("cpu_temp", "CPU temperature")
 SYSTEMD_BITCOIND = prometheus_client.Gauge("systemd_bitcoind_active_count", "Systemd unit active count for Bitcoin Core")
 SYSTEMD_ELECTRS = prometheus_client.Gauge("systemd_electrs_active_count", "Systemd unit active count for Electrs")
 SYSTEMD_LND = prometheus_client.Gauge("systemd_lnd_active_count", "Systemd unit status active count for lnd")
+SYSTEMD_NGINX = prometheus_client.Gauge("systemd_nginx_active_count", "Systemd unit active count for Nginx")
 SYSTEMD_PROMETHEUS = prometheus_client.Gauge("systemd_prometheus_active_count", "Systemd unit status active count for Prometheus")
 SYSTEMD_GRAFANA = prometheus_client.Gauge("systemd_grafana_active_count", "Systemd unit status active count for Grafana")
 
@@ -54,6 +55,8 @@ def main():
             SYSTEMD_ELECTRS.inc()
         if systemd_unit_running('lnd'):
             SYSTEMD_LND.inc()
+        if systemd_unit_running('nginx'):
+            SYSTEMD_NGINX.inc()
         if systemd_unit_running('prometheus'):
             SYSTEMD_PROMETHEUS.inc()
         if systemd_unit_running('grafana-server'):
