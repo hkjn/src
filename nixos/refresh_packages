@@ -1,16 +1,11 @@
 set -euo pipefail
 
 BASE_VERSION=master
-GENERATION_NUMBER=80
+GENERATION_NUMBER=81
 LOCAL_BRANCH=build-${GENERATION_NUMBER}
 COMMITS=(
-	08bd28bc2 # python3Packages.ckcc-protocol: init at 0.7.9
+	6bd628ed4 # python3Packages.ckcc-protocol: init at 0.8.0
 	1d2affa07 # electrum: Add ckcc-protocol
-	11ddb02e7 # pythonPackages.trezor_agent: add hkjn to maintainers
-	b191b3952 # trezor_agent: init at 0.10.0
-	7cb37c9ce # ledger_agent: init at 0.9.0
-	51e66afcc # keepkey_agent: init at 0.9.0
-	# 7230a3c92 # [WIP] tor-browser-bundle-bin: 8.5.5 -> 9.0a8
 )
 
 echo "Refreshing upstream and channels.."
