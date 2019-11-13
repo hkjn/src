@@ -4,6 +4,10 @@
 :INPUT DROP [0:0]
 :FORWARD DROP [0:0]
 :OUTPUT DROP [0:0]
+:DOCKER - [0:0]
+:DOCKER-ISOLATION-STAGE-1 - [0:0]
+:DOCKER-ISOLATION-STAGE-2 - [0:0]
+:DOCKER-USER - [0:0]
 :inputdrop - [0:0]
 :forwarddrop - [0:0]
 :outputdrop - [0:0]
@@ -64,6 +68,36 @@
 -A INPUT -j inputdrop
 
 ########################
+### FORWARD CHAIN    ###
+########################
+
+# Allow DNS query responses to reach docker containers.
+-A FORWARD -m udp -p udp -i docker0 --dport 53 -j ACCEPT
+
+-A FORWARD -j DOCKER-USER
+-A FORWARD -j DOCKER-ISOLATION-STAGE-1
+-A FORWARD -o docker0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A FORWARD -o docker0 -j DOCKER
+-A FORWARD -i docker0 ! -o docker0 -j ACCEPT
+-A FORWARD -i docker0 -o docker0 -j ACCEPT
+-A FORWARD -o br-1efeb5a4f035 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A FORWARD -o br-1efeb5a4f035 -j DOCKER
+-A FORWARD -i br-1efeb5a4f035 ! -o br-1efeb5a4f035 -j ACCEPT
+-A FORWARD -i br-1efeb5a4f035 -o br-1efeb5a4f035 -j ACCEPT
+
+-A DOCKER-ISOLATION-STAGE-1 -i docker0 ! -o docker0 -j DOCKER-ISOLATION-STAGE-2
+-A DOCKER-ISOLATION-STAGE-1 -i br-1efeb5a4f035 ! -o br-1efeb5a4f035 -j DOCKER-ISOLATION-STAGE-2
+-A DOCKER-ISOLATION-STAGE-1 -j RETURN
+-A DOCKER-ISOLATION-STAGE-2 -o docker0 -j DROP
+-A DOCKER-ISOLATION-STAGE-2 -o br-1efeb5a4f035 -j DROP
+-A DOCKER-ISOLATION-STAGE-2 -j RETURN
+-A DOCKER-USER -j RETURN
+
+# Anything making it here is not allowed; send it to logging chain.
+# # Dropped packets can be checked with `journalctl -k | grep "IN=.*OUT=.*"`
+-A FORWARD -j forwarddrop
+
+########################
 ### OUTPUT CHAIN     ###
 ########################
 
@@ -117,6 +151,21 @@
 # Allow outbound torrent DHT traffic.
 -A OUTPUT -p tcp --dport 6881 -j ACCEPT
 
+# xx: look into blocked docker0 traffic:
+# [OUTPUT] IPTables-Dropped: IN= OUT=docker0
+# SRC=172.17.0.1 DST=239.255.255.250 LEN=194 TOS=0x00 PREC=0x00
+# TTL=1 ID=6280 DF PROTO=UDP SPT=36062 DPT=1900 LEN=174
+#
+# xx: look into blocked velletri -> frankenbox traffic on tcp/3306, i.e
+# mysql:
+# [INPUT] IPTables-Dropped: IN=eth0 OUT= MAC=9a:94:d5:e2:a1:2a:d4:3b:04:72:42:6e:08:00
+# SRC=192.168.1.86 DST=192.168.1.94 LEN=44 TOS=0x00 PREC=0x00
+# TTL=51 ID=26091 PROTO=TCP SPT=60128 DPT=3306 WINDOW=1024 RES=0x00 SYN URGP=0
+#
+
+
+-A OUTPUT -p udp -m udp --dport 80 -j ACCEPT
+
 # Allow outbound torrent traffic to trackers.
 -A OUTPUT -p tcp --dport 6889 -j ACCEPT
 
@@ -124,20 +173,30 @@
 # that ends up being blocked by virtue of not being whitelisted:
 # -A OUTPUT -p tcp --dport 1 -j ACCEPT
 # -A OUTPUT -p tcp --dport 1900 -j ACCEPT
+# -A OUTPUT -p tcp --dport 1987 -j ACCEPT
 # -A OUTPUT -p tcp --dport 5516 -j ACCEPT
+# -A OUTPUT -p tcp --sport 6881 -j ACCEPT
 # -A OUTPUT -p tcp --dport 6882 -j ACCEPT
+# -A OUTPUT -p tcp --dport 6896 -j ACCEPT
+# -A OUTPUT -p tcp --dport 7107 -j ACCEPT
 # -A OUTPUT -p tcp --dport 8999 -j ACCEPT
+# -A OUTPUT -p tcp --dport 9621 -j ACCEPT
+# -A OUTPUT -p tcp --dport 10952 -j ACCEPT
 # -A OUTPUT -p tcp --dport 11975 -j ACCEPT
 # Connection attempts below might be random high-level ports from
 # same process?
+# -A OUTPUT -p tcp --dport 13952 -j ACCEPT
 # -A OUTPUT -p tcp --dport 13938 -j ACCEPT
 # -A OUTPUT -p tcp --dport 15570 -j ACCEPT
 # -A OUTPUT -p tcp --dport 15675 -j ACCEPT
+# -A OUTPUT -p tcp --dport 16881 -j ACCEPT
 # -A OUTPUT -p tcp --dport 18446 -j ACCEPT
 # -A OUTPUT -p tcp --dport 18359 -j ACCEPT
+# -A OUTPUT -p tcp --dport 19186 -j ACCEPT
 # -A OUTPUT -p tcp --dport 19664 -j ACCEPT
 # -A OUTPUT -p tcp --dport 20089 -j ACCEPT
 # -A OUTPUT -p tcp --dport 20294 -j ACCEPT
+# -A OUTPUT -p tcp --dport 20878 -j ACCEPT
 # -A OUTPUT -p tcp --dport 22236 -j ACCEPT
 # -A OUTPUT -p tcp --dport 24346 -j ACCEPT
 # -A OUTPUT -p tcp --dport 26621 -j ACCEPT
@@ -145,13 +204,22 @@
 # -A OUTPUT -p tcp --dport 27876 -j ACCEPT
 # -A OUTPUT -p tcp --dport 28245 -j ACCEPT
 # -A OUTPUT -p tcp --dport 28729 -j ACCEPT
+# -A OUTPUT -p tcp --dport 29138 -j ACCEPT
+# -A OUTPUT -p tcp --dport 29387 -j ACCEPT
+# -A OUTPUT -p tcp --dport 30185 -j ACCEPT
+# -A OUTPUT -p tcp --dport 31082 -j ACCEPT
+# -A OUTPUT -p tcp --dport 32585 -j ACCEPT
 # -A OUTPUT -p tcp --dport 33755 -j ACCEPT
+# -A OUTPUT -p tcp --dport 35031 -j ACCEPT
 # -A OUTPUT -p tcp --dport 37939 -j ACCEPT
 # -A OUTPUT -p tcp --dport 38848 -j ACCEPT
 # -A OUTPUT -p tcp --dport 38856 -j ACCEPT
 # -A OUTPUT -p tcp --dport 41247 -j ACCEPT
 # -A OUTPUT -p tcp --dport 41521 -j ACCEPT
+# -A OUTPUT -p tcp --dport 42255 -j ACCEPT
+# -A OUTPUT -p tcp --dport 43448 -j ACCEPT
 # -A OUTPUT -p tcp --dport 45390 -j ACCEPT
+# -A OUTPUT -p tcp --dport 45687 -j ACCEPT
 # -A OUTPUT -p tcp --dport 46081 -j ACCEPT
 # -A OUTPUT -p tcp --dport 46319 -j ACCEPT
 # -A OUTPUT -p tcp --dport 47100 -j ACCEPT
@@ -159,7 +227,9 @@
 # -A OUTPUT -p tcp --dport 51044 -j ACCEPT
 # -A OUTPUT -p tcp --dport 51413 -j ACCEPT
 # -A OUTPUT -p tcp --dport 52410 -j ACCEPT
+# -A OUTPUT -p tcp --dport 52432 -j ACCEPT
 # -A OUTPUT -p tcp --dport 52522 -j ACCEPT
+# -A OUTPUT -p tcp --dport 52988 -j ACCEPT
 # -A OUTPUT -p tcp --dport 53617 -j ACCEPT
 # -A OUTPUT -p tcp --dport 53517 -j ACCEPT
 # -A OUTPUT -p tcp --dport 55130 -j ACCEPT
@@ -168,9 +238,12 @@
 # -A OUTPUT -p tcp --dport 57219 -j ACCEPT
 # -A OUTPUT -p tcp --dport 57501 -j ACCEPT
 # -A OUTPUT -p tcp --dport 58106 -j ACCEPT
+# -A OUTPUT -p tcp --dport 58562 -j ACCEPT
 # -A OUTPUT -p tcp --dport 60016 -j ACCEPT
 # -A OUTPUT -p tcp --dport 61246 -j ACCEPT
+# -A OUTPUT -p tcp --dport 61735 -j ACCEPT
 # -A OUTPUT -p tcp --dport 62665 -j ACCEPT
+# -A OUTPUT -p tcp --dport 64655 -j ACCEPT
 
 # Following comments explain some commonly seen traffic that
 # ends up being blocked by virtue of not being whitelisted:
@@ -186,6 +259,9 @@
 # Allow outbound TCP traffic from/to monero port.
 -A OUTPUT -p tcp --sport 18080 -j ACCEPT
 -A OUTPUT -p tcp --dport 18080 -j ACCEPT
+
+# Allow OUTPUT for docker0 interface.
+-A OUTPUT -o docker0 -j ACCEPT
 
 # Explicitly whitelist established / related connections. This is a
 # last-ditch safeguard to avoid locking yourself out if a too-restrictive
@@ -216,4 +292,11 @@ COMMIT
 :INPUT ACCEPT [0:0]
 :POSTROUTING ACCEPT [0:0]
 :OUTPUT ACCEPT [0:0]
+:DOCKER - [0:0]
+-A PREROUTING -m addrtype --dst-type LOCAL -j DOCKER
+-A POSTROUTING -s 172.17.0.0/16 ! -o docker0 -j MASQUERADE
+-A POSTROUTING -s 172.18.0.0/16 ! -o br-1efeb5a4f035 -j MASQUERADE
+-A OUTPUT ! -d 127.0.0.0/8 -m addrtype --dst-type LOCAL -j DOCKER
+-A DOCKER -i docker0 -j RETURN
+
 COMMIT
