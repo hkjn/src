@@ -3,8 +3,8 @@ NAME=undefined-name
 VERSION=undefined-version
 IMAGE=$(USERNAME)/$(NAME)
 MAKE_DIR=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-DOCKER_ARCH=$(shell bash $(MAKE_DIR)/get_docker_arch)
-SHELL=/bin/bash
+DOCKER_ARCH=$(shell env bash $(MAKE_DIR)/get_docker_arch)
+SHELL=/usr/bin/env bash
 PUSH_ENABLED=1
 .DEFAULT_GOAL=all
 .PHONY: pre-build docker-build post-build build push do-push post-push
