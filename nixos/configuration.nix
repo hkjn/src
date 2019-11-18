@@ -164,7 +164,6 @@
     };
     bash.shellInit = ''
       export SSH_AUTH_SOCK="/run/user/$UID/gnupg/S.gpg-agent.ssh"
-      alias elec="electrum --oneserver --server=127.0.0.1:50001:t"
       alias xcl="xclip -selection c"
       alias pp="git pull && git push"
       alias vms="virt-manager -c qemu:///session"

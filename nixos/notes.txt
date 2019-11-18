@@ -623,3 +623,8 @@ hwi --device-path webusb:001:2 --device-type trezor getxpub "m/84'/0'/0'"
 # on 2019-11-16, found issue with prometheus consoles:
 curl http://localhost:9090/graph
 # error reading base template: open templates/_base.html: no such file or directory
+
+# the elec alias is no longer necessary, since 'electrum setconfig oneserver true &&
+# electrum setconfig server 127.0.0.1:50001:t' persist the same settings to
+# ~/.electrum/config:
+alias elec="electrum --oneserver --server=127.0.0.1:50001:t"
