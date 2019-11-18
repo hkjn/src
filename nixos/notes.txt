@@ -495,10 +495,23 @@ virsh dumpxml <domain> > domain.xml
 # similar to addresses on receive tab
 
 # services that currently have to be started manually:
+
+# clightning:
 lightningd
+
+# electrs:
 cd .config/electrs && electrs -vvvv
+
+# spark-wallet:
 spark-wallet --no-rates
+# alternatively:
 sudo docker run -it -v ~/.lightning:/etc/lightning -v ~/.spark-docker:/data -p 9737:9737 shesek/spark-wallet:0.2.9 --no-rates
+
+# prometheus-tor-exporter, exporting tor stats for tor prometheus collector:
+prometheus-tor-exporter
+
+# custom collector, package built from hkjn.me/src/coinstats/prometheus_tor.py:
+prometheus_tor
 
 # also have to restart bitcoin.service once after restart every so often,
 # for unknown reasons:
@@ -606,3 +619,7 @@ hwi --device-path webusb:001:2 --device-type trezor getxpub "m/84'/0'/0'"
 # only setting that needs to be changed when importing wasabi wallet (seed
 # words or xpub) into electrum is:
 # wallet.gap_limit_for_change = 25
+
+# on 2019-11-16, found issue with prometheus consoles:
+curl http://localhost:9090/graph
+# error reading base template: open templates/_base.html: no such file or directory
