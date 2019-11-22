@@ -29,6 +29,7 @@ package prober
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -36,7 +37,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang/glog"
 	"gopkg.in/yaml.v2"
 )
 
@@ -296,11 +296,11 @@ func SuccessReward(reward int) func(*Probe) {
 
 // Run repeatedly runs the probe, blocking forever.
 func (p *Probe) Run() {
-	glog.Infof("[%s] Starting..\n", p.Name)
+	log.Printf("[%s] Starting..\n", p.Name)
 
 	if !enabledInFlags(p.Name) {
 		p.Disabled = true
-		glog.Infof("[%s] is disabled, will now exit", p.Name)
+		log.Printf("[%s] is disabled, will now exit", p.Name)
 		return
 	}
 
@@ -365,7 +365,7 @@ func (p *Probe) runProbe() time.Duration {
 	c := make(chan Result, 1)
 	start := p.t.Now()
 	go func() {
-		glog.Infof("[%s] Probing..\n", p.Name)
+		log.Printf("[%s] Probing..\n", p.Name)
 		c <- p.Probe()
 	}()
 	select {
@@ -373,11 +373,11 @@ func (p *Probe) runProbe() time.Duration {
 		// We got a result of some sort from the prober.
 		p.handleResult(r)
 		wait := p.Interval - p.t.Now().Sub(start)
-		glog.V(2).Infof("[%s] needs to sleep %v more here\n", p.Name, wait)
+		log.Printf("[%s] needs to sleep %v more here\n", p.Name, wait)
 		return wait
 	case <-time.After(p.Interval):
 		// Probe didn't finish in time for us to run the next one, report as failure.
-		glog.Errorf("[%s] Timed out\n", p.Name)
+		log.Printf("[%s] Timed out\n", p.Name)
 		timeoutFail := FailedWith(
 			fmt.Errorf("%s timed out (with probe interval %1.1f sec)",
 				p.Name,
@@ -400,11 +400,11 @@ func (p *Probe) addRecord(r Record) {
 	p.records = append(p.records, r)
 	if len(p.records) >= bufferSize {
 		over := len(p.records) - bufferSize
-		glog.V(2).Infof("[%s] buffer is over %d, reslicing it\n", p.Name, bufferSize)
+		log.Printf("[%s] buffer is over %d, reslicing it\n", p.Name, bufferSize)
 		p.records = p.records[over:]
 	}
 	p.recordsLock.Unlock()
-	glog.V(2).Infof("[%s] buffer is now %d elements\n", p.Name, len(p.Records()))
+	log.Printf("[%s] buffer is now %d elements\n", p.Name, len(p.Records()))
 }
 
 // Silenced returns true if the probe is currently silenced.
@@ -415,7 +415,7 @@ func (p *Probe) Silenced() bool {
 // Silence silences the Probe until specified time.
 func (p *Probe) Silence(until time.Time) {
 	p.SilencedUntil = SilenceTime{until}
-	glog.V(1).Infof("[%s] is now silenced until %v\n", p.Name, until)
+	log.Printf("[%s] is now silenced until %v\n", p.Name, until)
 }
 
 // String returns a human-readable description of the time until which a probe is silenced.
@@ -527,7 +527,7 @@ func (r Record) Ago() string {
 func (r Record) marshal() []byte {
 	b, err := yaml.Marshal(r)
 	if err != nil {
-		glog.Fatalf("failed to marshal record %+v: %v", r, err)
+		log.Printf("failed to marshal record %+v: %v", r, err)
 	}
 	return b
 }
@@ -549,10 +549,10 @@ func (r1 Record) Equal(r2 Record) bool {
 // openLog opens the log file.
 func openLog() {
 	logPath := filepath.Join(logDir, logName)
-	glog.V(1).Infof("Using YAML log file %q\n", logPath)
+	log.Printf("Using YAML log file %q\n", logPath)
 	f, err := os.OpenFile(logPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, os.ModePerm)
 	if err != nil {
-		glog.Fatalf("failed to open %q: %v\n", logPath, err)
+		log.Printf("failed to open %q: %v\n", logPath, err)
 	}
 	logFile = f
 }
@@ -569,16 +569,16 @@ func (p *Probe) handleResult(r Result) {
 		if b < 0 {
 			b = 0
 		}
-		glog.V(1).Infof("[%s] Pass, badness is now %d.\n", p.Name, b)
+		log.Printf("[%s] Pass, badness is now %d.\n", p.Name, b)
 	} else {
 		b += p.failurePenalty
-		glog.Errorf("[%s] Failed while probing, badness is now %d: %v\n", p.Name, b, r.Error)
+		log.Printf("[%s] Failed while probing, badness is now %d: %v\n", p.Name, b, r.Error)
 	}
 	p.setBadness(b)
 	p.logResult(r)
 
 	if p.Silenced() {
-		glog.V(1).Infof("[%s] is silenced until %v, will not alert, resetting badness to 0\n", p.Name, p.SilencedUntil)
+		log.Printf("[%s] is silenced until %v, will not alert, resetting badness to 0\n", p.Name, p.SilencedUntil)
 		p.setBadness(0)
 	}
 
@@ -587,17 +587,17 @@ func (p *Probe) handleResult(r Result) {
 		return
 	}
 	if *alertsDisabled {
-		glog.Infof("[%s] would now be alerting, but alerts are disabled\n", p.Name)
+		log.Printf("[%s] would now be alerting, but alerts are disabled\n", p.Name)
 		return
 	}
 
 	lastAlert := p.getLastAlert()
 	if time.Since(lastAlert) < MaxAlertFrequency {
-		glog.V(1).Infof("[%s] will not alert, since last alert was sent %v back\n", p.Name, time.Since(lastAlert))
+		log.Printf("[%s] will not alert, since last alert was sent %v back\n", p.Name, time.Since(lastAlert))
 		return
 	}
 
-	glog.Infof("[%s] is alerting\n", p.Name)
+	log.Printf("[%s] is alerting\n", p.Name)
 	// Send alert notification in goroutine to not block further
 	// probing.
 	// TODO: There is a race condition here, if email sending takes long
@@ -656,11 +656,11 @@ func (p *Probe) getLastAlert() time.Time {
 func (p *Probe) sendAlert() {
 	err := p.Alert(p.Name, p.Desc, p.Badness(), p.Records())
 	if err != nil {
-		glog.Errorf("[%s] Failed to alert: %v", p.Name, err)
+		log.Printf("[%s] Failed to alert: %v", p.Name, err)
 		// Note: We don't reset badness here; next cycle we'll keep
 		// trying to send the alert.
 	} else {
-		glog.Infof("[%s] Called Alert(), resetting badness to 0\n", p.Name)
+		log.Printf("[%s] Called Alert(), resetting badness to 0\n", p.Name)
 		p.setLastAlert(p.t.Now())
 		p.setBadness(0)
 	}
@@ -679,7 +679,7 @@ func (p *Probe) logResult(res Result) {
 	p.addRecord(rec)
 	_, err := logFile.Write(rec.marshal())
 	if err != nil {
-		glog.Fatalf("failed to write record to log: %v", err)
+		log.Printf("failed to write record to log: %v", err)
 	}
 }
 
