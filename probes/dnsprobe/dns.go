@@ -3,12 +3,11 @@ package dnsprobe // import "hkjn.me/src/probes/dnsprobe"
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"sort"
 	"strings"
 	"time"
-
-	"github.com/golang/glog"
 
 	"hkjn.me/src/prober"
 	"hkjn.me/src/probes"
@@ -126,31 +125,31 @@ func TXT(txt []string) func(*DnsProber) {
 // Probe verifies that the target's DNS records are as expected.
 func (p *DnsProber) Probe() prober.Result {
 	if len(p.wantMX) > 0 {
-		glog.V(1).Infof("Checking %d MX records..\n", len(p.wantMX))
+		log.Printf("Checking %d MX records..\n", len(p.wantMX))
 		if err := p.checkMX(); err != nil {
 			return prober.FailedWith(err)
 		}
 	}
 	if len(p.wantA) > 0 {
-		glog.V(1).Infof("Checking %d A records..\n", len(p.wantA))
+		log.Printf("Checking %d A records..\n", len(p.wantA))
 		if err := p.checkA(); err != nil {
 			return prober.FailedWith(err)
 		}
 	}
 	if len(p.wantNS) > 0 {
-		glog.V(1).Infof("Checking %d NS records..\n", len(p.wantNS))
+		log.Printf("Checking %d NS records..\n", len(p.wantNS))
 		if err := p.checkNS(); err != nil {
 			return prober.FailedWith(err)
 		}
 	}
 	if p.wantCNAME != "" {
-		glog.V(1).Infof("Checking CNAME record..\n")
+		log.Printf("Checking CNAME record..\n")
 		if err := p.checkCNAME(); err != nil {
 			return prober.FailedWith(err)
 		}
 	}
 	if len(p.wantTXT) > 0 {
-		glog.V(1).Infof("Checking %d TXT records..\n", len(p.wantTXT))
+		log.Printf("Checking %d TXT records..\n", len(p.wantTXT))
 		if err := p.checkTXT(); err != nil {
 			return prober.FailedWith(err)
 		}

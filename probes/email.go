@@ -16,11 +16,11 @@ package probes // import "hkjn.me/src/probes"
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"html/template"
 
 	"hkjn.me/src/prober"
 
-	"github.com/golang/glog"
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
@@ -62,7 +62,7 @@ func getClient() (*sendgrid.Client, error) {
 //
 // This is provided to simplify prober.Probe implementations for Alert().
 func SendAlertEmail(name, desc string, badness int, records prober.Records) error {
-	glog.V(1).Infof("sending alert email..\n")
+	log.Printf("sending alert email..\n")
 
 	var t *template.Template
 	var err error
@@ -105,6 +105,6 @@ func SendAlertEmail(name, desc string, badness int, records prober.Records) erro
 	if !(resp.StatusCode >= 200 && resp.StatusCode <= 299) {
 		return fmt.Errorf("unexpected response from sendgrid, want status 200-299: %v", resp)
 	}
-	glog.Infof("sent alert email to %s\n", Config.Alert.Recipient)
+	log.Printf("sent alert email to %s\n", Config.Alert.Recipient)
 	return nil
 }
