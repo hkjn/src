@@ -3,7 +3,10 @@
 # do want.
 :INPUT DROP [0:0]
 :FORWARD DROP [0:0]
-:OUTPUT DROP [0:0]
+# Default OUTPUT policy is ACCEPT, mainly to allow rtorrent to connect
+# to other peers, which does not seem to have an option to restrict
+# to a certain port range.
+:OUTPUT ACCEPT [0:0]
 :DOCKER - [0:0]
 :DOCKER-ISOLATION-STAGE-1 - [0:0]
 :DOCKER-ISOLATION-STAGE-2 - [0:0]
@@ -28,6 +31,9 @@
 
 # Allow inbound HTTPS traffic.
 -A INPUT -p tcp --dport 443 -j ACCEPT
+
+# Allow custom fileserver port.
+-A INPUT -p tcp --dport 8081 -j ACCEPT
 
 # Allow DHCP discovery.
 -A INPUT -p udp --sport 67 --dport 68 -j ACCEPT
@@ -76,6 +82,14 @@
 
 # Allow DNS query responses to reach docker containers.
 -A FORWARD -m udp -p udp -i docker0 --dport 53 -j ACCEPT
+-A FORWARD -m udp -p udp -o eth0 --dport 53 -j ACCEPT
+-A FORWARD -m tcp -p tcp --sport 80 -j ACCEPT
+-A FORWARD -m tcp -p tcp --dport 80 -j ACCEPT
+-A FORWARD -m tcp -p tcp --sport 443 -j ACCEPT
+-A FORWARD -m tcp -p tcp --dport 443 -j ACCEPT
+-A FORWARD -m tcp -p tcp --sport 8080 -j ACCEPT
+-A FORWARD -m tcp -p tcp --dport 8080 -j ACCEPT
+-A FORWARD -m tcp -p tcp --dport 9001 -j ACCEPT
 
 -A FORWARD -j DOCKER-USER
 -A FORWARD -j DOCKER-ISOLATION-STAGE-1
@@ -104,117 +118,8 @@
 ### OUTPUT CHAIN     ###
 ########################
 
-# Allow local connections.
--A OUTPUT -m tcp -p tcp -o lo -j ACCEPT
--A OUTPUT -m udp -p udp -o lo -j ACCEPT
-
-# Allow outbound HTTP / HTTPS.
--A OUTPUT -p tcp -m tcp --dport 80 -j ACCEPT
--A OUTPUT -p tcp -m tcp --dport 443 -j ACCEPT
-
-# Allow DHCP lookups.
--A OUTPUT -p udp --sport 67 --dport 68 -j ACCEPT
--A OUTPUT -p udp --sport 68 --dport 67 -j ACCEPT
-
-# Allow DNS lookups.
--A OUTPUT -p udp -m udp --dport 53 -j ACCEPT
--A OUTPUT -p tcp -m tcp --dport 53 -j ACCEPT
-
--A OUTPUT -p udp --dport 1337 -j ACCEPT
--A OUTPUT -p udp --dport 6969 -j ACCEPT
-
-# Allow mDNS.
--A OUTPUT -p udp --sport 5353 --dport 5353 -j ACCEPT
--A OUTPUT -p tcp --dport 5353 -j ACCEPT
-
-# Allow outbound LLMNR and IGMP multicast:
-#   https://en.wikipedia.org/wiki/Link-Local_Multicast_Name_Resolution
-#   https://en.wikipedia.org/wiki/Multicast_address
--A OUTPUT -p udp -d 224.0.0.252 --sport 5355 --dport 5355 -j ACCEPT
--A OUTPUT -p igmp -d 224.0.0.22 -j ACCEPT
-
-# Allow NTP lookups.
--A OUTPUT -p udp -m udp --dport 123 -j ACCEPT
-
-# Allow ICMP type 0 and 8 ("Echo Reply" and "Echo", i.e. ping).
--A OUTPUT -p icmp -m icmp --icmp-type 0 -j ACCEPT
--A OUTPUT -p icmp -m icmp --icmp-type 8 -j ACCEPT
-
-# Allow outbound TCP traffic to sshd port.
--A OUTPUT -p tcp --dport 22 -j ACCEPT
--A OUTPUT -p tcp --dport 8527 -j ACCEPT
-# Allow outbound TCP traffic from sshd port.
--A OUTPUT -p tcp --sport 22 -j ACCEPT
--A OUTPUT -p tcp --sport 8527 -j ACCEPT
-
-# Allow outbound lightning traffic.
--A OUTPUT -p tcp --dport 9735 -j ACCEPT
--A OUTPUT -p tcp --dport 9736 -j ACCEPT
-
--A OUTPUT -p tcp -m tcp --dport 6990:6999 -j ACCEPT
--A OUTPUT -p tcp -m tcp --dport 6974 -j ACCEPT
-
--A OUTPUT -p tcp -m tcp --dport 8999 -j ACCEPT
-
-# Allow outbound torrent traffic.
--A OUTPUT -p tcp -m tcp --dport 46666 -j ACCEPT
-
-# Allow outbound torrent DHT traffic.
--A OUTPUT -p udp -m udp --dport 6881 -j ACCEPT
-
-# Allow outbound torrent tracker traffic to udp/80.
--A OUTPUT -p udp -m udp --dport 80 -j ACCEPT
-
-# Allow outbound torrent traffic to trackers.
--A OUTPUT -p tcp --dport 6889 -j ACCEPT
-
-# xx: look into blocked velletri -> frankenbox traffic on tcp/3306, i.e
-# mysql:
-# [INPUT] IPTables-Dropped: IN=eth0 OUT= MAC=9a:94:d5:e2:a1:2a:d4:3b:04:72:42:6e:08:00
-# SRC=192.168.1.86 DST=192.168.1.94 LEN=44 TOS=0x00 PREC=0x00
-# TTL=51 ID=26091 PROTO=TCP SPT=60128 DPT=3306 WINDOW=1024 RES=0x00 SYN URGP=0
-#
-
-
-# Following lists observed attempted traffic from unknown services
-# that ends up being blocked by virtue of not being whitelisted:
-# -A OUTPUT -p tcp --dport 1 -j ACCEPT
-# -A OUTPUT -p tcp --dport 1987 -j ACCEPT
-# -A OUTPUT -p tcp --dport 5516 -j ACCEPT
-# -A OUTPUT -p tcp --dport 6896 -j ACCEPT
-# -A OUTPUT -p tcp --dport 7107 -j ACCEPT
-# -A OUTPUT -p tcp --dport 8999 -j ACCEPT
-# -A OUTPUT -p tcp --dport 9621 -j ACCEPT
-
-# Following comments explain some commonly seen traffic that
-# ends up being blocked by virtue of not being whitelisted:
-#
-# Do not allow Microsoft SSDP / uPNP discovery,
-# used e.g by rtorrent:
-#   https://www.speedguide.net/port.php?port=1900
-# -A OUTPUT -p udp -m udp --dport 1900 -j ACCEPT
-
-# Allow outbound TCP traffic to Tor ports.
--A OUTPUT -p tcp --dport 9001 -j ACCEPT
--A OUTPUT -p tcp --dport 9090 -j ACCEPT
-
-# Allow outbound TCP traffic from/to monero port.
--A OUTPUT -p tcp --sport 18080 -j ACCEPT
--A OUTPUT -p tcp --dport 18080 -j ACCEPT
-
-# Allow OUTPUT for docker0 interface.
--A OUTPUT -o docker0 -j ACCEPT
-
-# Explicitly whitelist established / related connections. This is a
-# last-ditch safeguard to avoid locking yourself out if a too-restrictive
-# rule would be applied - your current SSH connections will remain,
-# giving you one last chance so you can fix the issue.
--A OUTPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
-
-# Anything making it here is not allowed; send it to logging chain.
-# Dropped packets can be checked with `journalctl -k | grep "IN=.*OUT=.*"`
--A OUTPUT -j outputdrop
-
+# Implicitly allow all outgoing connections.
+# -A OUTPUT -j ACCEPT
 
 # Configure 'drop' chains, which just jump to LOG -> DROP.
 #
