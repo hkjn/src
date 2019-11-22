@@ -2,11 +2,10 @@ package dashboard
 
 import (
 	"flag"
+	"log"
 	"net"
 	"sort"
 	"sync"
-
-	"github.com/golang/glog"
 
 	"hkjn.me/src/prober"
 	"hkjn.me/src/probes/dnsprobe"
@@ -82,7 +81,7 @@ func getProbes() prober.Probes {
 			flag.Parse()
 		}
 		if *proberDisabled {
-			glog.Infof("Probes are disabled with -no_probes\n")
+			log.Printf("Probes are disabled with -no_probes\n")
 		} else {
 			allProbes = append(getDnsProbes(), getWebProbes()...)
 		}

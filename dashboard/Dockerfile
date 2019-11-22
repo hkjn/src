@@ -1,4 +1,4 @@
-FROM hkjn/golang
+FROM hkjn/golang:1.12.6
 
 WORKDIR /home/go/src/hkjn.me/src/dashboard
 

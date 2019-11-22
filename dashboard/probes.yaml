@@ -20,21 +20,9 @@ webprobes:
     name: GolangPackageDocs
     want: https://godoc.org/hkjn.me/dashboard
     wantstatus: 200
-  - target: https://decenter.world
-    name: DecenterIndex
-    want: IrSn3zx2GbM
-    wantstatus: 200
-  - target: https://blockpress.me
-    name: BlockpressIndex
-    want: 
-    wantstatus: 200
-  - target: http://blockpress.me/shouldberedirected
-    name: BlockpressRedirector
-    want: Found
-    wantstatus: 302
   - target: http://www.sultanyoga.com
     name: YogaIndex
-    want: I am Aruna Elentari
+    want: I am Aruna
     wantstatus: 200
   - target: https://hkjn.me/dashboard?go-get=1
     name: GolangPackageImport
@@ -51,10 +39,6 @@ webprobes:
   - target: http://computare0.appspot.com/where/me@hkjn.me
     name: WhereAPI
     want: me@hkjn.me was last seen
-    wantstatus: 200
-  - target: http://ln.hkjn.me:8380/metrics
-    name: LightningdRunning
-    want: lightningd_running 1
     wantstatus: 200
 
 # DNS probe settings.

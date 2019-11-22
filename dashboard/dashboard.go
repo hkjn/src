@@ -3,13 +3,12 @@ package dashboard // import "hkjn.me/src/dashboard"
 
 import (
 	"errors"
+	"log"
 	"sync"
 
-	"github.com/golang/glog"
 	"github.com/gorilla/mux"
 
 	"hkjn.me/src/config"
-	"hkjn.me/src/googleauth"
 	"hkjn.me/src/probes"
 )
 
@@ -52,8 +51,6 @@ type Config struct {
 	Debug            bool
 	BindAddr         string
 	AllowedGoogleIds []string
-	GoogleServiceId  string
-	GoogleSecret     string
 	SendgridToken    string
 	EmailSender      string
 	EmailRecipient   string
@@ -62,7 +59,7 @@ type Config struct {
 // setProbeCfg sets the config values.
 func setProbesCfg(conf Config, emailTemplate string) error {
 	if conf.Debug {
-		glog.Infoln("Starting in debug mode (no auth)..")
+		log.Printf("Starting in debug mode (no auth)..")
 		return nil
 	}
 	// TODO(hkjn): Unify probes.Config vs dashboard.Config.
@@ -74,11 +71,13 @@ func setProbesCfg(conf Config, emailTemplate string) error {
 	if conf.EmailSender == "" {
 		return errors.New("no DASHBOARD_EMAILSENDER specified")
 	}
-	glog.V(1).Infof(
-		"Sending any alert emails from %q to %q\n",
-		conf.EmailSender,
-		conf.EmailRecipient,
-	)
+	if conf.Debug {
+		log.Printf(
+			"Sending any alert emails from %q to %q\n",
+			conf.EmailSender,
+			conf.EmailRecipient,
+		)
+	}
 	probes.Config.Alert.Sender = conf.EmailSender
 	if conf.EmailRecipient == "" {
 		return errors.New("no DASHBOARD_EMAILRECIPIENT specified")
@@ -89,27 +88,9 @@ func setProbesCfg(conf Config, emailTemplate string) error {
 	}
 	probes.Config.Template = emailTemplate
 
-	if conf.GoogleServiceId == "" {
-		return errors.New("no service ID")
+	if conf.Debug {
+		log.Printf("These Google+ IDs are allowed access: %q\n", conf.AllowedGoogleIds)
 	}
-	glog.V(1).Infof("Our Google service ID is %q\n", conf.GoogleServiceId)
-	if conf.GoogleSecret == "" {
-		return errors.New("no service secret")
-	}
-	googleauth.BaseURL = getHttpPrefix()
-	googleauth.SetCredentials(conf.GoogleServiceId, conf.GoogleSecret)
-	if len(conf.AllowedGoogleIds) == 0 {
-		return errors.New("no allowed IDs")
-	}
-	glog.V(1).Infof("These Google+ IDs are allowed access: %q\n", conf.AllowedGoogleIds)
-	googleauth.SetGatingFunc(func(id string) bool {
-		for _, aid := range conf.AllowedGoogleIds {
-			if id == aid {
-				return true
-			}
-		}
-		return false
-	})
 	return nil
 }
 
@@ -118,13 +99,13 @@ func Start(conf Config) *mux.Router {
 	config.MustLoad(&probecfg, config.Name("probes.yaml"))
 
 	ps := getProbes()
-	glog.Infof("Starting %d probes..\n", len(ps))
+	log.Printf("Starting %d probes..\n", len(ps))
 	for _, p := range ps {
 		go p.Run()
 	}
 
 	if err := setProbesCfg(conf, emailTemplate); err != nil {
-		glog.Fatalf("FATAL: Couldn't set probes config: %v\n", err)
+		log.Fatalf("FATAL: Couldn't set probes config: %v\n", err)
 	}
 	return newRouter(conf.Debug)
 }

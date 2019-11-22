@@ -2,17 +2,14 @@ package dashboard
 
 import (
 	"html/template"
+	"log"
 	"net/http"
 	"os"
 
-	"hkjn.me/src/googleauth"
-
-	"github.com/golang/glog"
 	"github.com/gorilla/mux"
 )
 
 var (
-	authDisabled = false
 	baseTmpls    = []string{
 		"tmpl/base.tmpl",
 		"tmpl/scripts.tmpl",
@@ -34,15 +31,11 @@ func newRouter(debug bool) *mux.Router {
 	prefix := getHttpPrefix()
 	routes := []route{
 		newPage(prefix+"/", indexTmpls, getIndexData),
-		simpleRoute{prefix + "/connect", "GET", googleauth.ConnectHandler},
-	}
-	if debug {
-		authDisabled = true // TODO(hkjn): Avoid global variable.
 	}
 
 	router := mux.NewRouter().StrictSlash(true)
 	for _, r := range routes {
-		glog.V(1).Infof("Registering route for %q on %q\n", r.Method(), r.Pattern())
+		log.Printf("Registering route for %q on %q\n", r.Method(), r.Pattern())
 		router.
 			Methods(r.Method()).
 			Path(r.Pattern()).
@@ -115,22 +108,18 @@ func (p page) HandlerFunc() http.HandlerFunc {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		data, err := p.getTemplateData(w, r)
 		if err != nil {
-			glog.Errorf("error getting template data: %v\n", err)
+			log.Printf("error getting template data: %v\n", err)
 			serveISE(w)
 			return
 		}
 		err = p.tmpl.ExecuteTemplate(w, baseTemplate, data)
 		if err != nil {
-			glog.Errorf("error rendering template: %v\n", err)
+			log.Printf("error rendering template: %v\n", err)
 			serveISE(w)
 			return
 		}
 	}
 
-	if authDisabled {
-		glog.V(1).Infof("Auth is disabled is set, not checking credentials\n")
-	} else {
-		fn = googleauth.RequireLogin(fn)
-	}
+	log.Printf("Auth is disabled is set, not checking credentials\n")
 	return fn
 }
