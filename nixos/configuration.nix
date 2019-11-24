@@ -117,6 +117,7 @@
      virtmanager
      virtviewer
      wasabiwallet
+     whois
      youtube-dl-light
      xautolock
      xbrightness
