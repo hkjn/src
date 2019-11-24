@@ -5,3 +5,6 @@ build:
 	bash generate_version.sh
 	bash generate_bindata.sh
 	go build ./cmd/gomon
+
+install:
+	sudo install gomon /usr/local/bin/
