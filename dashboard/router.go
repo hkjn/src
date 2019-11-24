@@ -7,10 +7,11 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
+	"hkjn.me/src/dashboard/gen"
 )
 
 var (
-	baseTmpls    = []string{
+	baseTmpls = []string{
 		"tmpl/base.tmpl",
 		"tmpl/scripts.tmpl",
 		"tmpl/style.tmpl",
@@ -29,18 +30,16 @@ var (
 // newRouter panics if the config wasn't loaded.
 func newRouter(debug bool) *mux.Router {
 	prefix := getHttpPrefix()
-	routes := []route{
-		newPage(prefix+"/", indexTmpls, getIndexData),
-	}
+	// xx: since we only have the index page, can parse template (
+	// via either bindata or .tmpl from disk) higher up in call chain than newPage().
+	r := newPage(prefix+"/", indexTmpls, getIndexData, debug)
 
 	router := mux.NewRouter().StrictSlash(true)
-	for _, r := range routes {
-		log.Printf("Registering route for %q on %q\n", r.Method(), r.Pattern())
-		router.
-			Methods(r.Method()).
-			Path(r.Pattern()).
-			HandlerFunc(r.HandlerFunc())
-	}
+	log.Printf("Registering route for %q on %q\n", r.Method(), r.Pattern())
+	router.
+		Methods(r.Method()).
+		Path(r.Pattern()).
+		HandlerFunc(r.HandlerFunc())
 	return router
 }
 
@@ -51,7 +50,18 @@ func getHttpPrefix() string {
 // getTemplate returns the template loaded from the paths.
 //
 // getTemplate parses the .tmpl files from disk.
-func getTemplate(tmpls []string) *template.Template {
+func getTemplate(tmpls []string, debug bool) *template.Template {
+	if !debug {
+		s := ""
+		for _, filename := range tmpls {
+			b, err := gen.Asset(filename)
+			if err != nil {
+				log.Fatalf("failed to fetch .tmpl with Asset(): %v\n", err)
+			}
+			s += string(b)
+		}
+		return template.Must(template.New("main").Parse(s))
+	}
 	return template.Must(template.ParseFiles(tmpls...))
 }
 
@@ -90,10 +100,10 @@ type page struct {
 }
 
 // newPage returns a new page.
-func newPage(pattern string, tmpls []string, getData getDataFn) *page {
+func newPage(pattern string, tmpls []string, getData getDataFn, debug bool) *page {
 	return &page{
 		pattern,
-		getTemplate(tmpls),
+		getTemplate(tmpls, debug),
 		getData,
 	}
 }

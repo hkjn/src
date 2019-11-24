@@ -3,12 +3,16 @@ package dashboard // import "hkjn.me/src/dashboard"
 
 import (
 	"errors"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"sync"
 
 	"github.com/gorilla/mux"
 
 	"hkjn.me/src/config"
+	"hkjn.me/src/dashboard/gen"
+	"hkjn.me/src/prober"
 	"hkjn.me/src/probes"
 )
 
@@ -59,7 +63,7 @@ type Config struct {
 // setProbeCfg sets the config values.
 func setProbesCfg(conf Config, emailTemplate string) error {
 	if conf.Debug {
-		log.Printf("Starting in debug mode (no auth)..")
+		log.Printf("Starting in debug mode..")
 		return nil
 	}
 	// TODO(hkjn): Unify probes.Config vs dashboard.Config.
@@ -94,9 +98,34 @@ func setProbesCfg(conf Config, emailTemplate string) error {
 	return nil
 }
 
+// getIndexData returns the data for the index page.
+func getIndexData(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+	data := struct {
+		Version string
+		Links   []struct {
+			Name, URL string
+		}
+		Probes         []*prober.Probe
+		ProberDisabled bool
+	}{}
+	data.Version = gen.Version
+	data.Probes = getProbes()
+	data.ProberDisabled = *proberDisabled
+	return data, nil
+}
+
 // Start returns the HTTP routes for the dashboard.
 func Start(conf Config) *mux.Router {
-	config.MustLoad(&probecfg, config.Name("probes.yaml"))
+	r := func(filename string) ([]byte, error) {
+		return ioutil.ReadFile(filename)
+	}
+	if !conf.Debug {
+		log.Printf("xx: will read probes.yaml from bindata.go since !debug\n")
+		r = func(filename string) ([]byte, error) {
+			return gen.Asset(filename)
+		}
+	}
+	config.MustLoadNameFrom("probes.yaml", &probecfg, r)
 
 	ps := getProbes()
 	log.Printf("Starting %d probes..\n", len(ps))
