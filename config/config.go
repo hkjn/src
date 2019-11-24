@@ -32,48 +32,62 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type fileReader func(filename string) ([]byte, error)
+
 var (
-	defaultConfigName      = "config.yaml" // default name of YAML config file
-	BasePath               = "."           // where to start looking for configs; relative to importing code
-	MaxSteps          uint = 5             // maximum number of directories to step up while looking for configs
+	defaultConfigName = "config.yaml" // default name of YAML config file
+	defaultFileReader = func(filename string) ([]byte, error) {
+		return ioutil.ReadFile(filename)
+	}
+	BasePath      = "." // where to start looking for configs; relative to importing code
+	MaxSteps uint = 5   // maximum number of directories to step up while looking for configs
 
 )
 
-// Name applies the option to set a name for the YAML config file.
-func Name(name string) option {
-	return option{"configName", name}
-}
-
 // MustLoad is like Load, but panics if the config can't be loaded or
 // parsed.
-func MustLoad(v interface{}, options ...option) {
-	err := Load(v, options...)
+func MustLoad(v interface{}) {
+	err := Load(v)
 	if err != nil {
 		panic(fmt.Errorf("FATAL: %v\n", err))
 	}
 }
 
-// Load parses the YAML-encoded config with specified options, and
-// stores the result in the value pointed to by v.
-func Load(v interface{}, options ...option) error {
-	configName := defaultConfigName
-	for _, opt := range options {
-		if opt.name == "configName" {
-			configName = opt.value
-		} else {
-			return fmt.Errorf("internal: bad option name %q", opt.name)
-		}
-	}
-	err := tryLoad(configName, v)
+// MustLoadName is like LoadName, but panics if the config can't be
+// loaded or parsed.
+func MustLoadName(name string, v interface{}) {
+	err := LoadName(v, name)
 	if err != nil {
-		return err
+		panic(fmt.Errorf("FATAL: %v\n", err))
 	}
-	return nil
 }
 
-// option represents an option that can be set in the package.
-type option struct {
-	name, value string
+// MustLoadNameFrom is like LoadNameFrom, but panics if the config can't be
+// loaded or parsed.
+func MustLoadNameFrom(name string, v interface{}, fr fileReader) {
+	err := LoadNameFrom(v, name, fr)
+	if err != nil {
+		panic(fmt.Errorf("FATAL: %v\n", err))
+	}
+}
+
+// LoadName parses the YAML-encoded config with specified name from
+// specified fileReader, and stores the result in the value pointed
+// to by v.
+func LoadNameFrom(v interface{}, name string, fr fileReader) error {
+	return tryLoad(v, name, fr)
+}
+
+// LoadName parses the YAML-encoded config.yml and stores the
+// result in the value pointed to by v.
+func LoadName(v interface{}, name string) error {
+	return tryLoad(v, name, defaultFileReader)
+}
+
+// Load parses the YAML-encoded config.yml and stores the
+// result in the value pointed to by v.
+func Load(v interface{}) error {
+	return tryLoad(v, defaultConfigName, defaultFileReader)
 }
 
 // tryLoad parses the YAML-encoded config in file name and stores the
@@ -81,12 +95,12 @@ type option struct {
 //
 // tryLoad steps up one directory level at a time, at most MaxSteps
 // number of times, until the named config file is found.
-func tryLoad(name string, v interface{}) error {
+func tryLoad(v interface{}, name string, fr fileReader) error {
 	var err error
 	tries := uint(0)
 	path := filepath.Join(BasePath, name)
 	for tries <= MaxSteps {
-		err = loadPath(path, v)
+		err = loadPath(path, v, fr)
 		if err == nil {
 			return nil
 		} else if os.IsNotExist(err) {
@@ -101,8 +115,8 @@ func tryLoad(name string, v interface{}) error {
 
 // loadPath parses the YAML-encoded config at path and stores the
 // result in the value pointed to by v.
-func loadPath(path string, v interface{}) error {
-	b, err := ioutil.ReadFile(path)
+func loadPath(path string, v interface{}, fr fileReader) error {
+	b, err := fr(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return err
