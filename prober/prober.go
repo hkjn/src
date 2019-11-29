@@ -48,7 +48,7 @@ var (
 	MaxAlertFrequency     = time.Minute * 15      // never call Alert() more often than this
 	logDir                = os.TempDir()          // logging directory
 	logName               = "prober.outcomes.log" // name of logging f1ile
-	alertThreshold        = flag.Int("alert_threshold", 100, "level of 'badness' before alerting")
+	alertThreshold        = flag.Int("alert_threshold", 200, "level of 'badness' before alerting")
 	alertsDisabled        = flag.Bool("no_alerts", false, "disables alerts when probes fail too often")
 	disabledProbes        = make(selectedProbes)
 	onlyProbes            = make(selectedProbes)
