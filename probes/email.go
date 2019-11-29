@@ -16,8 +16,8 @@ package probes // import "hkjn.me/src/probes"
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"html/template"
+	"log"
 
 	"hkjn.me/src/prober"
 
