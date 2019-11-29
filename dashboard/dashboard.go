@@ -52,7 +52,7 @@ Failure details follow:<br/>
 )
 
 type Config struct {
-	Debug            bool
+	Debug            bool `default:"true"`
 	BindAddr         string
 	AllowedGoogleIds []string
 	SendgridToken    string
@@ -120,7 +120,6 @@ func Start(conf Config) *mux.Router {
 		return ioutil.ReadFile(filename)
 	}
 	if !conf.Debug {
-		log.Printf("xx: will read probes.yaml from bindata.go since !debug\n")
 		r = func(filename string) ([]byte, error) {
 			return gen.Asset(filename)
 		}

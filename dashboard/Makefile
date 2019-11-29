@@ -1,10 +1,13 @@
 NAME=dashboard
 VERSION=$(shell cat VERSION)
 
-build:
+build: format
 	bash generate_version.sh
 	bash generate_bindata.sh
 	go build ./cmd/gomon
+
+format:
+	go fmt .
 
 install:
 	sudo install gomon /usr/local/bin/

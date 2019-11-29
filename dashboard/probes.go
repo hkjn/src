@@ -2,10 +2,10 @@ package dashboard
 
 import (
 	"flag"
-	"log"
 	"net"
 	"sort"
 	"sync"
+	"time"
 
 	"hkjn.me/src/prober"
 	"hkjn.me/src/probes/dnsprobe"
@@ -24,13 +24,14 @@ var (
 func getWebProbes() prober.Probes {
 	probes := prober.Probes{}
 	for _, p := range probecfg.WebProbes {
-		probes = append(probes,
-			webprobe.New(
-				p.Target,
-				"GET",
-				p.WantStatus,
-				webprobe.Name(p.Name),
-				webprobe.InResponse(p.Want)))
+		wp := webprobe.NewWithGeneric(
+			p.Target,
+			"GET",
+			p.WantStatus,
+			[]prober.Option{prober.Interval(time.Minute * 2)},
+			webprobe.Name(p.Name),
+			webprobe.InResponse(p.Want))
+		probes = append(probes, wp)
 	}
 	return probes
 }
@@ -77,14 +78,7 @@ func getDnsProbes() prober.Probes {
 // getProbes returns all probes in the dashboard.
 func getProbes() prober.Probes {
 	createOnce.Do(func() {
-		if !flag.Parsed() {
-			flag.Parse()
-		}
-		if *proberDisabled {
-			log.Printf("Probes are disabled with -no_probes\n")
-		} else {
-			allProbes = append(getDnsProbes(), getWebProbes()...)
-		}
+		allProbes = append(getDnsProbes(), getWebProbes()...)
 	})
 	sort.Sort(allProbes)
 	return allProbes

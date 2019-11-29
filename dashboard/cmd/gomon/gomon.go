@@ -15,8 +15,7 @@ import (
 func main() {
 	flag.Parse()
 	var conf dashboard.Config
-	err := envconfig.Process("dashboard", &conf)
-	if err != nil {
+	if err := envconfig.Process("dashboard", &conf); err != nil {
 		log.Fatal(err.Error())
 	}
 	if conf.BindAddr == "" {
@@ -24,9 +23,10 @@ func main() {
 	}
 	fmt.Printf("gomon initializing, listening on %s..\n", conf.BindAddr)
 
-	err = http.ListenAndServe(
+	if err := http.ListenAndServe(
 		conf.BindAddr,
 		dashboard.Start(conf),
-	)
-	log.Fatal(err.Error())
+	); err != nil {
+		log.Fatal(err.Error())
+	}
 }
