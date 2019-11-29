@@ -10,4 +10,4 @@ format:
 	go fmt .
 
 install:
-	sudo install gomon /usr/local/bin/
+	install gomon /usr/local/bin/
