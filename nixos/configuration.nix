@@ -96,6 +96,7 @@
      mosh
      mkpasswd
      mplayer
+     mtpaint
      ncdu
      nmap
      prometheus
@@ -103,6 +104,7 @@
      pwgen
      python3
      redshift
+     scrot
      srm
      steghide
      tmux

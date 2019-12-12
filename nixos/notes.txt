@@ -1,4 +1,27 @@
- after adding packages or otherwise editing configuration.nix, build new
+# services that currently have to be started manually:
+
+# clightning:
+lightningd
+
+# electrs:
+cd .config/electrs && electrs -vvvv
+
+# spark-wallet:
+spark-wallet --no-rates
+# alternatively:
+sudo docker run -it -v ~/.lightning:/etc/lightning -v ~/.spark-docker:/data -p 9737:9737 shesek/spark-wallet:0.2.9 --no-rates
+
+# prometheus-tor-exporter, exporting tor stats for tor prometheus collector:
+prometheus-tor-exporter
+
+# custom collector, package built from hkjn.me/src/coinstats/prometheus_tor.py:
+prometheus_tor
+
+# also have to restart bitcoin.service once after restart every so often,
+# for unknown reasons:
+systemctl --user restart bitcoin
+
+# after adding packages or otherwise editing configuration.nix, build new
 # configuration and switch to it for next boot:
 nixos-rebuild switch
 
@@ -494,28 +517,6 @@ virsh dumpxml <domain> > domain.xml
 # for example without resorting to trickery, also could be easier to copy
 # similar to addresses on receive tab
 
-# services that currently have to be started manually:
-
-# clightning:
-lightningd
-
-# electrs:
-cd .config/electrs && electrs -vvvv
-
-# spark-wallet:
-spark-wallet --no-rates
-# alternatively:
-sudo docker run -it -v ~/.lightning:/etc/lightning -v ~/.spark-docker:/data -p 9737:9737 shesek/spark-wallet:0.2.9 --no-rates
-
-# prometheus-tor-exporter, exporting tor stats for tor prometheus collector:
-prometheus-tor-exporter
-
-# custom collector, package built from hkjn.me/src/coinstats/prometheus_tor.py:
-prometheus_tor
-
-# also have to restart bitcoin.service once after restart every so often,
-# for unknown reasons:
-systemctl --user restart bitcoin
 
 # starting guix vm image using kvm:
 qemu-system-x86_64 -net user -net nic,model=virtio -enable-kvm -m 1024 -device virtio-blk,drive=myhd -drive if=none,file=guix-system-vm-image-1.0.1.x86_64-linux,id=myhd
@@ -628,3 +629,8 @@ curl http://localhost:9090/graph
 # electrum setconfig server 127.0.0.1:50001:t' persist the same settings to
 # ~/.electrum/config:
 alias elec="electrum --oneserver --server=127.0.0.1:50001:t"
+
+# network issue causes periodic loss of connectivity
+# ('Destination Host Unreachable' from network access
+# point on some wifi networks, as workaround hardware
+# network status toggle works
