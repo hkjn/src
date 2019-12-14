@@ -1,7 +1,7 @@
 set -euo pipefail
 
 BASE_VERSION=master
-GENERATION_NUMBER=82
+GENERATION_NUMBER=83
 LOCAL_BRANCH=build-${GENERATION_NUMBER}
 COMMITS=(
 	6bd628ed4 # python3Packages.ckcc-protocol: init at 0.8.0
