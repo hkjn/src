@@ -25,6 +25,11 @@ post-build:
 
 post-push:
 	@echo "Pushing multi-arch manifest to $(IMAGE):$(VERSION).."
+	# TODO: replace with built-in 'docker manifest' command available
+	# in docker 18.02+ with experimental=enabled set in ~/.docker/config.json:
+	# https://docs.docker.com/engine/reference/commandline/manifest_annotate/
+	# https://docs.docker.com/engine/reference/commandline/cli/#configuration-files
+	docker manifest --arch
 	docker run --rm -v $(HOME)/.docker:/root/.docker:ro \
 	       hkjn/manifest-tool \
 	       push from-args --platforms linux/amd64,linux/arm \
