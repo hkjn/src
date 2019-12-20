@@ -34,12 +34,12 @@ bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume 0 -5% #d
 bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute 0 toggle # mute sound
 
 # increase/decrease brightness
-bindsym XF86MonBrightnessUp exec bash brightnessinc
-bindsym XF86MonBrightnessDown exec bash brightnessdec
+bindsym XF86MonBrightnessUp exec bash /usr/local/bin/brightnessinc
+bindsym XF86MonBrightnessDown exec bash /usr/local/bin/brightnessdec
 
 # lock screen
-bindsym $mod+Shift+s exec bash lockscreen
-bindsym $mod+Escape exec bash lockscreen
+bindsym $mod+Shift+s exec bash /usr/local/bin/lockscreen
+bindsym $mod+Escape exec bash /usr/local/bin/lockscreen
 
 # start dmenu (a program launcher)
 bindsym $mod+d exec dmenu_run
@@ -176,4 +176,4 @@ bar {
 }
 
 # Automatically lock X session after 5min of inactivity
-exec_always --no-startup-id xautolock -time 5 -locker bash lockscreen
+exec_always --no-startup-id xautolock -time 5 -locker bash /usr/local/bin/lockscreen
