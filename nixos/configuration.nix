@@ -107,6 +107,7 @@
      scrot
      srm
      steghide
+     tightvnc
      tmux
      tor
      tor-browser-bundle-bin
