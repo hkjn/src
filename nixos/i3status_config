@@ -9,8 +9,6 @@ order += "load"
 order += "disk /"
 order += "volume master"
 order += "wireless _first_"
-order += "tztime local"
-
 order += "cpu_temperature 0"
 
 wireless _first_ {
@@ -33,24 +31,19 @@ cpu_usage {
         format = "CPU %usage "
 }
 
-tztime local {
-        format = "%Y-%m-%d %H:%M:%S"
-}
-
-
 disk "/" {
         format = "%percentage_used"
 }
 
 volume master {
         format = "♪: %volume"
-        format_muted = "♪: muted (%volume)"
+        format_muted = "♪: m (%volume)"
         device = "default"
         mixer = "Master"
         mixer_idx = 0
 }
 
 cpu_temperature 0 {
-        format = "T: %degrees °C"
+        format = "%degrees °C"
 }
 
