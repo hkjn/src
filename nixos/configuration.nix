@@ -100,7 +100,6 @@
      ncdu
      nmap
      prometheus
-     prometheus-tor-exporter
      pwgen
      python3
      redshift
