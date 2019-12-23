@@ -237,18 +237,10 @@
     domain   = "localhost";
     protocol = "http";
     dataDir  = "/var/lib/grafana";
-    # xx: settings below seem to not take effect
     provision.datasources = [
       {
         type = "prometheus";
         url = "http://localhost:9090";
-      }
-    ];
-    provision.dashboards = [
-      {
-        name = "prometheusXXX";
-        type = "prometheus";
-        editable = false;
       }
     ];
   };
