@@ -78,6 +78,8 @@
   environment.systemPackages = with pkgs; [
      arandr
      bind
+     bitcoin
+     clightning
      electrum
      exfat
      firefox
