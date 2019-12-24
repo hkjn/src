@@ -637,3 +637,6 @@ alias elec="electrum --oneserver --server=127.0.0.1:50001:t"
 # ('Destination Host Unreachable' from network access
 # point on some wifi networks, as workaround hardware
 # network status toggle works
+
+# listing the currently used test0 profile's generation:
+sudo nix-env --list-generations --profile /nix/var/nix/profiles/system-profiles/test0
