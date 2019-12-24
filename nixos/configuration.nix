@@ -125,6 +125,7 @@
      xautolock
      xbrightness
      xclip
+     xfce.terminal
   ];
 
   # Set environment to support gpg-agent as ssh-agent.
