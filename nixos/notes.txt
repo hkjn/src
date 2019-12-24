@@ -640,3 +640,20 @@ alias elec="electrum --oneserver --server=127.0.0.1:50001:t"
 
 # listing the currently used test0 profile's generation:
 sudo nix-env --list-generations --profile /nix/var/nix/profiles/system-profiles/test0
+
+# in attempt to make the test0 profile the default, ran:
+nix-env --switch-profile /nix/var/nix/profiles/system-profiles/test0
+
+# however, now any attempt to install packages like `nix-env -iA nixpkgs.monero`
+# gives permission denied errors, and running with sudo says that the `nixpkgs`
+# attribute is not found. by randomly running `--switch-profile` with different
+# arguments, it seems that the following allows packages to be installed again:
+nix-env --switch-profile /nix/var/nix/profiles/per-user/user/profile-197-link
+
+# reading docs, it seems that switching to non-existing profiles creates them
+# automatically, however after the following, the permission denied issue persists:
+nix-env --switch-profile /nix/var/nix/profiles/test1
+
+# creating a new profile under per-user seems to also allow installation of
+# packages again:
+nix-env --switch-profile /nix/var/nix/profiles/per-user/user/test2
