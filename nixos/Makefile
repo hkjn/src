@@ -19,4 +19,4 @@ install-user-config:
 
 update-system-packages:
 	cp configuration.nix /etc/nixos/
-	nixos-rebuild switch -I nixpkgs=/home/user/src/hkjn.me/nixpkgs --upgrade -p test0
+	nixos-rebuild switch -I nixpkgs=/home/user/src/hkjn.me/nixpkgs --upgrade --profile-name test0
