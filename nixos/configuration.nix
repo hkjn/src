@@ -92,7 +92,6 @@
      htop
      glxinfo
      gptfdisk
-     ledger-live-desktop
      mosh
      mkpasswd
      mplayer
