@@ -1,8 +1,0 @@
-#
-# Increase brightness and set redshift temperature to cool.
-#
-set -euo pipefail
-
-COOL_TEMPERATURE=7000
-xbrightness +5000
-redshift -P -O ${COOL_TEMPERATURE}

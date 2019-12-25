@@ -1,4 +1,0 @@
-network=bitcoin
-log-level=debug
-bind-addr=127.0.0.1:9735
-announce-addr=<value from /var/lib/tor/onion/lightningd/hostname goes here>

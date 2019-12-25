@@ -1,7 +1,0 @@
-Xft.dpi: 96.0
-Xft.hinting: true
-Xft.hintstyle: hintslight
-Xft.antialias: true
-Xft.rgba: rgb
-*font:        xft:ubuntu mono:size=13:style=medium:antialias=true
-*boldFont:    xft:ubuntu mono:size=13:style=medium:antialias=true
