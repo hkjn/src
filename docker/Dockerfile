@@ -1,4 +1,4 @@
-FROM hkjn/alpine:0.2.0
+FROM alpine
 
 ARG docker_arch
 ARG docker_version
