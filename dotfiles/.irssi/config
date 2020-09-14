@@ -112,7 +112,6 @@ chatnets = {
 
 channels = (
   # Freenode
-  { name = "#archlinux"; chatnet = "freenode"; autojoin = "Yes"; },
   { name = "#bitcoin"; chatnet = "freenode"; autojoin = "Yes"; },
   { name = "#bitcoin-build"; chatnet = "freenode"; autojoin = "Yes"; },
   { 
@@ -138,13 +137,7 @@ channels = (
   { name = "#c-lightning"; chatnet = "freenode"; autojoin = "Yes"; },
   { name = "#go-nuts"; chatnet = "freenode"; autojoin = "Yes"; },
   { name = "#lnd"; chatnet = "freenode"; autojoin = "Yes"; },
-  { 
-    name = "#lightning-charge";
-    chatnet = "freenode";
-    autojoin = "Yes";
-  },
   { name = "#lightning-dev"; chatnet = "freenode"; autojoin = "Yes"; },
-  { name = "#monero-dev"; chatnet = "freenode"; autojoin = "Yes"; },
   {
     name = "#monero-research-lab";
     chatnet = "freenode";
