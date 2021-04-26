@@ -183,7 +183,7 @@ export LANG="en_US.UTF-8"
 export LC_CTYPE="en_US.UTF-8"
 export EDITOR=nano
 export GOPATH=${HOME}
-export PATH=/usr/local/go/bin:${GOPATH}/src/hkjn.me/src/scripts:${HOME}/bin:${HOME}/.local/bin:${HOME}/.cargo/bin:/snap/bin:${HOME}/.npm-global/bin:.:$PATH
+export PATH=/usr/local/go/bin:${GOPATH}/src/hkjn.me/src/scripts:${HOME}/bin:${HOME}/.local/bin:${HOME}/.cargo/bin:/snap/bin:${HOME}/.npm-global/bin:/opt/homebrew/bin:.:$PATH
 export PYTHONPATH=.:..
 
 # GPG always wants to know what TTY it's running on.
@@ -240,4 +240,7 @@ if [[ ! "${TMUX}" ]] && [[ "${ATTACH_TMUX}" ]]; then
 	kill_other_mosh_sessions
 	# If not already in tmux session, attach to it.
 	tmux attach
+fi
+if command -v pyenv 1>/dev/null 2>&1; then
+  eval "$(pyenv init -)"
 fi
