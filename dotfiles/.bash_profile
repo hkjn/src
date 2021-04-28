@@ -175,6 +175,8 @@ alias xclip="xclip -selection c"
 alias shlogs="less ${HOME}/.shell_logs/${HOSTNAME}"
 alias rmkey="_rmkey ${1}"
 alias elec='electrum --oneserver --server=127.0.0.1:50001:t'
+alias bitd="$HOME/src/github.com/bitcoin/bitcoin/src/bitcoind"
+
 _gs() {
   gpg --decrypt ${1} | tr -d '\n'
 }
