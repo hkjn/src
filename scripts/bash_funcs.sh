@@ -35,19 +35,26 @@ function load-ssh-key() {
 	# TODO(henrik): Maybe check if output here contains all entries in a
 	# known list, and if not, add the missing keys?
 	ssh-add -l > /dev/null 2>&1
-	stat=$?
+	local stat=$?
+
 	# $?=0 means the socket is there and it has a key.
 	if [ $stat -eq 0 ]; then
 		return 0
 	elif [ $stat -eq 1 ] ; then
+		local sshKeys=""
+		if [ -f $HOME/secrets/ssh_keys ] ; then
+			sshKeys=$(cat $HOME/secrets/ssh_keys)
+		fi
 		# $?=1 means the socket is there but contains no key.
-		ssh-add -t $key_ttl > /dev/null 2>&1
+		ssh-add -t $key_ttl $sshKeys > /dev/null 2>&1
 	elif [ $stat -eq 2 ] ; then
 		# $?=2 means the socket is not there or broken
 		rm -f $SSH_AUTH_SOCK
 		start-ssh-agent
 		ssh-add -t $key_ttl > /dev/null 2>&1
 	fi
+	export SSH_AUTH_SOCK
+	export SSH_AGENT_PID
 }
 
 # Timed GTK dialogs; use like "timer 25m your note here".
