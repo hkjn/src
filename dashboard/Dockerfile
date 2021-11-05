@@ -6,6 +6,7 @@ COPY ["*.go", "./"]
 COPY ["cmd/", "./cmd/"]
 COPY ["tmpl/", "./tmpl/"]
 
+RUN go get ./...
 RUN go test && \
     go vet && \
     go install hkjn.me/src/dashboard/cmd/gomon
