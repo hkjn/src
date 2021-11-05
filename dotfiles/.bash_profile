@@ -38,7 +38,9 @@ userhost() {
   local lgreen='\[\033[01;32m\]'
   local normal='\[\033[00m\]'
   local dgray='\[\033[1;30m\]'
-  echo "${lgreen}\u@\h${dgray}♾${normal}"
+  local symb='♪'
+  # echo "${lgreen}\u@\h${dgray}♾${normal}"
+  echo "${lgreen}\u@\h${dgray}${symb}${normal}"
 }
 
 # echo current working directory
@@ -50,8 +52,7 @@ workdir() {
 
 # echo extra info, if available
 #
-# TODO(hkjn): Improve the setup for "extrainfo" and make it extensible:
-
+# TODO: Improve the setup for "extrainfo" and make it extensible:
 # 1. Read from some inmemory store / unix socket or similar, so no
 #    filesystem access is necessary just to draw the prompt
 # 2. Have separate timer-based job that checks stuff and writes to socket:
@@ -63,7 +64,9 @@ extrainfo() {
   local red='\[\e[0;31m\]'
   local awscreds=''
   local dgray='\[\033[1;30m\]'
+  local zensymb='☯'
   if [[ ! -e '.aws/creds.env' ]]; then
+    echo "${lcyan}${zensymb}${normal}"
     return
   fi
   local expiry=$(grep -Eo '[0-9]{10}$' .aws/creds.env)
@@ -88,8 +91,9 @@ extrainfo() {
   else
     stageinfo="${lcyan}☯"
   fi
-  echo "${dgray}♾${awscreds}${dgray}♾${stageinfo}${normal}"
-
+  local symb="♪"
+  # echo "${dgray}♾${awscreds}${dgray}♾${stageinfo}${normal}"
+  echo "${dgray}${symb}${awscreds}${dgray}${symb}${stageinfo}${normal}"
 }
 
 PROMPT_COMMAND=__prompt_command
@@ -113,7 +117,7 @@ __prompt_command() {
   fi
   # 木 人 ♪
   if [ "$color_prompt" = yes ]; then
-    PS1="${lwhite}\$(gitbranch)${dgray}♾${normal}$(userhost)$(workdir)$(extrainfo) \n${pcolor}${prompt}$normal "
+    PS1="${lwhite}\$(gitbranch)${dgray}人${normal} $(userhost) $(workdir) $(extrainfo) \n${pcolor}${prompt}$normal "
   else
     PS1="$"
   fi
@@ -129,11 +133,14 @@ xterm*|rxvt*)
 esac
 
 # Pull in useful functions.
+#
+# xx: broken, at least on macos; load-ssh-key is run but the ssh keys that are
+#     loaded does not make it into the calling new bash shell..
 BASH_FUNCS="$HOME/src/hkjn.me/src/scripts/bash_funcs.sh"
 if [[ -e "$BASH_FUNCS" ]]; then
 	source "$BASH_FUNCS"
 else
-	echo "No '$BASH_FUNCS' found. Try 'go get hkjn.me/src'?"
+	echo "No '$BASH_FUNCS' found."
 fi
 
 # enable color support of ls and also add handy aliases
@@ -175,8 +182,6 @@ alias xclip="xclip -selection c"
 alias shlogs="less ${HOME}/.shell_logs/${HOSTNAME}"
 alias rmkey="_rmkey ${1}"
 alias elec='electrum --oneserver --server=127.0.0.1:50001:t'
-alias bitd="$HOME/src/github.com/bitcoin/bitcoin/src/bitcoind"
-
 _gs() {
   gpg --decrypt ${1} | tr -d '\n'
 }
@@ -184,8 +189,9 @@ _gs() {
 export LANG="en_US.UTF-8"
 export LC_CTYPE="en_US.UTF-8"
 export EDITOR=nano
-export GOPATH=${HOME}
-export PATH=/usr/local/go/bin:${GOPATH}/src/hkjn.me/src/scripts:${HOME}/bin:${HOME}/.local/bin:${HOME}/.cargo/bin:/snap/bin:${HOME}/.npm-global/bin:/opt/homebrew/bin:.:$PATH
+# export GOPATH=${HOME}
+export PATH=${HOME}/src/github.com/bitcoin/bitcoin/src:/usr/local/go/bin:${GOPATH}/src/hkjn.me/src/scripts:${HOME}/bin:${HOME}/.local/bin:${HOME}/.cargo/bin:/snap/bin:${HOME}/.npm-global/bin:${HOME}/.pyenv/shims:/opt/homebrew/bin:.:$PATH
+
 export PYTHONPATH=.:..
 
 # GPG always wants to know what TTY it's running on.
@@ -241,8 +247,9 @@ if [[ ! "${TMUX}" ]] && [[ "${ATTACH_TMUX}" ]]; then
 	# Kill any other mosh sessions that might be lingering.
 	kill_other_mosh_sessions
 	# If not already in tmux session, attach to it.
-	tmux attach
+	# tmux attach
 fi
-if command -v pyenv 1>/dev/null 2>&1; then
-  eval "$(pyenv init -)"
-fi
+
+# xx: remove the below if the load-ssh-key func is fixed on macos
+eval $(ssh-agent)
+# ssh-add $HOME/secrets/pass/bithost0_ed25519
