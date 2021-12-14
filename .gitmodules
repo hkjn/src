@@ -1,0 +1,3 @@
+[submodule "tor-browser"]
+	path = tor-browser
+	url = git@github.com:hkjn/tor-browser
