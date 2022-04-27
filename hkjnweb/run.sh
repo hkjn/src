@@ -4,10 +4,9 @@
 #
 set -euo pipefail
 
-export BIND_ADDR=:4430
+export BIND_ADDR=127.0.0.1:8089
+export SERVE_HTTP=1
 export PROD=1
-echo "[run.sh] Fetching updates.."
-go get -u hkjn.me/hkjnweb/...
 echo "[run.sh] Building binary.."
 go build ./cmd/server/hkjnserver.go
 while pgrep hkjnserver 1>/dev/null; do

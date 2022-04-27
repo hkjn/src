@@ -49,9 +49,7 @@ var (
     <meta name="go-import" content="%s git %s">
   </head>`
 
-	redirects = map[string]string{
-		"/where": "http://computare0.appspot.com/where/me@hkjn.me",
-	}
+	redirects = map[string]string{}
 )
 
 // Register registers the handlers.
