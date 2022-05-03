@@ -1,4 +1,4 @@
-FROM hkjn/golang:1.12.6
+FROM hkjn/golang:1.18.1
 
 USER root
 RUN apk add --no-cache gcc make && \
