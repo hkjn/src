@@ -2,7 +2,7 @@ FROM hkjn/alpine:0.2.0
 
 ARG tf_arch
 ARG tf_version
-
+RUN echo "received tf_arch=$tf_arch, tf_version=$tf_version"
 ENV TF_VERSION=$tf_version \
     USER=tfuser \
     TF_ARCH=$tf_arch
