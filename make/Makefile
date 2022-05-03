@@ -37,7 +37,7 @@ post-push:
 	@if [ "$(PUSH_ENABLED)" = "1" ]; then \
 		$(DOCKER) run -v ${HOME}/.docker:/root/.docker:ro \
 		           --rm hkjn/manifest-tool push from-args \
-			     --platforms linux/amd64,linux/arm,linux/arm64 \
+			     --platforms linux/amd64,linux/arm64 \
 		             --template $(IMAGE):$(VERSION)-ARCH \
 		             --target $(IMAGE):$(VERSION); \
 	else \
