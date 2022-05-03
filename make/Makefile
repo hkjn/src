@@ -33,7 +33,8 @@ post-build:
 push: build do-push post-push
 
 post-push:
-	# xx: how to handle bind mounts on macos?
+	# xx: how to handle bind mounts on macos? can set --username
+	#     and --password before command 'push'..
 	@if [ "$(PUSH_ENABLED)" = "1" ]; then \
 		$(DOCKER) run -v ${HOME}/.docker:/root/.docker:ro \
 		           --rm hkjn/manifest-tool push from-args \
