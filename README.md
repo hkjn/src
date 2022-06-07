@@ -2,16 +2,27 @@
 
 Repo src holds some source code by hkjn.
 
-## Subtree
+## Submodules
 
-Some directories hold source code from separate repos outside of `src/`, added with:
-
-```
-$ git subtree add --prefix lnmon https://github.com/hkjn/lnmon.git master --squash
-```
-
-The subtree repos can be updated with:
+Some directories hold source code from separate repos outside of `src/`, 
+which can be initialized with:
 
 ```
-$ git subtree pull --prefix lnmon https://github.com/hkjn/lnmon.git master --squash
+git submodule init
+git submodule update
+```
+
+These repos were added with:
+
+```
+git submodule add https://github.com/hkjn/lnmon
+git submodule add https://github.com/hkjn/probes
+git submodule add https://github.com/hkjn/prober
+git submodule add https://github.com/hkjn/dashboard
+```
+
+The submodule repos can be updated like:
+
+```
+git submodule update --remote probes
 ```
