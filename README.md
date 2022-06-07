@@ -12,13 +12,10 @@ git submodule init
 git submodule update
 ```
 
-These repos were added with:
+These repos were added like:
 
 ```
-git submodule add https://github.com/hkjn/lnmon
 git submodule add https://github.com/hkjn/probes
-git submodule add https://github.com/hkjn/prober
-git submodule add https://github.com/hkjn/dashboard
 ```
 
 The submodule repos can be updated like:
