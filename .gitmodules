@@ -13,3 +13,6 @@
 [submodule "tor-browser"]
 	path = tor-browser
 	url = https://github.com/hkjn/tor-browser
+[submodule "hkjnweb"]
+	path = hkjnweb
+	url = https://github.com/hkjn/hkjnweb
