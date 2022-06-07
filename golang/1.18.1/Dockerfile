@@ -7,8 +7,8 @@ ENV GOLANG_SRC_URL=https://golang.org/dl/go$GOLANG_VERSION.src.tar.gz \
     GOOS=linux
 
 RUN set -eux && \
-    apk add --no-cache ca-certificates git libcap musl-dev && \
-    apk add --no-cache --virtual .build-deps bash gcc openssl go && \
+    apk add --no-cache ca-certificates bash git libcap make musl-dev && \
+    apk add --no-cache --virtual .build-deps gcc openssl go && \
     export GOROOT_BOOTSTRAP="$(go env GOROOT)" && \
     wget -q "${GOLANG_SRC_URL}" -O golang.tar.gz && \
     echo "${GOLANG_SRC_SHA256}  golang.tar.gz" | sha256sum -c - && \
@@ -24,9 +24,7 @@ RUN set -eux && \
 ENV GOPATH /home/go
 ENV PATH ${GOPATH}/bin:/usr/local/go/bin:${PATH}
 
-# xx: dep build seems broken?
-# RUN go install -v github.com/golang/dep/cmd/dep@latest
+USER go
+
 RUN go install -v github.com/jteeuwen/go-bindata/go-bindata@latest
 
-WORKDIR ${GOPATH}
-USER go

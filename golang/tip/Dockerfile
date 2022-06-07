@@ -22,7 +22,4 @@ ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 
 USER go
 
-RUN go get -v github.com/golang/dep/cmd/dep
-RUN go get -v github.com/jteeuwen/go-bindata/...
-
-WORKDIR $GOPATH
+RUN go install -v github.com/jteeuwen/go-bindata/go-bindata@latest
