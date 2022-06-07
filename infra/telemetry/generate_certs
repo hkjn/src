@@ -10,6 +10,8 @@ declare BASE_DIR="/etc/secrets/telemetry/certs"
 
 if ! which cfssljson 1>/dev/null; then
 	echo "FATAL: No cfssljson present on PATH." >&2
+	echo >&2
+	echo "Try go get github.com/cloudflare/cfssl/cmd/cfssl{,json}" >&2
 	exit 1
 fi
 
