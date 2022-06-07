@@ -1,6 +1,3 @@
-[submodule "tor-browser"]
-	path = tor-browser
-	url = git@github.com:hkjn/tor-browser
 [submodule "probes"]
 	path = probes
 	url = https://github.com/hkjn/probes
@@ -13,3 +10,6 @@
 [submodule "lnmon"]
 	path = lnmon
 	url = https://github.com/hkjn/lnmon
+[submodule "tor-browser"]
+	path = tor-browser
+	url = https://github.com/hkjn/tor-browser
