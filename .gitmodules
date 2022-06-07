@@ -10,3 +10,6 @@
 [submodule "dashboard"]
 	path = dashboard
 	url = https://github.com/hkjn/dashboard
+[submodule "lnmon"]
+	path = lnmon
+	url = https://github.com/hkjn/lnmon
