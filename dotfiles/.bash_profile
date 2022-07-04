@@ -190,7 +190,7 @@ export LANG="en_US.UTF-8"
 export LC_CTYPE="en_US.UTF-8"
 export EDITOR=nano
 export GOPATH=${HOME}
-export PATH=${HOME}/src/github.com/bitcoin/bitcoin/src:/usr/local/go/bin:${HOME}/Library/Python/3.9/bin:${HOME}/bin:${HOME}/.local/bin:${HOME}/.cargo/bin:/snap/bin:${HOME}/.npm-global/bin:${HOME}/.pyenv/shims:/opt/homebrew/bin:/opt/local/bin:/opt/local/sbin:${HOME}/.yarn/bin/:.:$PATH
+export PATH=${HOME}/src/github.com/bitcoin/bitcoin/src:/usr/local/go/bin:${HOME}/Library/Python/3.9/bin:${HOME}/bin:${HOME}/.local/bin:${HOME}/.cargo/bin:/snap/bin:${HOME}/.npm-global/bin:${HOME}/.pyenv/shims:/opt/homebrew/bin:/opt/local/bin:/opt/local/sbin:${HOME}/.yarn/bin/:${HOME}/src/github.com/Homebrew/brew/bin:.:$PATH
 
 export PYTHONPATH=.:..
 
