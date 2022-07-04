@@ -189,10 +189,13 @@ _gs() {
 export LANG="en_US.UTF-8"
 export LC_CTYPE="en_US.UTF-8"
 export EDITOR=nano
-# export GOPATH=${HOME}
-export PATH=${HOME}/src/github.com/bitcoin/bitcoin/src:/usr/local/go/bin:${GOPATH}/src/hkjn.me/src/scripts:${HOME}/bin:${HOME}/.local/bin:${HOME}/.cargo/bin:/snap/bin:${HOME}/.npm-global/bin:${HOME}/.pyenv/shims:/opt/homebrew/bin:.:$PATH
+export GOPATH=${HOME}
+export PATH=${HOME}/src/github.com/bitcoin/bitcoin/src:/usr/local/go/bin:${HOME}/Library/Python/3.9/bin:${HOME}/bin:${HOME}/.local/bin:${HOME}/.cargo/bin:/snap/bin:${HOME}/.npm-global/bin:${HOME}/.pyenv/shims:/opt/homebrew/bin:/opt/local/bin:/opt/local/sbin:${HOME}/.yarn/bin/:.:$PATH
 
 export PYTHONPATH=.:..
+
+# disable homebrew analytics
+export HOMEBREW_NO_ANALYTICS=1
 
 # GPG always wants to know what TTY it's running on.
 export GPG_TTY="$(tty)"
@@ -253,3 +256,4 @@ fi
 # xx: remove the below if the load-ssh-key func is fixed on macos
 eval $(ssh-agent)
 # ssh-add $HOME/secrets/pass/bithost0_ed25519
+
