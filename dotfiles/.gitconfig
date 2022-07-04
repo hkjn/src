@@ -1,9 +1,9 @@
 [user]
         email = me@hkjn.me
         name = Lairs Johnstone
-        signingkey = D6187A03A40A3D5662F54B4603EFBF839A5FDC15
+#        signingkey = D6187A03A40A3D5662F54B4603EFBF839A5FDC15
 [commit]
-        gpgsign = true
+#        gpgsign = true
 [push]
         default = current
 [color]
@@ -18,3 +18,9 @@
         update = "!u() { git checkout master && git refresh && git checkout - && git rebase master; }; u"
 [tag]
         forceSignAnnotated = true
+[diff]
+	submodule = log
+[log]
+	showSignature = true
+[init]
+	defaultBranch = main

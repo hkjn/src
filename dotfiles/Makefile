@@ -1,2 +1,2 @@
 deploy:
-	cp -v .bash_login .bash_profile .bashrc $(HOME)/
+	cp -v .bash_login .bash_profile .bashrc .gitconfig $(HOME)/
