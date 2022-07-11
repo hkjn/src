@@ -24,3 +24,6 @@
 	showSignature = true
 [init]
 	defaultBranch = main
+# replace https with ssh for github, allowing go commands to work for private repos
+[url "ssh://git@github.com/"]
+	insteadOf = https://github.com/
