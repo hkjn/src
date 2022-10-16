@@ -1,4 +1,4 @@
 include ../../make/Makefile
 
 NAME=golang
-VERSION=1.17.11
+VERSION=1.17.13
