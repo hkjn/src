@@ -5,11 +5,10 @@ IMAGE=$(USERNAME)/$(NAME)
 MAKE_DIR=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 DOCKER_ARCH=$(shell env bash $(MAKE_DIR)/get_docker_arch)
 BUILDER ?= podman
+HOST_ARCH = $(shell uname -m)
 SHELL=/usr/bin/env bash
-SQUASH_ENABLED=0
-PUSH_ENABLED ?= 1
 .DEFAULT_GOAL=all
-.PHONY: pre-build main-build post-build build push do-push post-push
+.PHONY: pre-build main-build post-build build push do-push
 
 all: build push
 
@@ -17,37 +16,44 @@ build: pre-build main-build post-build
 
 pre-build:
 
-main-build:
-	@echo "Building image $(IMAGE):$(VERSION)-$(DOCKER_ARCH).."
-	$(BUILDER) build -t $(IMAGE):$(VERSION)-$(DOCKER_ARCH) .
+main-build: make-manifest build-amd64 build-arm64
+
+make-manifest:
+	@echo "Creating multiarch manifest for $(IMAGE)-$(VERSION)"
+	$(BUILDER) manifest create $(IMAGE)-$(VERSION)
+
+build-amd64:
+	@echo "Building image $(IMAGE):$(VERSION) for amd64.."
+	$(BUILDER) build --platform linux/amd64 -t $(IMAGE):$(VERSION)-amd64 .
+	# TODO: 'manifest add' tries to add remote image docker://..
+	# to the list (1st arg), so seems we have to push to registry for
+	# the specific -amd64 and -arm64 images first
+	$(BUILDER) manifest add $(USERNAME)-$(NAME)-$(VERSION) $(IMAGE):$(VERSION)-amd64
+	# TODO: above command also gives error if manifest already exists;
+	# podman manifest inspect $(USERNAME)-$(NAME)-$(VERSION) would check
+
+build-arm64:
+	@echo "Building image $(IMAGE):$(VERSION) for arm64.."
+	# TODO: --platform should automatically add ARGS
+	# [TARGETARCH TARGETOS TARGETPLATFORM]
+
+	# TODO: try with --squash or --squash-all
+	$(BUILDER) build --platform linux/arm64 -t $(IMAGE):$(VERSION)-arm64 .
+	$(BUILDER) manifest add $(USERNAME)-$(NAME)-$(VERSION) $(IMAGE):$(VERSION)-arm64
+
+tag:
+	$(BUILDER) tag $(IMAGE):$(VERSION)-$(HOST_ARCH) $(IMAGE):$(VERSION)
 
 post-build:
-	@if [ "$(SQUASH_ENABLED)" = "1" ]; then \
-		$(BUILDER) run --rm \
-		           -v /var/run/docker.sock:/var/run/docker.sock \
-			   hkjn/docker-squash:1.1.0 -t $(IMAGE):$(VERSION)-$(DOCKER_ARCH) $(IMAGE):$(VERSION)-$(DOCKER_ARCH); \
-	else \
-		echo "Not squashing image, since SQUASH_ENABLED != 1."; \
-	fi
+	@echo "Pushing manifest $(USERNAME)-$(IMAGE)-$(VERSION).."
+	podman manifest push --all $(USERNAME)-$(NAME)-$(VERSION) $(IMAGE):$(VERSION)
 
-push: build do-push post-push
-
-post-push:
-	# xx: how to handle bind mounts on macos? can set --username
-	#     and --password before command 'push'..
-	@if [ "$(PUSH_ENABLED)" = "1" ]; then \
-		$(BUILDER) run -v ${HOME}/.docker:/root/.docker:ro \
-		           --rm hkjn/manifest-tool push from-args \
-			     --platforms linux/amd64,linux/arm64 \
-		             --template $(IMAGE):$(VERSION)-ARCH \
-		             --target $(IMAGE):$(VERSION); \
-	else \
-		echo "Not pushing multiarch manifest, since PUSH_ENABLED=$(PUSH_ENABLED)."; \
-	fi
+push: build do-push
 
 do-push:
-	@if [ "$(PUSH_ENABLED)" = "1" ]; then \
-		$(BUILDER) push $(IMAGE):$(VERSION)-$(DOCKER_ARCH); \
-	else \
-		echo "Not pushing image, since PUSH_ENABLED=$(PUSH_ENABLED)"; \
-	fi
+	@echo "Pushing manifest $(IMAGE)-$(VERSION).."
+	$(BUILDER) manifest push --all $(USERNAME)-$(NAME)-$(VERSION) $(IMAGE):$(VERSION)
+	@echo "Pushing image $(IMAGE):$(VERSION).."
+	$(BUILDER) push $(IMAGE):$(VERSION)
+	@echo "Cleaning up manifest $(IMAGE)-$(VERSION).."
+	$(BUILDER) manifest rm $(USERNAME)-$(NAME)-$(VERSION)
